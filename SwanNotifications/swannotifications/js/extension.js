@@ -104,7 +104,6 @@ define([
         }
     }
 
-
     function on_close(id) {
         notifications[id].visible = false;
 
@@ -125,7 +124,6 @@ define([
             }
         });
     }
-
 
     return {
         load_jupyter_extension: load_jupyter_extension,

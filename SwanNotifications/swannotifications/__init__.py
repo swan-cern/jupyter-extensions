@@ -5,10 +5,10 @@ def _jupyter_nbextension_paths():
                 section="tree",
                 src="js",
                 dest="swannotifications",
-                require="swannotifications/notifications"),
+                require="swannotifications/extension"),
             dict(
                 section="notebook",
                 src="js",
                 dest="swannotifications",
-                require="swannotifications/notifications"),
+                require="swannotifications/extension"),
             ]
