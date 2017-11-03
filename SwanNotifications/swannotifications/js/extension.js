@@ -7,6 +7,12 @@ define([
     './lib/pnotify.custom.min'
 ], function ($, require, Jupyter, dialog, events, pnotify) {
 
+    /**
+     * This extensions checks for Jupyterhub /status endpoint to get notifications
+     * for the user, and displays them in the interface.
+     * It uses the browser local storage to keep hidden messaged already seen.
+     */
+
     var endpoint = '/hub/status';
     var local_storage_name = 'swan-notifications';
     var stack = {"dir1": "up", "dir2": "left"};
@@ -14,6 +20,11 @@ define([
     var seen_notifications = [];
 
 
+    /**
+     * Start the extension.
+     * If inside the notebook editor, check for updated in timed intervals
+     * If inside the tree view, attach to the file list update event.
+     */
     function load_jupyter_extension() {
 
         $('<link/>', {
@@ -35,10 +46,16 @@ define([
         }
     }
 
+    /**
+     * Checks jupyterhub for messages to the logged user.
+     * Checks if they were already displayed.
+     */
     function load_events() {
 
         $.get(endpoint, function (json) {
 
+            // Get all the IDs of seen notifications from local storage.
+            // This includes all the notifications dismissed in other tabs/windows.
             var local_storage = localStorage.getItem(local_storage_name);
             if(local_storage != null) {
                 seen_notifications = local_storage.split(',');
@@ -46,12 +63,13 @@ define([
 
             var current_ids = [];
 
+            // Keep track of current message IDs displayed to prevent duplication
             $.each(json, function(k, notification) {
                 show_notification(notification);
                 current_ids.push(""+notification.id);
             });
 
-            //Add removed notifications to seen list for cleanup
+            //Add removed notifications from other windows to seen list for cleanup
             $.each(notifications, function(id, notification) {
 
                 if(notification != null && $.inArray(""+id, current_ids) === -1) {
@@ -72,6 +90,10 @@ define([
         }, "json");
     }
 
+    /**
+     * Display a notification in the browser if it hasn't already been displayed or dismissed.
+     * @param notification Object with information info from Jupyterhub
+     */
     function show_notification(notification) {
 
         if (!(notification.id in notifications) && $.inArray(""+notification.id, seen_notifications) === -1) {
@@ -104,6 +126,11 @@ define([
         }
     }
 
+    /**
+     * Handler for notification dismiss on the interface.
+     * Some notifications cannot be dismissed.
+     * @param id Notification ID
+     */
     function on_close(id) {
         notifications[id].visible = false;
 
@@ -113,6 +140,11 @@ define([
         }
     }
 
+    /**
+     * Clear notifications already seen in another window/tab.
+     * If the user has multiple tabs open and dismisses a notification, it should
+     * disappear on all tabs.
+     */
     function remove_seen_notifications() {
 
         $.each(seen_notifications, function(k, id) {
