@@ -1,0 +1,43 @@
+{
+  "1. Introduction" :
+    {
+      "What is SWAN" : "intro/what_is",
+      "Jupyter notebooks" : "intro/jupyter",
+      "Cloud storage: CERNBox" : "intro/cernbox",
+      "Software: CVMFS" : "intro/cvmfs"
+    },
+  "2. Create and manage a SWAN session" :
+    {
+      "Log in" : "session/login",
+      "Select a configuration" : "session/select",
+      "Set a configuration as default" : "session/set_default",
+      "Switch to a new configuration" : "session/switch",
+      "Terminate a session" : "session/terminate",
+      "Resume a session" : "session/resume"
+    },
+  "3. Working with SWAN" :
+    {
+      "Create a Project" : "swan/create_proj",
+      "Create a Notebook" : "swan/create_notebook",
+      "Create a Folder" : "swan/create_folder",
+      "Open a Terminal" : "swan/open_terminal"
+    },
+  "4. Share your work" :
+    {
+      "Share a Project" : "share/how_to",
+      "Modify/stop a sharing" : "share/modify",
+      "Check what you share" : "share/being_shared",
+      "Check what others share with you" : "share/shared_with_me"
+    },
+  "5. CERNBox" :
+    {
+      "Browse files" : "cernbox/browse",
+      "Synchronize data from your computer" : "cernbox/sync_files"
+    },
+  "6. Advanced setup" :
+    {
+      "Install packages in CERNBox" : "advanced/install_packages",
+      "Install and enable notebook extensions" : "advanced/enable_extensions"
+    },
+  "7. Known issues" : "issues"
+}
