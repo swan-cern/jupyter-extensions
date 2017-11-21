@@ -1,0 +1,22 @@
+{
+  "name": "swannotifications",
+  "version": "0.0.1",
+  "description": "Jupyter Notebook extension to display users' notifications",
+  "keywords": [
+    "Jupyter",
+    "Extension",
+    "Notebook"
+  ],
+  "author": "Diogo Castro",
+  "devDependencies": {
+    "webpack": "^3.3.0"
+  },
+  "scripts": {
+    "webpack": "webpack -p --config webpack.config.js"
+  },
+  "dependencies": {
+    "css-loader": "^0.28.7",
+    "pnotify": "^3.2.1",
+    "style-loader": "^0.19.0"
+  }
+}
