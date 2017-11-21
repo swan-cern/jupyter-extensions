@@ -1,0 +1,6 @@
+build/
+*/node_modules/
+*/*/js/
+SparkMonitor/scalalistener/project/
+SparkMonitor/scalalistener/target/
+SparkMonitor/sparkmonitor/listener.jar
