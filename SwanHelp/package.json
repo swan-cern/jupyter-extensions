@@ -1,0 +1,18 @@
+{
+  "name": "sparkhelp",
+  "version": "0.0.1",
+  "description": "Jupyter Notebook extension to provide a help panel to users",
+  "keywords": [
+    "Jupyter",
+    "Extension",
+    "Notebook"
+  ],
+  "author": "Diogo Castro",
+  "devDependencies": {
+    "copy-webpack-plugin": "^4.2.0",
+    "webpack": "^3.3.0"
+  },
+  "scripts": {
+    "webpack": "webpack -p --config webpack.config.js"
+  }
+}

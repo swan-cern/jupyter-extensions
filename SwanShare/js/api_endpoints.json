@@ -1,0 +1,10 @@
+{
+  "domain": "https://cernbox.cern.ch",
+  "base": "/swanapi/v1",
+  "authentication": "/authenticate",
+  "shared": "/sharing",
+  "shared_with_me": "/shared",
+  "share": "/share",
+  "clone": "/clone",
+  "search": "/search"
+}

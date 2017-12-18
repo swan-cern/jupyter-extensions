@@ -1,0 +1,110 @@
+{% extends "page.html" %}
+
+{% block title %}{{page_title}}{% endblock %}
+
+
+{% block bodyclasses %}terminal-app {{super()}}{% endblock %}
+
+{% block params %}
+
+data-base-url="{{base_url | urlencode}}"
+data-ws-url="{{ws_url | urlencode}}"
+data-ws-path="{{ws_path}}"
+
+{% endblock %}
+
+{% block stylesheet %}
+{{super()}}
+
+<link rel="stylesheet" href="{{ static_url("terminal/css/override.css") }}" type="text/css" />
+<link rel="stylesheet" href="{{static_url("components/xterm.js/dist/xterm.css") }}" type="text/css" />
+{% endblock %}
+
+{% block site %}
+<div id="header"></div>
+<div id="terminado-container" class="container" style="padding-yop: 25px;padding-bottom: 10px;"></div>
+
+{% endblock %}
+
+{% block script %}
+
+<!-- Hack: this needs to be outside the display:none block, so we can measure
+     its size in JS in setting up the page. It is still invisible. Putting in
+     the script block gets it outside the initially undisplayed region. -->
+<!-- test size: 25x80 -->
+<div style='position:absolute; left:-1000em'>
+<pre id="dummy-screen" style="border: solid 5px white;" class="terminal">0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+1
+2
+3
+4
+5
+6
+7
+8
+9
+0
+1
+2
+3
+<span id="dummy-screen-rows" style="">01234567890123456789012345678901234567890123456789012345678901234567890123456789</span>
+</pre>
+</div>
+
+    {{super()}}
+
+<script src="{{ static_url('terminal/js/main.min.js') }}" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" charset="utf-8">
+
+    require([
+        'jquery',
+        'terminal/js/main',
+        'terminal/js/terminado'
+    ], function ($) {
+
+        // Test size: 25x80
+        var termRowHeight = function(){ return 1.00 * $("#dummy-screen")[0].offsetHeight / 25;};
+        // 1.02 here arrived at by trial and error to make the spacing look right
+        var termColWidth =  function() { return 1.02 * $("#dummy-screen-rows")[0].offsetWidth / 80;};
+
+        var header = $("header")[0];
+        var footer = $("footer")[0];
+
+        function calculate_size() {
+            var height = $(window).height() - header.offsetHeight - footer.offsetHeight;
+            var width = $('#terminado-container').width();
+            var rows = Math.min(1000, Math.max(20, Math.floor(height/termRowHeight())-1));
+            var cols = Math.min(1000, Math.max(40, Math.floor(width/termColWidth())-1));
+            console.log("resize to :", rows , 'rows by ', cols, 'columns');
+            return {rows: rows, cols: cols};
+        }
+
+        function resize() {
+
+            var geom = calculate_size();
+            terminal.term.resize(geom.cols, geom.rows);
+            terminal.socket.send(JSON.stringify(["set_size", geom.rows, geom.cols,
+                $(window).height(), $(window).width()]));
+        }
+
+        window.onresize = resize;
+
+        terminal.socket.addEventListener('open', function () {
+            resize();
+        });
+    });
+
+</script>
+
+
+{% endblock %}

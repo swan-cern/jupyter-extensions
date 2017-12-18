@@ -1,0 +1,2 @@
+graft sparkmonitor/js
+recursive-include sparkmonitor *.jar

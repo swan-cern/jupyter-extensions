@@ -1,0 +1,384 @@
+{% set menu = True %}
+{% set tree = True %}
+{% extends "page.html" %}
+
+{% block title %}{{page_title}}{% endblock %}
+
+
+{% block params %}
+{{super()}}
+data-base-url="{{base_url | urlencode}}"
+data-notebook-path="{{notebook_path | urlencode}}"
+data-terminals-available="{{terminals_available}}"
+data-server-root="{{server_root}}"
+{% endblock %}
+
+{% block headercontainer %}
+<span class="flex-spacer"></span>
+{% endblock %}
+
+{% block site %}
+
+  <div id="ipython-main-app" class="container">
+
+        {% if share_page %}
+        <!-- Share -->
+        <div id="share">
+          <div id="share-projects-placeholder" class="row list_item" style="display: none;">
+            <div>There are no projects shared</div>
+          </div>
+
+          <div id="shared-projects-project-element" class="list_item row" style="display: none;">
+            <div class="col-md-5 col-xs-9">
+              <div class="row">
+                <div class="col-xs-1">
+                  <i class="item_icon project_icon icon-fixed-width"></i>
+                </div>
+                <div class="col-xs-11 name">
+                  <div>
+                    <span class="item_name"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-2 hidden-xs">
+              <ul class="actions">
+                <li><a href="javascript:" class="btn-clone green">Clone</a></li>
+              </ul>
+            </div>
+            <div class="col-md-1 hidden-xs shared_size">
+            </div>
+            <div class="col-md-2 hidden-xs shared_user">
+            </div>
+            <div class="col-md-2 col-xs-3 shared_date">
+            </div>
+          </div>
+
+          <div id="sharing-projects-project-element" class="list_item row" style="display: none;">
+            <div class="col-md-5 col-xs-9">
+              <div class="row">
+                <div class="col-xs-1">
+                  <i class="item_icon project_icon icon-fixed-width"></i>
+                </div>
+                <div class="col-xs-11 name">
+                  <div>
+                    <a class="item_link" href="">
+                      <span class="item_name"></span>
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-3 hidden-xs">
+              <ul class="actions">
+                <li><a href="javascript:" class="btn-update blue">Edit sharing</a></li>
+              </ul>
+            </div>
+            <div class="col-md-2 hidden-xs shared_with">
+            </div>
+            <div class="col-md-2 col-xs-3 shared_date">
+            </div>
+          </div>
+
+          <div class="panel-group">
+            <ul class="breadcrumb">
+              <li><a href="/">SWAN</a></li>
+              <li><a href="{{base_url}}share">Share</a></li>
+
+            </ul>
+
+            <div>
+              <div class="row title-bar">
+                <div class="col-md-6">
+                  <h1>
+                    Projects shared with me
+                    <a data-toggle="collapse" data-target="#collapse-shared" href="javascript:" class="no-hover-efecct">
+                      <i class="icon-collapse"></i>
+                    </a>
+                  </h1>
+                </div>
+              </div>
+
+              <div id="collapse-shared" class="notebook_list collapse in">
+                <div id="notebook_list_header" class="row header list_header">
+                  <div class="col-md-5 col-xs-9">
+                    <div class="row">
+                      <div class="col-xs-1">
+                      </div>
+                      <div class="col-xs-11 name">
+                        Name
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-2 hidden-xs">
+                  </div>
+                  <div class="col-md-1 hidden-xs">
+                    Size
+                  </div>
+                  <div class="col-md-2 hidden-xs">
+                    Shared by
+                  </div>
+                  <div class="col-md-2 col-xs-3">
+                    Date
+                  </div>
+                </div>
+                <div id="shared-projects-list">
+                </div>
+              </div>
+            </div>
+
+            <p>&nbsp;</p>
+            <p>&nbsp;</p>
+
+            <div>
+              <div class="row title-bar">
+                <div class="col-md-6">
+                  <h1>
+                    Projects shared by me
+                    <a data-toggle="collapse" data-target="#collapse-sharing" href="javascript:" class="no-hover-efecct">
+                      <i class="icon-collapse"></i>
+                    </a>
+                  </h1>
+                </div>
+              </div>
+
+              <div id="collapse-sharing" class="notebook_list collapse in">
+                <div class="row header list_header">
+                  <div class="col-md-5 col-xs-9">
+                    <div class="row">
+                      <div class="col-xs-1">
+                      </div>
+                      <div class="col-xs-11 name">
+                        Name
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-3 hidden-xs">
+                  </div>
+                  <div class="col-md-2 hidden-xs">
+                    Shared with
+                  </div>
+                  <div class="col-md-2 col-xs-3">
+                    Date
+                  </div>
+                </div>
+                <div id="sharing-projects-list">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <!-- Tree -->
+        <div id="tree">
+          <ul class="breadcrumb">
+            <li><a href="/">SWAN</a></li>
+            {% if projects_page %}
+            <li><a href="{{base_url}}projects">My Projects</a></li>
+            {% for crumb in breadcrumbs[1:] %}
+            <li><a href="{{crumb[0]}}">{{crumb[1]}}</a></li>
+            {% endfor %}
+            {% else %}
+            <li><a href="{{base_url}}cernbox">CERNBox</a></li>
+            {% for crumb in breadcrumbs[1:] %}
+            <li><a href="{{crumb[0]}}">{{crumb[1]}}</a></li>
+            {% endfor %}
+            {% endif %}
+          </ul>
+          <div class="row title-bar">
+            <div class="col-md-6">
+              {% if projects_page %}
+              <h1>{% if breadcrumbs|length > 1 %}{{breadcrumbs[-1][1]}}{% else %}My Projects{% endif %}
+                {% if breadcrumbs|length > 1 %}<a href="{{breadcrumbs[-2][0]}}"><i class="icon-up" aria-hidden="true"></i></a>{% endif %}
+              </h1>
+              {% else %}
+              <h1>{% if breadcrumbs|length > 1 %}{{breadcrumbs[-1][1]}}{% else %}CERNBox{% endif %}
+                {% if breadcrumbs|length > 1 %}<a href="{{breadcrumbs[-2][0]}}"><i class="icon-up" aria-hidden="true"></i></a>{% endif %}
+              </h1>
+              {% endif %}
+            </div>
+            <div class="col-md-6 buttons-bar">
+              <div id="notebook_toolbar" class="row">
+
+                <div class="no-padding tree-buttons pull-right">
+                  <div class="pull-right">
+
+                    <button title="Shutdown selected notebook(s)" class="shutdown-button btn btn-default btn-xs btn-warning"><i class="fa fa-stop" aria-hidden="true"></i></button>
+                    <button title="Rename selected" class="rename-button btn btn-default btn-xs"><i class="fa fa-pencil fa-fw" aria-hidden="true"></i></button>
+                    {% if projects_page  and breadcrumbs|length == 1%}
+                    <button title="Delete selected" class="delete-button btn btn-default btn-xs btn-danger"><i class="icon-fa-times" aria-hidden="true"></i></button>
+                    <button title="Add new Project" id="new-project" class="btn btn-default btn-xs"><i class="icon-fa-plus"></i></button>
+                    {% else %}
+                    <button title="Duplicate selected" class="duplicate-button btn btn-default btn-xs"><i class="fa fa-files-o fa-fw" aria-hidden="true"></i></button>
+                    <button title="Move selected" class="move-button btn btn-default btn-xs"><i class="fa fa-scissors fa-fw" aria-hidden="true"></i></button>
+                    <button title="Download selected" class="download-button btn btn-default btn-xs"><i class="fa fa-download fa-fw" aria-hidden="true"></i></button>
+                    <button title="Delete selected" class="delete-button btn btn-default btn-xs btn-danger"><i class="icon-fa-times" aria-hidden="true"></i></button>
+                    <div class="separator"></div>
+                    <button title="Share this Project" id="share-project-button" class="btn btn-default btn-xs"><i class="fa fa-share-alt fa-fw"></i></button>
+
+                    <form id='alternate_upload'  class='alternate_upload'>
+                      <span id="notebook_list_info">
+                        <input  id="upload" title="Click to browse for a file to upload." type="file" name="datafile" class="fileinput" multiple='multiple'>
+                        <label for="upload">
+                          <span title="Upload file" class="btn btn-xs btn-default btn-upload">
+                            <i class="fa fa-upload fa-fw" aria-hidden="true"></i>
+                          </span>
+                        </label>
+                      </span>
+                    </form>
+                    <div id="new-buttons" class="btn-group">
+                      <button title="Add new..." class="dropdown-toggle btn btn-default btn-xs" data-toggle="dropdown">
+                        <i class="icon-fa-plus" aria-hidden="true"></i>
+                      </button>
+                      <ul id="new-menu" class="dropdown-menu">
+                        <li role="presentation" class="dropdown-header" id="notebook-kernels">Notebooks</li>
+                        <li class="divider"></li>
+                        <li role="presentation" id="new-file">
+                          <a role="menuitem" tabindex="-1" href="javascript:">Text File</a>
+                        </li>
+                        <li role="presentation" id="new-folder">
+                          <a role="menuitem" tabindex="-1" href="javascript:">Folder</a>
+                        </li>
+                      </ul>
+                    </div>
+                    {% endif %}
+                    <div class="btn-group">
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="notebook_list" class="notebook_list">
+            <div id="notebook_list_header" class="row header">
+              <div class="col-md-5 col-xs-9">
+                <div class="row">
+                  <div class="col-xs-1">
+                    <input type="checkbox" class="tree-selector" id="select-all">
+                  </div>
+                  <div class="col-xs-11 name">
+                    <div id="sort_name" >
+              <span class="sort-action" id="sort-name">
+                  Name
+                  <i class="fa fa-sort-asc"></i>
+              </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4 hidden-xs">
+              </div>
+              <div class="col-md-1 hidden-xs">
+                Status
+              </div>
+              <div class="col-md-2 col-xs-3">
+                <div id="last_modified">
+          <span class="sort-action" id="last-modified">
+              Modified
+              <i class="fa fa-sort-asc" style="display: none"></i>
+          </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Running -->
+        <div id="running-modal" class="modal fade right" role="dialog">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                <h4 class="modal-title">Running Processes</h4>
+              </div>
+              <div class="modal-body">
+                <div id="running" class="">
+                  <div class="panel-group" id="accordion" >
+                    <div>
+                      <div class="row title-bar">
+                        <div class="col-md-6">
+                          <h2>
+                            Terminals
+                            <a data-toggle="collapse" data-target="#running_terminals" href="javascript:">
+                              <i class="icon-collapse"></i>
+                            </a>
+                          </h2>
+                        </div>
+                      </div>
+                      <div id="running_terminals" class="notebook_list list_container collapse in">
+                        <div class="row header list_header">
+                          <div class="col-xs-9">
+                            <div class="row">
+                              <div class="col-xs-1">
+                              </div>
+                              <div class="col-xs-11 name">
+                                Name
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div id="terminal_list">
+                          <div id="terminal_list_header" class="row list_placeholder">
+                            {% if terminals_available %}
+                            <div class="list_item">There are no terminals running</div>
+                            {% else %}
+                            <div class="list_item">Terminals are unavailable</div>
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <div class="row title-bar">
+                        <div class="col-md-6">
+                          <h2>
+                            Notebooks
+                            <a data-toggle="collapse" data-target="#running_notebooks" href="javascript:">
+                              <i class="icon-collapse"></i>
+                            </a>
+                          </h2>
+                        </div>
+                      </div>
+                      <div id="running_notebooks" class="notebook_list list_container collapse in">
+                        <div class="row header list_header">
+                          <div class="col-xs-9">
+                            <div class="row">
+                              <div class="col-xs-1">
+                              </div>
+                              <div class="col-xs-11 name">
+                                Name
+                              </div>
+                            </div>
+                          </div>
+                          <div class="col-xs-3">
+                            Kernel
+                          </div>
+                        </div>
+                        <div id="running_list">
+                          <div id="running_list_placeholder" class="row list_placeholder">
+                            <div class="list_item">There are no notebooks running</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+  </div><!-- ipython-main-app  -->
+
+
+
+{% endblock %}
+
+{% block script %}
+    {{super()}}
+
+
+<script src="{{ static_url("tree/js/main.min.js") }}" type="text/javascript" charset="utf-8"></script>
+{% endblock %}
