@@ -5,7 +5,7 @@ try:
 except ImportError:
     ipykernel_imported = False
 
-import os, sys, re, json, logging, tempfile, time, subprocess, socket
+import os, sys, json, logging, tempfile, time, subprocess, socket
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
 from threading import Thread
@@ -47,7 +47,7 @@ class SparkConnector:
         # Try to get a kerberos ticket
         if action == 'sparkconn-action-auth':
 
-            if os.system("echo \"%s\" | kinit" % re.escape(msg['content']['data']['password'])) == 0:
+            if os.system("echo \"%s\" | kinit" % msg['content']['data']['password']) == 0:
                 self.send_ok('sparkconn-config')
             else:
                 self.send_error('sparkconn-auth', 'Error obtaining the ticket. Is the password correct?')
