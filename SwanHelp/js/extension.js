@@ -24,7 +24,7 @@ function load_ipython_extension() {
 
                 modal = dialog.modal({
                     draggable: false,
-                    title: 'Help',
+                    title: 'Quickstart Guide',
                     body: pages.main
                 }).attr('id', 'help-modal').addClass('right full-body');
 
@@ -137,7 +137,7 @@ function renderPage(path) {
         .attr('href', 'javascript:openPage(\'home\')')
         .addClass('no-hover-efecct')
         .append('<i class="icon-home" aria-hidden="true">')
-        .attr('title', 'Help home');
+        .attr('title', 'Quickstart Guide home');
 
     $('<p>').appendTo(html);
     $('<h2>').text(section).appendTo(html);
@@ -196,7 +196,12 @@ function renderPage(path) {
  */
 function getRenderedToc(toc) {
 
-    var html = $('<div>');
+    var html = $('<div>')
+        .addClass('home_wrapper');
+
+    html.append('<p>This guide describes the basic steps you can follow in the new interface. ' +
+        'We are working on a more comprehensive description of all the options of the new interface, ' +
+        'but this should be enough for you to get started. If you have any doubts, please ask!</p>')
 
     for (var title in toc) {
         var topics = toc[title]
