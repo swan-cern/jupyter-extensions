@@ -17,6 +17,10 @@ module.exports = {
     module: {
         rules: [
             {
+                test: /d3\.js$/,
+                use: "imports-loader?define=>false"
+            },
+            {
                 test: /\.js$/,
                 exclude: /(node_modules|bower_components)/,
                 use: {
