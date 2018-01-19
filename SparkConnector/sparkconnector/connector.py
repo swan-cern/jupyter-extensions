@@ -137,7 +137,7 @@ class SparkConnector:
             for option in opts['options']:
                 option = option.split('=',1)
                 if len(option) == 2:
-                    conf.set(option[0].strip(), option[1].strip())
+                    conf.set(option[0].strip(), eval(option[1].strip()))
 
         if 'jars' in opts:
             jars = ",".join(opts['jars'])

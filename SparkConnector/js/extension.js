@@ -385,11 +385,11 @@ SparkConnector.prototype.get_html_configuring = function (error) {
             }
         });
 
-    get_special_block(this.list_of_extrajavaoptions, 'extrajavaoptions', 'spark.driver.extraJavaOptions', 'e.g. -Opt.A=a -Opt.B=b', 'fa-cog', ' ');
+    get_special_block(this.list_of_extrajavaoptions, 'extrajavaoptions', 'spark.driver.extraJavaOptions', 'e.g. -Opt.A=a   -Opt.B=b', 'fa-cog');
 
-    get_special_block(this.list_of_jars, 'jars', 'spark.jars', 'e.g. path/to/my/file.jar, path/to/my/file2.jar', 'fa-cube', ',');
+    get_special_block(this.list_of_jars, 'jars', 'spark.jars', 'e.g. path/to/my/file.jar   path/to/my/file2.jar', 'fa-cube');
 
-    get_special_block(this.list_of_options, 'options', 'Other options', 'e.g. spark.python.profile=true', 'fa-cogs', ' ');
+    get_special_block(this.list_of_options, 'options', 'Other options', 'e.g. opt.a=&quot;a&quot;   opt.file=os.environ[\'b\']+&quot;/file.py&quot;', 'fa-cogs');
 
     $('<br><label for="include_nxcals">Bundled configurations</label><br>')
         .appendTo(html);
@@ -414,7 +414,7 @@ SparkConnector.prototype.get_html_configuring = function (error) {
         }
     });
 
-    function get_special_block(list_elems, elem, title, dfl_val, icon, sep) {
+    function get_special_block(list_elems, elem, title, dfl_val, icon) {
 
         /* Html code */
 
@@ -553,7 +553,7 @@ SparkConnector.prototype.get_html_configuring = function (error) {
             var paths = input.val();
             input.val("");
 
-            $.each(paths.split(sep), function (i, path) {
+            $.each(paths.split(/ +(?=(?:(?:[^"]*"){2})*[^"]*$)/g), function (i, path) {
 
                 path = $.trim(path);
 
