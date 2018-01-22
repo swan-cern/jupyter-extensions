@@ -263,6 +263,7 @@ define([
                     function create_new_project_success(path) {
                         modal.data('bs.modal').isShown = true;
                         modal.modal('hide');
+                        gtag('event', 'projects_created');
                         window.location.replace(that.base_url + path.replace('SWAN_projects/', 'projects/'));
                     }
 
@@ -290,7 +291,10 @@ define([
                         alert.fadeTo(4000, 500).slideUp(500, function () {
                             alert.slideUp(500);
                         });
+                        gtag('event', 'projects_error');
                     }
+
+                    gtag('event', 'projects_click_new');
 
                     return false;
                 });
