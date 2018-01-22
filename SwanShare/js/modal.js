@@ -74,6 +74,7 @@ function update_sharing() {
             function () {
                 util.alert_error_modal(modal_share, "Error trying to share the Project. Please try again.");
             });
+        gtag('event', is_start ? "sharing_start" : "sharing_update");
     }
 }
 
@@ -94,7 +95,7 @@ function stop_sharing() {
         function () {
             util.alert_error_modal(modal_share, "Error trying to stop sharing the Project. Please try again.");
         });
-
+    gtag('event', 'sharing_stop');
 }
 
 /**
@@ -155,6 +156,7 @@ function add_person(person) {
         if (persons.length === 0) {
             modal_share.find('.act-update, .act-share').attr('disabled', '');
         }
+        gtag('event', 'sharing_person_remove');
     });
     modal_share.find('.act-update, .act-share').removeAttr('disabled');
 }
@@ -234,6 +236,7 @@ function show_share_modal(project) {
                     persons.push(suggestion.data);
                     add_person(suggestion.data);
                     modal_share.find('#name-search').val('');
+                    gtag('event', 'sharing_person_add');
                 },
                 onSearchStart: function () {
                     $(this).parent().find('.error').hide();
