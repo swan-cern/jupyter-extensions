@@ -129,8 +129,8 @@ function refresh_tree_page() {
 
             var this_project_path = parent.find('.item_link').attr('href')
                 .replace(Jupyter.notebook_list.base_url + 'cernbox/', '')
-                .replace(Jupyter.notebook_list.base_url + 'projects/', 'SWAN_projects/').replace('%20', ' ')
-                .replace('#projects', '').replace('#cernbox', '').replace(/^\/|\/$/g, '');
+                .replace(Jupyter.notebook_list.base_url + 'projects/', 'SWAN_projects/')
+                .replace(/%20/g, ' ').replace(/^\/|\/$/g, '');
 
             parent.find('.sharing-button').remove();
 
