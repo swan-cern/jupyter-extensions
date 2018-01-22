@@ -49,6 +49,7 @@ function refresh_share_page() {
                 }
                 elem.find('.btn-update').on('click', function () {
                     modal.show_share_modal(project.project);
+                    gtag('event', 'sharing_share_inline');
                 });
 
                 var this_path = Jupyter.notebook_list.base_url + 'projects/' + project.project.replace('SWAN_projects/', '');
@@ -85,6 +86,7 @@ function refresh_share_page() {
                     elem.find('.shared_user').text(project.shared_by);
                     elem.find('.btn-clone').on('click', function () {
                         modal.show_clone_modal(project.project, project.shared_by);
+                        gtag('event', 'sharing_clone');
                     });
                     elem.show();
                     elem_list_shared.append(elem);
@@ -142,6 +144,7 @@ function refresh_tree_page() {
 
             share_button_list.click(function () {
                 modal.show_share_modal(this_project_path);
+                gtag('event', 'sharing_tree_inline');
                 return false;
             });
 
@@ -209,10 +212,13 @@ function start_notebook_view() {
 
                     if (folder.type === 'project') {
                         modal.show_share_modal(folder.path);
+                        gtag('event', 'sharing_notebook_header');
                     } else if (folder.type === 'directory' && folder.project) {
                         modal.show_share_modal(folder.project);
+                        gtag('event', 'sharing_notebook_header');
                     } else {
                         util.alert_error(null, "You can only share SWAN Projects. Please place this notebook inside one.");
+                        gtag('event', 'sharing_error_not_project');
                     }
                 }).fail(function (e) {
                     console.log('Error getting project path', e);
@@ -240,6 +246,7 @@ function formatBytes(bytes) {
 
 function share_button_click(project_path) {
     modal.show_share_modal(project_path);
+    gtag('event', 'sharing_tree_header');
 }
 
 function load_ipython_extension() {
