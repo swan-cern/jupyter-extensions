@@ -50,7 +50,7 @@ class ScalaMonitor:
 
         Does nothing for now as this only works if kernel is not busy.
         """
-        log.info("Comm message received: %s", str(msg))
+        log.debug("Comm message received: %s", str(msg))
 
     def register_comm(self):
         """Register a comm_target which will be used by frontend to start communication."""
@@ -109,7 +109,7 @@ class SocketThread(Thread):
                 totalMessage = pieces[-1]
                 messages = pieces[:-1]
                 for msg in messages:
-                    log.info("Message Received: \n%s\n", msg)
+                    log.debug("Message Received: \n%s\n", msg)
                     self.onrecv(msg)
             log.info("Socket Exiting Client Loop")
             client.shutdown(socket.SHUT_RDWR)
