@@ -166,6 +166,10 @@ data-notebook-path="{{notebook_path | urlencode}}"
                                                 title="Show/Hide the action icons (below menu bar)">
                                                 <a href="#">Toggle Toolbar</a>
                                             </li>
+                                            <li id="toggle_width"
+                                                title="Make the editor wider or normal size">
+                                                <a href="#">Toggle Width</a>
+                                            </li>
                                             <li id="toggle_line_numbers"
                                                 title="Show/Hide line numbers in cells">
                                                 <a href="#">Toggle Line Numbers</a>
@@ -418,6 +422,10 @@ data-notebook-path="{{notebook_path | urlencode}}"
                     menu.removeClass('stick');
                     main_app.css('padding-top', 0);
                 }
+            });
+
+            $('#toggle_width').on('click', function () {
+                $('body').toggleClass('full-width');
             });
         });
     });
