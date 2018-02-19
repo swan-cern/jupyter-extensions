@@ -76,6 +76,7 @@ function update_sharing() {
             });
         gtag('event', is_start ? "sharing_start" : "sharing_update");
     }
+    return false;
 }
 
 /**
