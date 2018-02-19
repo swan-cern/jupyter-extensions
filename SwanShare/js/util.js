@@ -73,32 +73,28 @@ function alert_error_modal(modal, message) {
 }
 
 /**
- * Show success message in the main page (outside of modal box)
+ * Show success message inside a modal box
  * Hide the current modal
- * @param modal Modal to hide
+ * @param modal Modal where to display
  * @param message Message text to display
  */
 function alert_success(modal, message) {
 
-    if (typeof modal != 'undefined') {
-        modal.data('bs.modal').isShown = true;
-        modal.modal('hide');
+
+    var html = $('<p>')
+        .addClass('success')
+        .append('<i class="icon-checked">')
+        .append(message);
+
+    modal.find('.modal-body').html(html);
+    modal.find('.modal-footer').empty();
+
+    if (modal != null) {
+        setTimeout(function(){
+            modal.data('bs.modal').isShown = true;
+            modal.modal('hide');
+        }, 850);
     }
-
-    var alert = build_alert('alert-success')
-        .hide()
-        .append(
-            $('<p/>').text(message)
-        );
-
-    var notification = $('<div/>').attr('id', 'share-notification').append(alert);
-
-    $('body').prepend(notification);
-    alert.slideDown('fast');
-
-    $("#share-notification").fadeTo(4000, 500).slideUp(500, function () {
-        $("#share-notification").slideUp(500);
-    });
 }
 
 
