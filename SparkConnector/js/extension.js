@@ -2,7 +2,15 @@ import $ from 'jquery';
 import dialog from 'base/js/dialog';
 import Jupyter from 'base/js/namespace';
 import events from 'base/js/events';
-import extra_options from './extra_options.json'
+
+import autocomplete from 'devbridge-autocomplete';
+import InlineEdit from 'inline-edit-js';
+
+import extra_options from './options/extra_options.json'
+import spark_options from './options/spark_options.json'
+
+import template_configuring from './templates/configuring.html'
+import template_connected from './templates/connected.html'
 
 
 /**
@@ -54,21 +62,8 @@ function SparkConnector() {
     }
 
     this.comm = null;
-    this.list_of_extrajavaoptions = [];
-    this.list_of_jars = [];
-    this.list_of_options = [];
-    this.include_nxcals_options = false;
 
-    var saved_options = this.get_notebook_metadata();
-
-    // If metadata about the connection is saved in the notebook, retrieve it
-    if (Object.keys(saved_options).length > 0) {
-
-        this.list_of_extrajavaoptions = saved_options.list_of_extrajavaoptions || [];
-        this.list_of_jars = saved_options.list_of_jars || [];
-        this.list_of_options = saved_options.list_of_options || [];
-        this.include_nxcals_options = saved_options.include_nxcals_options || false;
-    }
+    this.options = this.get_notebook_metadata();
 
     this.start_comm();
     events.on('kernel_connected.Kernel', $.proxy(this.start_comm, this));//Make sure there is always a comm when the kernel connects.
@@ -80,8 +75,6 @@ function SparkConnector() {
  * @param msg JSON message received
  */
 SparkConnector.prototype.on_comm_msg = function (msg) {
-
-    console.log('SparkConnector: Message received', msg);
 
     switch (msg.content.data.msgtype) {
         case 'sparkconn-action-open':
@@ -96,14 +89,13 @@ SparkConnector.prototype.on_comm_msg = function (msg) {
             break;
         default:
             show_page(this, msg.content.data.msgtype, msg.content.data.error);
-            if(msg.content.data.error) {
+            if (msg.content.data.error) {
                 gtag('event', 'spark_connector_error');
             }
             break;
     }
 
     function show_page(that, page, error) {
-
         switch (page) {
             case 'sparkconn-auth':
                 that.switch_state(that.states.auth, error);
@@ -148,7 +140,6 @@ SparkConnector.prototype.start_comm = function () {
     var that = this;
 
     if (Jupyter.notebook.kernel) {
-
         this.comm = Jupyter.notebook.kernel.comm_manager.new_comm('SparkConnector',
             {'msgtype': 'sparkconn-action-open'});
         this.comm.on_msg($.proxy(that.on_comm_msg, that));
@@ -203,14 +194,25 @@ SparkConnector.prototype.connect = function () {
     this.switch_state(this.states.connecting);
     this.save_notebook_metadata();
 
-    var memory = this.modal.find('input[name="memory"]').val();
+    var options = {};
+
+    $.each(this.options.list_of_options, function (i, option) {
+        options[option.name] = option.value
+    });
+
+    $.each(this.options.bundled_options, function (i, bundle) {
+        $.each(extra_options[bundle], function (i, option) {
+            if (!(option.name in options)) {
+                options[option.name] = option.value
+            } else if ("concatenate" in option) {
+                options[option.name] = options[option.name] + option.concatenate + option.value;
+            }
+        });
+    });
 
     this.send({
         action: 'sparkconn-action-connect',
-        memory: memory,
-        extrajavaoptions: this.include_nxcals_options ? this.list_of_extrajavaoptions.concat(extra_options.nxcals_extraopts) : this.list_of_extrajavaoptions,
-        jars: this.include_nxcals_options ? this.list_of_jars.concat(extra_options.nxcals_jars) : this.list_of_jars,
-        options: this.list_of_options
+        options: options
     });
 
     return false;
@@ -248,6 +250,75 @@ SparkConnector.prototype.cancel = function () {
 }
 
 /**
+ * Action for the Close button
+ * If the changes are not saved, asks the user if he wants to save them
+ */
+SparkConnector.prototype.close = function () {
+
+    if (!is_metadata_equal(this.options, this.get_notebook_metadata())) {
+        dialog.modal({
+            notebook: Jupyter.notebook,
+            keyboard_manager: Jupyter.keyboard_manager,
+            title: 'Unsaved changes',
+            body: 'You made changes to the Spark connector configuration. Do you want to save them?',
+            buttons: {
+                'No': {},
+                'Save': {
+                    class: 'btn-success size-100',
+                    click: $.proxy(this.save_notebook_metadata, this)
+                }
+            }
+        });
+    }
+
+    // Compare two metadata config objects to see if they are equal
+    function is_metadata_equal(first, second) {
+
+        // If the number of bundle options are different, they are different
+        if (first.bundled_options.length != second.bundled_options.length) {
+            return false;
+        }
+
+        $.each(first.bundled_options, function (i, option) {
+            if (!(option in second)) {
+                return false;
+            }
+        });
+
+        // If the number of user options are different, they are different
+        if (first.list_of_options.length != second.list_of_options.length) {
+            return false;
+        }
+
+        // Create associative arrays with the options of both objects to facilitate the comparison
+        var options_first = {};
+        var options_second = {};
+        var first_properties = [];
+
+        for (var i = 0; i < first.list_of_options.length; i++) {
+            var option = first.list_of_options[i];
+            options_first[option.name] = option.value;
+            first_properties.push(option.name);
+        }
+
+        for (var i = 0; i < second.list_of_options.length; i++) {
+            var option = second.list_of_options[i];
+            options_second[option.name] = option.value;
+        }
+
+        // Check if options with the same name have the same value
+        for (var i = 0; i < first_properties.length; i++) {
+            var property = first_properties[i];
+            if (options_first[property] !== options_second[property]) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+}
+
+/**
  * Enables the extension when the communication to the kernel is successful
  * By default, the toolbar button is visible but in disabled state
  */
@@ -266,7 +337,7 @@ SparkConnector.prototype.enable = function () {
 SparkConnector.prototype.add_toolbar_button = function () {
 
     var action = {
-        help: 'Spark Clusters connection',
+        help: 'Spark clusters connection',
         help_index: 'zz', // Sorting Order in keyboard shortcut dialog
         handler: $.proxy(this.open_modal, this)
     };
@@ -297,7 +368,7 @@ SparkConnector.prototype.open_modal = function () {
             draggable: false,
             notebook: Jupyter.notebook,
             keyboard_manager: Jupyter.keyboard_manager,
-            title: 'Spark Clusters connection',
+            title: 'Spark clusters connection',
         }).attr('id', 'sparkclusters-modal').addClass('right');
 
         this.modal.on('shown.bs.modal', function () {
@@ -311,11 +382,16 @@ SparkConnector.prototype.open_modal = function () {
 
         }).modal('show');
         this.modal.find(".modal-header").unbind("mousedown");
+
+        this.modal.on('hide.bs.modal', function () {
+            that.close();
+        });
     }
 }
 
 /**
- * Html for auth state
+ * Generates the HTML corresponding to the "auth" state of this Spark connector.
+ * In this state the user has to input the password to generate a kerberos ticket.
  * @param error Error message received upon authentication failed
  */
 SparkConnector.prototype.get_html_auth = function (error) {
@@ -349,12 +425,17 @@ SparkConnector.prototype.get_html_auth = function (error) {
 }
 
 /**
- * Html for configuring state
+ * Generates the HTML corresponding to the "configuring" state of this Spark connector.
+ * In this state the user can configure the options that will be added to SparkConf.
  * @param error Error message received upon connection failed
  */
 SparkConnector.prototype.get_html_configuring = function (error) {
 
+    this.options = this.get_notebook_metadata();
+
     var that = this;
+    var list_elements = [];
+
     var html = this.modal.find('.modal-body');
 
     if (error) {
@@ -367,315 +448,342 @@ SparkConnector.prototype.get_html_configuring = function (error) {
             .appendTo(html);
     }
 
-    $('<p>This allows you to connect to CERN IT Spark Clusters.</p>')
-        .appendTo(html);
+    html.append(template_configuring.replace('{cluster_name}', this.cluster));
 
-    $('<p>You are going to connect to:<br><span class="cluster-name">' + this.cluster + '</span></p><p>&nbsp;</p>')
-        .appendTo(html);
+    var new_option = html.find('.new-option');
+    var bundled_options = html.find('#bundled-options');
+    var options_list = html.find('.spark-options');
 
-    $('<p>You can configure the following <a href="https://spark.apache.org/docs/latest/configuration.html#available-properties" target="_blank" title="SparkConf options">options</a>:</p>')
-        .appendTo(html);
-
-    $('<br><label for="memory">spark.driver.memory</label><br>')
-        .appendTo(html);
-
-    $('<input/>')
-        .addClass('form-control')
-        .attr('name', 'memory')
-        .attr('type', 'number')
-        .attr('min', 1)
-        .attr('max', this.max_memory)
-        .attr('value', 1)
-        .appendTo(html)
-        .on('input', function () {
-            if ($(this).val() !== '' && ($(this).val() < 1 || $(this).val() > that.max_memory)) {
-                $(this).val(that.max_memory);
-            }
-        });
-
-    get_special_block(this.list_of_extrajavaoptions, 'extrajavaoptions', 'spark.driver.extraJavaOptions', 'e.g. -Opt.A=a   -Opt.B=b', 'fa-cog');
-
-    get_special_block(this.list_of_jars, 'jars', 'spark.jars', 'e.g. path/to/my/file.jar   path/to/my/file2.jar', 'fa-cube');
-
-    get_special_block(this.list_of_options, 'options', 'Other options', 'e.g. opt.a=&quot;a&quot;   opt.file=os.environ[\'b\']+&quot;/file.py&quot;', 'fa-cogs');
-
-    $('<br><label for="include_nxcals">Bundled configurations</label><br>')
-        .appendTo(html);
-    $('<div><input type="checkbox" name="include_nxcals" ' + (this.include_nxcals_options ? 'checked' : '') + '> Include NXCALS options</div>')
-        .appendTo(html)
-        .find('input').on('click', function () {
-        if (that.include_nxcals_options) {
-            hide_nxcals_options();
-        } else {
-            show_nxcals_options();
-        }
-    });
-
-    if (that.include_nxcals_options) {
-        show_nxcals_options();
-    }
-
-    var lists = html.find('.list-wrapper');
-    lists.each(function () {
-        if ($(this).find('ul li').length > 3) {
-            $(this).find('.show-more').show();
-        }
-    });
-
-    function get_special_block(list_elems, elem, title, dfl_val, icon) {
-
-        /* Html code */
-
-        var special_block = $('<div>')
-            .attr('id', elem + '_block')
-            .addClass('special-block');
-
-        $('<br><label for="' + elem + '">' + title + '</label>')
-            .appendTo(special_block);
-
-        var input_wrapper = $('<div>').addClass('input-block').appendTo(special_block);
-
-        var input = $('<input type="text" name="\' + elem + \'" class="form-control" placeholder="' + dfl_val + '">')
-            .appendTo(input_wrapper)
-            .keypress(function (e) {
-                if (e.which == 13) {
-                    if (input_wrapper.hasClass('editing')) {
-                        button_edit.click();
-                    } else {
-                        button_add.click();
-                    }
-                    return false;
-                }
-            });
-
-        var button_add = $('<button class="btn btn-default btn-primary add" title="Add"><i class="fa fa-plus" aria-hidden="true"></i></button>')
-            .appendTo(input_wrapper);
-
-        var button_edit = $('<button class="btn btn-default btn-primary edit" title="Edit"><i class="fa fa-pencil" aria-hidden="true"></i></button>')
-            .appendTo(input_wrapper);
-
-        var button_delete = $('<button class="btn btn-default btn-danger delete" title="Remove"><i class="fa fa-minus" aria-hidden="true"></i></button>')
-            .appendTo(input_wrapper);
-
-        var list_wrapper = $('<div>')
-            .attr('id', elem + '_wrapper')
-            .addClass('list-wrapper')
-            .appendTo(special_block);
-
-        var list = $('<ul>')
-            .appendTo(list_wrapper);
-
-        var show_more = $('<p class="show-more"><a href="javascript:"><i class="icon-expand"></i></a></p>')
-            .hide()
-            .appendTo(list_wrapper);
-
-        var show_less = $('<p class="show-less"><a href="javascript:"><i class="icon-collapse"></i></a></p>')
-            .hide()
-            .appendTo(list_wrapper);
-
-        // Add the elements already in the list (i.e. from the notebook metadata)
-        $.each(list_elems, function (i, path) {
-            add_path(path);
-        });
-
-        // Append after adding the elements to prevent flashing update in the screen
-        html.append(special_block);
-
-        /* Helper functions */
-
-        // Add an element to the list
-        function add_path(path) {
-            var entry = $('<li>');
-
-            $('<i class="fa fa-pencil" aria-hidden="true">')
-                .appendTo(entry);
-
-            $('<i class="fa ' + icon + '" aria-hidden="true">')
-                .appendTo(entry);
-
-            var path_elem = $('<span>')
-                .addClass('path')
-                .text(path)
-                .attr('title', path)
-                .appendTo(entry);
-
-            list.prepend(entry);
-
-            // On click show the editing buttons and the text inside input
-            entry.on('click', function () {
-
-                input.val(path);
-                input_wrapper.addClass('editing');
-
-                // Remove old actions (from the editing before)
-                button_delete.unbind();
-                button_edit.unbind();
-
-                // On remove, take the elem out of the list and update the interface
-                // Check if the height changes to see if the show more/less are still necessary
-                button_delete.on('click', function () {
-
-                    entry.remove();
-                    list_elems.splice(list_elems.indexOf(path), 1);
-                    input_wrapper.removeClass('editing');
-                    input.val("");
-
-                    if (list.height() < 120) {
-                        show_more.fadeOut();
-                        show_less.fadeOut();
-                    }
-                })
-
-                // On edit, check if the value changed
-                // If it did, check that's not already in the list, otherwise remove it
-                // Put the new value at the top of the list
-                button_edit.on('click', function () {
-                    var new_path = input.val();
-
-                    if (new_path !== path) {
-
-                        if ($.inArray(new_path, list_elems) === -1) {
-
-                            list_elems[list_elems.indexOf(path)] = new_path;
-                            path_elem.text(new_path).attr('title', new_path);
-                            path = new_path;
-                            entry.prependTo(list);
-
-                        } else {
-
-                            entry.remove();
-                            list_elems.splice(list_elems.indexOf(path), 1);
-                        }
-                    }
-
-                    input_wrapper.removeClass('editing');
-                    input.val("");
-                })
-            });
-        }
-
-        /* Events */
-
-        button_add.on('click', function () {
-
-            var paths = input.val();
-            input.val("");
-
-            $.each(paths.split(/ +(?=(?:(?:[^"]*"){2})*[^"]*$)/g), function (i, path) {
-
-                path = $.trim(path);
-
-                if (path !== "" && $.inArray(path, list_elems) === -1) {
-
-                    list_elems.push(path);
-                    add_path(path);
-                }
-            });
-        });
-
-        show_more.on('click', function () {
-
-            list_wrapper.css({
-                // Set height to prevent instant jumpdown when max height is removed
-                'height': list_wrapper.height(),
-                'max-height': 'none'
-            })
-                .animate({
-                    "height": list.outerHeight() + show_less.outerHeight()
-                }, function () {
-                    list_wrapper.css({
-                        'height': 'auto'
-                    })
-                });
-            show_more.hide();
-            show_less.fadeIn();
-
-            return false;
-        });
-
-        show_less.on('click', function () {
-
-            list_wrapper.animate({
-                "height": '120px'
-            });
-            show_less.hide();
-            show_more.fadeIn();
-
-            return false;
-        });
-
-        // Observe if the list height passed the size of the container
-        new MutationObserver(function (mutations) {
-
-            if (list.height() >= 120) {
-
-                if (show_less.css('display') === 'none') {
-                    show_more.fadeIn();
-                }
-
+    // Add the bundle options to the panel
+    $.each(extra_options, function (name, options) {
+        $('<div><input type="checkbox" ' + (that.options.bundled_options.includes(name) ? 'checked' : '') + '> Include ' + name + ' options</div>')
+            .appendTo(bundled_options)
+            .find('input').on('click', function () {
+            if (that.options.bundled_options.includes(name)) {
+                that.options.bundled_options.splice(that.options.bundled_options.indexOf(name), 1);
+                hide_bundle_option(name);
             } else {
-
-                show_more.fadeOut();
-                show_less.fadeOut();
-                list_wrapper.css({
-                    'height': 'auto',
-                    'max-height': '120px'
-                })
+                that.options.bundled_options.push(name);
+                show_bundle_option(name);
             }
-        }).observe(list.get(0), {childList: true});
-    }
+        });
+    });
 
-    // Show the NXCALS options in the interface
-    function show_nxcals_options() {
+    // Show the first step of adding an option
+    choose_option_name();
+    // Add the options saved in the notebook metadata
+    fill_options();
+    // Hightligh all the errors that might exist
+    highlight_errors();
 
-        that.include_nxcals_options = true;
+    /**
+     * Display the first input, where users enter the name of the option.
+     * If the are in step 2 (choosing the value) and decide to change the option name,
+     * this function gets called with the old name as key
+     * @param key Value to display inside the input form
+     */
+    function choose_option_name(key) {
 
-        var jars_block = that.modal.find('#jars_block');
-        var options_block = that.modal.find('#extrajavaoptions_block');
+        new_option.empty();
 
-        var jars_ul = jars_block.find('ul');
-        var options_ul = options_block.find('ul');
+        $('<label for="add_new">Add a new option</label><br>')
+            .appendTo(new_option);
 
-        $.each(extra_options.nxcals_extraopts, function (k, opt) {
+        var input = $('<input/>')
+            .addClass('form-control')
+            .attr('name', 'add_new')
+            .attr('type', 'text')
+            .attr('value', key)
+            .attr('placeholder', 'Write the option name...')
+            .appendTo(new_option)
+            .focus()
+            .devbridgeAutocomplete({
+                minChars: 1,
+                lookup: spark_options,
+                groupBy: 'category',
+                triggerSelectOnValidInput: false,
+                onSelect: function () {
+                    choose_option_value(input.val());
+                }
+            })
+            .keydown(function (e) {
+                if (e.keyCode == 13 && input.val() !== "") {
+                    choose_option_value(input.val());
+                }
+            });
+    };
 
-            var entry = $('<li>').addClass('nxcals_option');
+    /**
+     * Display the input where users can enter the value of the option.
+     * The option name is shown above the input.
+     * @param option_name Name of the option
+     */
+    function choose_option_value(option_name) {
 
-            $('<i class="fa fa-cog" aria-hidden="true">')
-                .appendTo(entry);
-            $('<span>')
-                .addClass('path')
-                .text(opt)
-                .attr('title', opt)
-                .appendTo(entry);
+        new_option.empty();
 
-            options_ul.append(entry);
+        $('<label>')
+            .addClass('option')
+            .attr('for', 'add_new')
+            .html(' ' + option_name)
+            .appendTo(new_option)
+            .on('click', function () {
+                choose_option_name(option_name);
+            })
+            .prepend('<i class="fa fa-pencil" aria-hidden="true"> ')
+            .prepend('<i class="fa fa-cog" aria-hidden="true">')
+            .append('<br>');
 
+        var input = $('<input/>')
+            .addClass('form-control')
+            .attr('name', 'add_new')
+            .attr('type', 'text')
+            .attr('placeholder', 'Write the option value... ')
+            .appendTo(new_option)
+            .focus()
+            .keydown(function (e) {
+                if (e.keyCode == 13 && input.val() !== "") {
+
+                    var option = {
+                        name: option_name,
+                        value: input.val()
+                    }
+                    that.options.list_of_options.push(option);
+                    show_option(option);
+                    highlight_errors();
+                    choose_option_name();
+                }
+            });
+
+    };
+
+    /**
+     * Add an option to the list of options
+     * @param option Object with name and value of the option being added
+     */
+    function show_option(option) {
+
+        var entry = $('<li>')
+            .addClass('editable')
+            .append('<i class="fa fa-pencil" aria-hidden="true">')
+            .append('<i class="fa fa-cog" aria-hidden="true">')
+            .append('<i class="fa fa-exclamation-circle" aria-hidden="true">');
+
+        var errors = get_errors(option);
+
+        var elem = {option: option, entry: entry, errors: errors};
+        list_elements.push(elem);
+
+        var pair = $('<ul>')
+            .appendTo(entry);
+
+        var elem_key = $('<li>')
+            .addClass('option')
+            .html(option.name)
+            .appendTo(pair);
+
+        var elem_value = $('<li>')
+            .html(option.value)
+            .appendTo(pair);
+
+        $('<span class="remove">×</span>')
+            .appendTo(entry)
+            .on('click', function () {
+                entry.remove();
+                that.options.list_of_options.splice(that.options.list_of_options.indexOf(option), 1);
+                list_elements.splice(list_elements.indexOf(elem), 1);
+                highlight_errors();
+            });
+
+        options_list.prepend(entry);
+
+        // Add the ability to edit the options names and values inline...
+        // And add the option to click "enter" to save
+
+        var editing_element_name = document.createElement('input');
+
+        $(editing_element_name).keydown(function (e) {
+            if (e.keyCode == 13) {
+                $(this).blur();
+            }
         });
 
-        $.each(extra_options.nxcals_jars, function (k, jar) {
+        new InlineEdit(elem_key.get(0), {
+            onChange: function (newValue, oldValue) {
+                if (newValue === "") {
+                    elem_key.html(oldValue);
+                } else {
+                    option.name = newValue;
+                    elem.errors = get_errors(option);
+                    highlight_errors();
+                }
+            },
+            editingElement: editing_element_name
+        });
 
-            var entry = $('<li>').addClass('nxcals_option');
+        var editing_element_value = document.createElement('input');
 
-            $('<i class="fa fa-cube" aria-hidden="true">')
-                .appendTo(entry);
-            $('<span>')
-                .addClass('path')
-                .text(jar)
-                .attr('title', jar)
-                .appendTo(entry);
+        $(editing_element_value).keydown(function (e) {
+            if (e.keyCode == 13) {
+                $(this).blur();
+            }
+        });
 
-            jars_ul.append(entry);
+        new InlineEdit(elem_value.get(0), {
+            onChange: function (newValue, oldValue) {
+                if (newValue === "") {
+                    elem_value.html(oldValue);
+                } else {
+                    option.value = newValue;
+                    elem.errors = get_errors(option);
+                    highlight_errors();
+                }
+            },
+            editingElement: editing_element_value
         });
     }
 
-    function hide_nxcals_options() {
-        that.include_nxcals_options = false;
-        that.modal.find('.nxcals_option').remove();
+    /**
+     * Get the list of static errors that adding the given option produces.
+     * These include using greater memory than the one available,
+     * or overwriting the default connection values.
+     * @param option Object with name and value of the option being added
+     * @returns {Array} Array of error messages to display
+     */
+    function get_errors(option) {
+
+        var errors = [];
+
+        if (option.name === 'spark.driver.memory' &&
+            option.value.replace('g', '') > that.max_memory) {
+
+            errors.push('Memory exceeds the container memory');
+        }
+
+        if (option.name === 'spark.driver.host' ||
+            option.name === 'spark.driver.port' ||
+            option.name === 'spark.blockManager.port' ||
+            option.name === 'spark.ui.port' ||
+            option.name === 'spark.master' ||
+            option.name === 'spark.authenticate' ||
+            option.name === 'spark.network.crypto.enabled' ||
+            option.name === 'spark.authenticate.enableSaslEncryption') {
+
+            errors.push('Redefining a SWAN configuration');
+        }
+        return errors;
+    }
+
+    /**
+     * Display the errors in the interface, and checks if there are duplicated
+     * options or options that are already present in the selected bundles.
+     */
+    function highlight_errors() {
+
+        var uniq = that.options.list_of_options
+            .map((elem) => {
+                return {count: 1, name: elem.name}
+            })
+            .reduce((a, b) => {
+                a[b.name] = (a[b.name] || 0) + b.count
+                return a
+            }, {});
+
+        var keys = Object.keys(uniq);
+        var duplicates = keys.filter((a) => uniq[a] > 1)
+
+        var duplicates_bundles = [];
+        $.each(that.options.bundled_options, function (i, bundle) {
+            $.each(extra_options[bundle], function (i, option) {
+                if (!("concatenate" in option)
+                    && keys.some(key => key === option.name)
+                    && !(option.name in duplicates_bundles)) {
+                    duplicates_bundles.push(option.name)
+                }
+            });
+        });
+
+        $.each(list_elements, function (i, elem) {
+            var elem_errors = elem.errors.slice(0);
+
+            if (duplicates.includes(elem.option.name)) {
+                elem_errors.push("Option duplicated");
+            }
+
+            if (duplicates_bundles.includes(elem.option.name)) {
+                elem_errors.push("Option redefined by bundle");
+            }
+
+            if (elem_errors.length > 0) {
+                elem.entry
+                    .addClass('warning')
+                    .attr('title', elem_errors.join('\n'));
+            } else {
+                elem.entry
+                    .removeClass('warning')
+                    .removeAttr('title');
+            }
+        });
+    }
+
+    /**
+     * Add the values from the metadata to the interface
+     */
+    function fill_options() {
+        $.each(that.options.list_of_options, function (i, option) {
+            show_option(option);
+        });
+        $.each(that.options.bundled_options, function (i, option) {
+            show_bundle_option(option);
+        });
+        highlight_errors();
+    }
+
+    /**
+     * Display the bundle individual options
+     * @param option Name of the bundle
+     */
+    function show_bundle_option(option) {
+
+        var entry = $('<li>')
+            .addClass('bundle')
+            .addClass('bundle_' + option)
+            .append('<i class="fa fa-cogs" aria-hidden="true">')
+            .appendTo(options_list);
+
+        var pair = $('<ul>')
+            .appendTo(entry);
+
+        $('<li>')
+            .addClass('option')
+            .html(option)
+            .appendTo(pair);
+
+        $.each(extra_options[option], function (i, value) {
+
+            var elem_value = $('<li>')
+                .append('<i class="fa fa-cog" aria-hidden="true">')
+                .appendTo(pair);
+
+            var list_values = $('<ul>')
+                .appendTo(elem_value);
+
+            list_values.append('<li>' + value.name + '</li><li>' + value.value + '</li>')
+        });
+    }
+
+    /**
+     * Remove the bundle individual options from the interface
+     * @param option Name of the bundle
+     */
+    function hide_bundle_option(option) {
+        html.find('.bundle_' + option).remove();
     }
 }
 
 /**
- * Html for connecting state
+ * Generates the HTML corresponding to the "connecting" state of this Spark connector.
+ * In this state the logs are displayed, while the connection is ongoing.
  */
 SparkConnector.prototype.get_html_connecting = function () {
 
@@ -706,17 +814,14 @@ SparkConnector.prototype.get_html_connecting = function () {
 }
 
 /**
- * Html for connected state
+ * Generates the HTML corresponding to the "connected" state of this Spark connector.
+ * In this state the user is informed that everything is ok and that it is connected.
  */
 SparkConnector.prototype.get_html_connected = function () {
 
     var html = this.modal.find('.modal-body');
 
-    html.html('<p class="success">You are now connected!</p><p>The following variables were instantiated:</p>' +
-        '<ul class="variables">' +
-        '<li><b>sc</b> = <a href="https://spark.apache.org/docs/2.2.0/api/python/pyspark.html#pyspark.SparkContext" target="_blank">SparkContext</a></li>' +
-        '<li><b>spark</b> = <a href="https://spark.apache.org/docs/2.2.0/api/python/pyspark.sql.html#pyspark.sql.SparkSession" target="_blank">SparkSession</a></li>' +
-        '</ul>');
+    html.html(template_connected);
 
     if (this.connecting_logs != null) {
 
@@ -777,11 +882,19 @@ SparkConnector.prototype.switch_state = function (new_state, error) {
  * @returns {*} Options list
  */
 SparkConnector.prototype.get_notebook_metadata = function () {
+
+    var to_return = {
+        list_of_options: [],
+        bundled_options: []
+    };
+
     if (Jupyter.notebook.metadata &&
         Jupyter.notebook.metadata.sparkconnect) {
-        return Jupyter.notebook.metadata.sparkconnect;
+
+        //Clone the metadata so that users can recover the old configs if they choose not to save
+        to_return = $.extend(true, to_return, Jupyter.notebook.metadata.sparkconnect);
     }
-    return {};
+    return to_return;
 }
 
 /**
@@ -789,12 +902,7 @@ SparkConnector.prototype.get_notebook_metadata = function () {
  */
 SparkConnector.prototype.save_notebook_metadata = function () {
 
-    var sparkconnect_metadata = {
-        list_of_extrajavaoptions: this.list_of_extrajavaoptions,
-        list_of_jars: this.list_of_jars,
-        list_of_options: this.list_of_options,
-        include_nxcals_options: this.include_nxcals_options
-    }
+    var sparkconnect_metadata = $.extend(true, {}, this.options);
 
     var metadata = Jupyter.notebook.metadata;
     metadata.sparkconnect = sparkconnect_metadata;

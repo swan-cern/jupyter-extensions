@@ -9,6 +9,7 @@ import os, sys, json, logging, tempfile, time, subprocess, socket
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
 from threading import Thread
+from string import Formatter
 from io import open
 
 class SparkConnector:
@@ -133,25 +134,6 @@ class SparkConnector:
     def configure(self, conf, opts):
         """ Configures the provided conf object """
 
-        if 'options' in opts:
-            for option in opts['options']:
-                option = option.split('=',1)
-                if len(option) == 2:
-                    conf.set(option[0].strip(), eval(option[1].strip()))
-
-        if 'jars' in opts:
-            jars = ",".join(opts['jars'])
-            conf.set('spark.jars', jars.format(lcgview = os.environ.get('LCG_VIEW')))
-
-        extra_options = "-Dlog4j.configuration=file:%s" % self.log4j_file
-        if 'extrajavaoptions' in opts:
-            extra_options = " ".join(opts['extrajavaoptions']) + " " + extra_options
-        conf.set('spark.driver.extraJavaOptions', extra_options)
-
-        if 'memory' in opts:
-            conf.set('spark.driver.memory', opts['memory'] + 'g')
-
-        # Set the connection configs in the end to prevent overriding from the user
         conf.set('spark.driver.host', os.environ.get('SERVER_HOSTNAME'))
         conf.set('spark.driver.port', os.environ.get('SPARK_PORT_1'))
         conf.set('spark.blockManager.port', os.environ.get('SPARK_PORT_2'))
@@ -160,6 +142,34 @@ class SparkConnector:
         conf.set('spark.authenticate', True)
         conf.set('spark.network.crypto.enabled', True)
         conf.set('spark.authenticate.enableSaslEncryption', True)
+
+        extra_java_options = "-Dlog4j.configuration=file:%s" % self.log4j_file
+
+        analytics_extra_class = "/eos/project/s/swan/public/hadoop-mapreduce-client-core-2.6.0-cdh5.7.6.jar"
+        extra_class_path = conf.get('spark.driver.extraClassPath')
+        if extra_class_path:
+            extra_class_path = extra_class_path + ":" + analytics_extra_class
+        else:
+            extra_class_path = analytics_extra_class
+
+        if 'options' in opts:
+            for name, value in opts['options'].items():
+                replaceable_values = {}
+                for _, variable, _, _ in Formatter().parse(value):
+                    if variable is not None:
+                        replaceable_values[variable] = os.environ.get(variable)
+
+                value = value.format(**replaceable_values)
+
+                if name == "spark.driver.extraJavaOptions":
+                    extra_java_options = value + " " + extra_java_options
+                elif name == "spark.driver.extraClassPath":
+                    extra_class_path = extra_class_path + ":" + value
+                else:
+                    conf.set(name, value)
+
+        conf.set('spark.driver.extraJavaOptions', extra_java_options)
+        conf.set('spark.driver.extraClassPath', extra_class_path)
 
     def create_properties_file(self, log_path):
         """ Creates a configuration file for Spark log4j """
