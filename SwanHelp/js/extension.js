@@ -7,12 +7,15 @@ var toc;
 var modal;
 var history_stack = [];
 var pages = {};
+var base_url;
 
 /**
  * Load extension
  * Loads table of contents from a json file and enables the help button
  */
 function load_ipython_extension() {
+
+    base_url = require.toUrl('.').split('?')[0];
 
     $.get(require.toUrl('./docs/toc.json'), function (response) {
 
@@ -147,10 +150,13 @@ function renderPage(path) {
         $('<h3>').text(page_title).appendTo(html);
     }
 
+    var page_html = pages[path];
+    page_html = page_html.replace(/{root_path}/g, base_url + '/')
+
     $('<div>')
         .addClass('help-content')
         .appendTo(html)
-        .append(pages[path]);
+        .append(page_html);
 
     var nav = $('<div>')
         .addClass('row')
