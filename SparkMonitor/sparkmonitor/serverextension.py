@@ -22,48 +22,76 @@ proxy_root = "/sparkmonitor"
 class SparkMonitorHandler(IPythonHandler):
     """A custom tornado request handler to proxy Spark Web UI requests."""
 
+    http = httpclient.AsyncHTTPClient()
+
     @tornado.web.asynchronous
     def get(self):
         """Handles get requests to the Spark UI
 
         Fetches the Spark Web UI from the configured ports
         """
-        http = httpclient.AsyncHTTPClient()
         # Without protocol and trailing slash
         baseurl = os.environ.get("SPARKMONITOR_UI_HOST", "127.0.0.1")
         port = os.environ.get("SPARKMONITOR_UI_PORT", "4040")
         url = "http://" + baseurl + ":" + port
-        request_path = self.request.uri[(
+
+        self.request_path = self.request.uri[(
             self.request.uri.index(proxy_root) + len(proxy_root) + 1):]
+
         self.replace_path = self.request.uri[:self.request.uri.index(
             proxy_root) + len(proxy_root)]
-        log.info(" Request_path " +
-              request_path + " \n Replace_path:" + self.replace_path)
-        backendurl = url_path_join(url, request_path)
-        self.debug_url = url
-        self.backendurl = backendurl
-        log.info("GET: \n Request uri:%s \n Port: %s \n Host: %s \n request_path: %s ", self.request.uri, os.environ.get(
-            "SPARKMONITOR_UI_PORT", "4040"), os.environ.get("SPARKMONITOR_UI_HOST", "127.0.0.1"), request_path)
-        http.fetch(backendurl, self.handle_response)
 
-    def handle_response(self, response):
+        log.debug("GET: Request uri:%s Port: %s request_path: %s replace_path: %s", self.request.uri, port, self.request_path, self.replace_path)
+
+        # Due to a bug in yarn the query parameters are dropped when redirecting
+        # Workaround: fetch the redirect url of the base path and use that url to fetch the real files
+        if self.request_path:
+            self.fetch_url(url)
+        else:
+            self.fetch_content(url)
+
+
+    def fetch_url(self, url):
+        """Fetches the root url to get the redirection url"""
+        log.debug("Fetching redirection url from: %s", url)
+        self.http.fetch(url, self.handle_url_response)
+
+
+    def handle_url_response(self, response):
+        """Gets the redirection url and uses that as base url to fetch the content"""
+        if response.error:
+            self.handle_content_response(response)
+        else:
+            url = url_path_join(response.effective_url, self.request_path)
+            self.fetch_content(url)
+
+
+    def fetch_content(self, url):
+        """Fetches the requested content"""
+        log.debug("Fetching content from: %s", url)
+        self.http.fetch(url, self.handle_content_response)
+
+
+    def handle_content_response(self, response):
         """Sends the fetched page as response to the GET request"""
+
         if response.error:
             content_type = "application/json"
             content = json.dumps({"error": "SPARK_UI_NOT_RUNNING",
-                                  "url": self.debug_url, "backendurl": self.backendurl, "replace_path": self.replace_path})
-            log.info("Spark UI not running")
+                                  "backendurl": response.effective_url, "replace_path": self.replace_path})
+            log.debug("Spark UI not running")
+
         else:
             content_type = response.headers["Content-Type"]
-            # print("SPARKSERVER: CONTENT TYPE: "+ content_type + "\n")
             if "text/html" in content_type:
                 content = replace(response.body, self.replace_path)
             elif "javascript" in content_type:
-                content = response.body.replace(
+                content = response.body.decode().replace(
                     "location.origin", "location.origin +'" + self.replace_path + "' ")
             else:
                 # Probably binary response, send it directly.
                 content = response.body
+
         self.set_header("Content-Type", content_type)
         self.write(content)
         self.finish()
