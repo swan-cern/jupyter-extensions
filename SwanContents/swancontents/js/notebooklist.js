@@ -157,6 +157,7 @@ define([
         item.data('modified', modified);
         item.data('type', model.type);
         item.find(".item_name").text(name);
+        item.find(".item_name").attr('title', name);
         var icon = parent_notebook_list.icons[model.type];
         if (running) {
             icon = 'running_' + icon;
