@@ -73,8 +73,9 @@ define([
 
     child_notebook_list.prototype.draw_notebook_list = function (list, error_msg) {
 
-        // Check if the page changed to display the loading effect
+        // Check if the page changed to display the loading effect and clean the readme from previous page
         if (this.last_path === undefined || this.last_path !== this.notebook_path) {
+            $('#readme').empty();
             this.changing_page = true;
             this.last_path = this.notebook_path;
         }
@@ -115,6 +116,16 @@ define([
                     this.add_link(model, item);
                 } catch (err) {
                     console.log('Error adding link: ' + err);
+                }
+
+                if (list.type === 'project' && model.name.toLowerCase() === 'readme.md') {
+                    var path = utils.url_path_join(
+                        this.base_url,
+                        'files',
+                        utils.encode_uri_components(model.path)
+                    );
+
+                    this.add_readme(path, this.changing_page);
                 }
             } else {
                 // Needed if the default order is not by type, where all the projects come first
@@ -731,6 +742,206 @@ define([
             select_all.data('indeterminate', true);
         }
     };
+
+    /*
+       Util functions for readme
+     */
+
+    /**
+     * Returns the extension of a given file
+     * @param path Path to the file
+     * @returns {*} Extension name or null if there isn't any
+     */
+    var extension = function (path) {
+        var parts = path.split('.');
+        parts = parts.filter(function (n) {
+            return n !== ""
+        });
+        if (parts.length > 1)
+            return parts[parts.length - 1];
+        return null;
+    };
+
+    /**
+     * Check if the path given is external (if it conaint ://)
+     * @param path Path/url to check
+     * @returns {boolean}
+     */
+    var is_external = function (path) {
+        var parts = path.split('://');
+        if (parts.length > 1)
+            return true;
+        return false;
+    };
+
+    /**
+     * Merges to paths, by replacing the relative modificators
+     * i.e. "path/to/folder" + "../../to/file.txt" becomes "path/to/file.txt"
+     * @param path1
+     * @param path2
+     * @returns {string} Joined path
+     */
+    function merge_paths(path1, path2) {
+
+        var path_elems = path1.split('/');
+
+        $.each(path2.split('/'), function (i, elem) {
+            if (elem === "..") {
+                path_elems.pop()
+            } else if (elem !== ".") {
+                path_elems.push(elem);
+            }
+        });
+        return path_elems.join('/');
+    }
+
+    /**
+     * Modal box to ask the user if it really wants to open an external url.
+     * @param url Url to open
+     */
+    window.open_external = function (url) {
+        dialog.modal({
+            notebook: Jupyter.notebook,
+            keyboard_manager: Jupyter.keyboard_manager,
+            title: 'Opening external link',
+            body: $('<p>Are you sure you want to open the following <b>external link</b>?<br>' + url + '</p>'),
+            buttons: {
+                'No': {},
+                'Open': {
+                    class: 'btn-warning',
+                    click: function () {
+                        window.open(url, '_blank');
+                    }
+                }
+            }
+        });
+    }
+
+    /**
+     * Show the content of a readme file inside a div with "readme" id
+     * @param path Path to the readme file
+     * @param change Show fadein effect
+     */
+    child_notebook_list.prototype.add_readme = function (path, change) {
+
+        var that = this;
+
+        var readme = $('#readme');
+
+        if(change) {
+            readme.hide();
+            readme.delay(70).fadeIn();
+        }
+
+        $.get(path, function (markdown) {
+
+            // Use showdown to convert markdown into HTML and xss to remove not allowed HTML elements
+            // (for security reasons).
+            // Replace the links with safer versions
+            require(['./libs/showdown.min', './libs/xss.min'], function (showdown) {
+
+                var whitelist = filterXSS.getDefaultWhiteList();
+                whitelist['h1'].push('id');
+                whitelist['h2'].push('id');
+                whitelist['h3'].push('id');
+                whitelist['h4'].push('id');
+
+                showdown.extension('clear-xss', function () {
+                    return [{
+                        type: "output",
+                        filter: function (text) {
+                            return filterXSS(text, {
+                                whiteList: whitelist,
+                                onTagAttr: function (tag, name, value, isWhiteAttr) {
+                                    if (tag == 'a') {
+                                        if (name == 'href') {
+
+                                            var folder_path = path.replace('readme.md', '');
+
+                                            var url_string;
+                                            var blank = false;
+
+                                            if (is_external(value)) { //External link. Tell that to the users
+                                                url_string = 'javascript:open_external(\'' + value + '\')';
+
+                                            } else {
+                                                //Check if the links don't spill out of this project
+                                                var temp_url = merge_paths(window.location.pathname, value);
+
+                                                if (temp_url.startsWith(window.location.pathname)) {
+
+                                                    if (!extension(value)) { //Not a file (could be a folder or anchor link)
+                                                        //Test if it's an anchor link
+                                                        if (value.startsWith('#')) {
+                                                            url_string = value;
+                                                        } else {
+                                                            url_string = temp_url;
+                                                        }
+                                                    } else { //It's a file...
+                                                        blank = true;
+                                                        //It could be a notebook or other file (and all files are currently editable for Jupyter)
+                                                        // base_url is already present in folder_path
+                                                        url_string = utils.url_path_join(
+                                                            folder_path.replace('files/', that._is_notebook({path: value}) ? 'notebooks/' : 'edit/'),
+                                                            value
+                                                        );
+                                                    }
+                                                } else { //Link outside the project: block it
+                                                    url_string = "#"
+                                                }
+                                            }
+                                            return 'href="' + url_string + '"' + (blank ? ' target="_blank"' : '');
+                                        }
+                                    }
+                                }
+                            });
+                        }
+                    }]
+                });
+                var converter = new showdown.Converter({
+                    extensions: ['clear-xss']
+                });
+                converter.setOption('ghCompatibleHeaderId', true);
+                var html = converter.makeHtml(markdown);
+
+                var panel = $('<div>')
+                    .addClass('row panel panel-default');
+
+                var heading = $('<div>')
+                    .addClass('panel-heading')
+                    .attr('data-toggle', 'collapse')
+                    .attr('data-target', '#readme .panel-body')
+                    .appendTo(panel);
+
+                $('<i>')
+                    .addClass('fa fa-fw ')
+                    .addClass(that.readme_closed ? 'fa-caret-down' : 'fa-caret-up')
+                    .appendTo(heading);
+
+                heading.append('readme.md');
+
+                var body = $('<div>')
+                    .addClass('panel-body collapse')
+                    .addClass(that.readme_closed ? '' : 'in')
+                    .appendTo(panel)
+                    .on('shown.bs.collapse', function () {
+                        heading.find('i').removeClass('fa-caret-down').addClass('fa-caret-up');
+                        that.readme_closed = false;
+                    })
+                    .on('hidden.bs.collapse', function () {
+                        heading.find('i').removeClass('fa-caret-up').addClass('fa-caret-down');
+                        that.readme_closed = true;
+                    });
+
+                $('<div>')
+                    .addClass('wrapper')
+                    .html(html)
+                    .appendTo(body);
+
+                readme.html(panel);
+            });
+        });
+    }
 
     /**
      * Update the files list
