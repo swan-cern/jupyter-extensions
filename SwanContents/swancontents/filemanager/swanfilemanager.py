@@ -95,9 +95,7 @@ class SwanFileManager(LargeFileManager):
                     os_path = os.path.join(os_dir, name)
 
                 except UnicodeDecodeError as e:
-                    self.log.warning(
-                        "failed to decode filename '%s': %s", name, e)
-
+                    self.log.warning("failed to decode filename '%s': %s", name, e)
                     continue
 
                 try:
@@ -316,6 +314,9 @@ class SwanFileManager(LargeFileManager):
         path = path.strip('/')
         os_path = self._get_os_path(path)
         rm = os.unlink
+        if not os.path.exists(os_path):
+             raise web.HTTPError(404, u'File or directory does not exist: %s' % os_path)
+
         if os.path.isdir(os_path):
             listing = os.listdir(os_path)
             # Don't delete non-empty directories.
@@ -326,10 +327,6 @@ class SwanFileManager(LargeFileManager):
                 if entry != cp_dir and entry != self.swan_default_file:
                     raise web.HTTPError(400, u'Directory %s not empty' % os_path)
 
-        elif not os.path.isfile(os_path):
-            raise web.HTTPError(404, u'File does not exist: %s' % os_path)
-
-        if os.path.isdir(os_path):
             self.log.debug("Removing directory %s", os_path)
             with self.perm_to_403():
                 shutil.rmtree(os_path)

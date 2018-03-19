@@ -1,6 +1,7 @@
 build/
 */node_modules/
 */*/js/
+!SwanContents/swancontents/js/
 SparkMonitor/scalalistener/project/
 SparkMonitor/scalalistener/target/
 SparkMonitor/sparkmonitor/listener.jar

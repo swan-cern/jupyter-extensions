@@ -67,9 +67,8 @@ function refresh_share_page() {
         $('.notebook_list.collapse ').on('hidden.bs.collapse', function () {
             $(this).parent().find('h1 i, h2 i').removeClass('icon-collapse').addClass('icon-expand');
         });
-
     });
-        
+
     api.get_shared_projects_by_me({}, function (sharing_projects_list) {
 
         var elem_list_sharing = $('#sharing-projects-list');
@@ -114,46 +113,49 @@ function refresh_share_page() {
  */
 function refresh_tree_page() {
 
-    api.get_shared_projects_by_me({}, function (sharing_projects_list) {
+    if (Jupyter.notebook_list.notebook_path === "SWAN_projects") {
 
-        var sharing_projects = [];
-        $.each(sharing_projects_list.shares, function (i, project) {
-            sharing_projects.push(project.project);
-        });
+        api.get_shared_projects_by_me({}, function (sharing_projects_list) {
 
-        $('#notebook_list').find('.project_icon').each(function () {
-
-            var parent = $(this).closest('.list_item');
-
-            var this_project_path = parent.find('.item_link').attr('href')
-                .replace(Jupyter.notebook_list.base_url + 'cernbox/', '')
-                .replace(Jupyter.notebook_list.base_url + 'projects/', 'SWAN_projects/')
-                .replace(/%20/g, ' ').replace(/^\/|\/$/g, '');
-
-            parent.find('.sharing-button').remove();
-
-            var share_button_list;
-
-            if ($.inArray(this_project_path, sharing_projects) !== -1) {
-                share_button_list = $('<li><a href="javascript:" class="sharing-button blue">Edit sharing</a></li>');
-            } else {
-                share_button_list = $('<li><a href="javascript:" class="sharing-button green">Share</a></li>');
-            }
-
-            share_button_list.click(function () {
-                modal.show_share_modal(this_project_path);
-                return false;
+            var sharing_projects = [];
+            $.each(sharing_projects_list.shares, function (i, project) {
+                sharing_projects.push(project.project);
             });
 
-            parent.find('.actions').append(share_button_list);
+            $('#notebook_list').find('.project_icon').each(function () {
 
-            if ($.inArray(this_project_path, sharing_projects) !== -1) {
-                parent.find('.sharing-indicator').show();
-            } else {
-                parent.find('.sharing-indicator').hide();
-            }
+                var parent = $(this).closest('.list_item');
+
+                var this_project_path = parent.find('.item_link').attr('href')
+                    .replace(Jupyter.notebook_list.base_url + 'cernbox/', '')
+                    .replace(Jupyter.notebook_list.base_url + 'projects/', 'SWAN_projects/')
+                    .replace(/%20/g, ' ').replace(/^\/|\/$/g, '');
+
+                parent.find('.sharing-button').remove();
+
+                var share_button_list;
+
+                if ($.inArray(this_project_path, sharing_projects) !== -1) {
+                    share_button_list = $('<li><a href="javascript:" class="sharing-button blue">Edit sharing</a></li>');
+                } else {
+                    share_button_list = $('<li><a href="javascript:" class="sharing-button green">Share</a></li>');
+                }
+
+                share_button_list.click(function () {
+                    modal.show_share_modal(this_project_path);
+                    return false;
+                });
+
+                parent.find('.actions').append(share_button_list);
+
+                if ($.inArray(this_project_path, sharing_projects) !== -1) {
+                    parent.find('.sharing-indicator').show();
+                } else {
+                    parent.find('.sharing-indicator').hide();
+                }
+            });
         });
-    });
+    }
 }
 
 /**
@@ -166,11 +168,9 @@ function start_tree_view() {
     configs['tree'].load();
 
     var refresh_function;
-    if (window.location.pathname.startsWith(Jupyter.notebook_list.base_url + 'share')) {
+    if (Jupyter.notebook_list.current_page === Jupyter.notebook_list.pages.share) {
         refresh_function = refresh_share_page;
-
-    } else if (window.location.pathname.startsWith(Jupyter.notebook_list.base_url + 'projects') ||
-        (window.location.pathname.startsWith(Jupyter.notebook_list.base_url + 'cernbox/SWAN_projects'))) {
+    } else {
         refresh_function = refresh_tree_page;
     }
 

@@ -1,5 +1,6 @@
 {% set menu = True %}
 {% set tree = True %}
+{% set projects_root = (projects_page and breadcrumbs|length == 1) %}
 {% extends "page.html" %}
 
 {% block title %}{{page_title}}{% endblock %}
@@ -171,29 +172,29 @@ data-server-root="{{server_root}}"
         {% else %}
         <!-- Tree -->
         <div id="tree">
-          <ul class="breadcrumb">
-            <li><a href="/">SWAN</a></li>
-            {% if projects_page %}
-            <li><a href="{{base_url}}projects">My Projects</a></li>
-            {% for crumb in breadcrumbs[1:] %}
-            <li><a href="{{crumb[0]}}">{{crumb[1]}}</a></li>
-            {% endfor %}
-            {% else %}
-            <li><a href="{{base_url}}cernbox">CERNBox</a></li>
-            {% for crumb in breadcrumbs[1:] %}
-            <li><a href="{{crumb[0]}}">{{crumb[1]}}</a></li>
-            {% endfor %}
-            {% endif %}
+          <ul class="breadcrumb"><!--
+            --><li><a href="/">SWAN</a></li><!--
+            -->{% if projects_page %}<!--
+            --><li><a href="{{base_url}}projects">My Projects</a></li><!--
+            -->{% for crumb in breadcrumbs[1:] %}<!--
+            --><li><a href="{{crumb[0]}}">{{crumb[1]}}</a></li>
+            {% endfor %}<!--
+            -->{% else %}<!--
+            --><li><a href="{{base_url}}cernbox">CERNBox</a></li><!--
+            -->{% for crumb in breadcrumbs[1:] %}<!--
+            --><li><a href="{{crumb[0]}}">{{crumb[1]}}</a></li><!--
+            -->{% endfor %}<!--
+            -->{% endif %}
           </ul>
           <div class="row title-bar">
             <div class="col-md-6">
               {% if projects_page %}
-              <h1>{% if breadcrumbs|length > 1 %}{{breadcrumbs[-1][1]}}{% else %}My Projects{% endif %}
-                {% if breadcrumbs|length > 1 %}<a href="{{breadcrumbs[-2][0]}}"><i class="icon-up" aria-hidden="true"></i></a>{% endif %}
+              <h1>{% if breadcrumbs|length > 1 %}{{breadcrumbs[-1][1]}}{% else %}My Projects{% endif %}<!--
+                -->{% if breadcrumbs|length > 1 %}<a href="{{breadcrumbs[-2][0]}}"><i class="icon-up" aria-hidden="true"></i></a>{% endif %}
               </h1>
               {% else %}
-              <h1>{% if breadcrumbs|length > 1 %}{{breadcrumbs[-1][1]}}{% else %}CERNBox{% endif %}
-                {% if breadcrumbs|length > 1 %}<a href="{{breadcrumbs[-2][0]}}"><i class="icon-up" aria-hidden="true"></i></a>{% endif %}
+              <h1>{% if breadcrumbs|length > 1 %}{{breadcrumbs[-1][1]}}{% else %}CERNBox{% endif %}<!--
+                -->{% if breadcrumbs|length > 1 %}<a href="{{breadcrumbs[-2][0]}}"><i class="icon-up" aria-hidden="true"></i></a>{% endif %}
               </h1>
               {% endif %}
             </div>
@@ -205,19 +206,19 @@ data-server-root="{{server_root}}"
 
                     <button title="Shutdown selected notebook(s)" class="shutdown-button btn btn-default btn-xs btn-warning"><i class="fa fa-stop" aria-hidden="true"></i></button>
                     <button title="Rename selected" class="rename-button btn btn-default btn-xs"><i class="fa fa-pencil fa-fw" aria-hidden="true"></i></button>
-                    {% if projects_page  and breadcrumbs|length == 1%}
-                    <button title="Delete selected" class="delete-button btn btn-default btn-xs btn-danger"><i class="icon-fa-times" aria-hidden="true"></i></button>
-                    <div class="separator"></div>
-                    <button title="Add new Project" id="new-project" class="btn btn-default btn-xs"><i class="icon-fa-plus"></i></button>
-                    {% else %}
-                    <button title="Duplicate selected" class="duplicate-button btn btn-default btn-xs"><i class="fa fa-files-o fa-fw" aria-hidden="true"></i></button>
-                    <button title="Move selected" class="move-button btn btn-default btn-xs"><i class="fa fa-scissors fa-fw" aria-hidden="true"></i></button>
-                    <button title="Download selected" class="download-button btn btn-default btn-xs"><i class="fa fa-download fa-fw" aria-hidden="true"></i></button>
-                    <button title="Delete selected" class="delete-button btn btn-default btn-xs btn-danger"><i class="icon-fa-times" aria-hidden="true"></i></button>
-                    <div class="separator"></div>
-                    <button title="Share this Project" id="share-project-button" class="btn btn-default btn-xs"><i class="fa fa-share-alt fa-fw"></i></button>
+                    <span class="page-projects"{% if not projects_root %} style="display:none"{% endif %}>
+                      <button title="Delete selected" class="delete-button btn btn-default btn-xs btn-danger"><i class="icon-fa-times" aria-hidden="true"></i></button>
+                      <div class="separator"></div>
+                      <button title="Add new Project" id="new-project" class="btn btn-default btn-xs"><i class="icon-fa-plus"></i></button>
+                    </span><span class="page-tree"{% if projects_root %} style="display:none"{% endif %}>
+                      <button title="Duplicate selected" class="duplicate-button btn btn-default btn-xs"><i class="fa fa-files-o fa-fw" aria-hidden="true"></i></button>
+                      <button title="Move selected" class="move-button btn btn-default btn-xs"><i class="fa fa-scissors fa-fw" aria-hidden="true"></i></button>
+                      <button title="Download selected" class="download-button btn btn-default btn-xs"><i class="fa fa-download fa-fw" aria-hidden="true"></i></button>
+                      <button title="Delete selected" class="delete-button btn btn-default btn-xs btn-danger"><i class="icon-fa-times" aria-hidden="true"></i></button>
+                      <div class="separator"></div>
+                      <button title="Share this Project" id="share-project-button" class="btn btn-default btn-xs"><i class="fa fa-share-alt fa-fw"></i></button>
 
-                    <form id='alternate_upload'  class='alternate_upload'>
+                      <form id='alternate_upload'  class='alternate_upload'>
                       <span id="notebook_list_info">
                         <input  id="upload" title="Click to browse for a file to upload." type="file" name="datafile" class="fileinput" multiple='multiple'>
                         <label for="upload">
@@ -226,23 +227,23 @@ data-server-root="{{server_root}}"
                           </span>
                         </label>
                       </span>
-                    </form>
-                    <div id="new-buttons" class="btn-group">
-                      <button title="Add new..." class="dropdown-toggle btn btn-default btn-xs" data-toggle="dropdown">
-                        <i class="icon-fa-plus" aria-hidden="true"></i>
-                      </button>
-                      <ul id="new-menu" class="dropdown-menu">
-                        <li role="presentation" class="dropdown-header" id="notebook-kernels">Notebooks</li>
-                        <li class="divider"></li>
-                        <li role="presentation" id="new-file">
-                          <a role="menuitem" tabindex="-1" href="javascript:">Text File</a>
-                        </li>
-                        <li role="presentation" id="new-folder">
-                          <a role="menuitem" tabindex="-1" href="javascript:">Folder</a>
-                        </li>
-                      </ul>
-                    </div>
-                    {% endif %}
+                      </form>
+                      <div id="new-buttons" class="btn-group">
+                        <button title="Add new..." class="dropdown-toggle btn btn-default btn-xs" data-toggle="dropdown">
+                          <i class="icon-fa-plus" aria-hidden="true"></i>
+                        </button>
+                        <ul id="new-menu" class="dropdown-menu">
+                          <li role="presentation" class="dropdown-header" id="notebook-kernels">Notebooks</li>
+                          <li class="divider"></li>
+                          <li role="presentation" id="new-file">
+                            <a role="menuitem" tabindex="-1" href="javascript:">Text File</a>
+                          </li>
+                          <li role="presentation" id="new-folder">
+                            <a role="menuitem" tabindex="-1" href="javascript:">Folder</a>
+                          </li>
+                        </ul>
+                      </div>
+                    </span>
                     <div class="btn-group">
 
                     </div>

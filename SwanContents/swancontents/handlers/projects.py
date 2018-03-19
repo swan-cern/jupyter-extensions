@@ -27,9 +27,9 @@ class ProjectsHandler(IPythonHandler):
                 comps.pop(0)
         page_title = url_path_join(*comps)
         if page_title:
-            return 'Projects - ' + page_title
+            return 'My Projects - ' + page_title
         else:
-            return 'Projects'
+            return 'My Projects'
 
     @web.authenticated
     def get(self, path=''):
@@ -37,10 +37,7 @@ class ProjectsHandler(IPythonHandler):
         path = path.strip('/')
         cm = self.contents_manager
 
-        if path == '':
-            swan_path = 'SWAN_projects'
-        else :
-            swan_path = 'SWAN_projects/' + path
+        swan_path = url_path_join('SWAN_projects', path)
 
         if cm.dir_exists(path=swan_path):
             if cm.is_hidden(swan_path):
