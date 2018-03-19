@@ -1,4 +1,7 @@
+from notebook import transutils #needs to be imported before Jupyter File Manager
 from notebook.services.contents.largefilemanager import LargeFileManager
+from .fileio import SwanFileManagerMixin
+from .handlers import SwanAuthenticatedFileHandler
 from tornado import web
 import nbformat
 from nbformat.v4 import new_notebook
@@ -6,12 +9,13 @@ from traitlets import Unicode
 import os, io
 import stat
 import shutil
+from notebook import _tz as tz
 from notebook.utils import (
     is_hidden, is_file_hidden
 )
 
 
-class SwanFileManager(LargeFileManager):
+class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
     """ SWAN File Manager Wrapper
         Adds "Project" as a new type of folder
     """
@@ -22,6 +26,23 @@ class SwanFileManager(LargeFileManager):
     untitled_project = Unicode("Project", config=True,
         help="The base name used when creating untitled projects."
     )
+
+    def _files_handler_params_default(self):
+        """
+            Define the root path for tornado StaticFileHandler object
+            This is necessary to open files from other users (for sharing tab)
+        """
+        if self.root_dir.startswith('/eos/user') :
+            return {'path': '/eos/user', 'default_path' : self.root_dir}
+        else:
+            return {'path': self.root_dir}
+
+    def _files_handler_class_default(self):
+        """
+            Return a SWAN personalised AuthenticatedFileHandler in order
+            to access files in other users paths
+        """
+        return SwanAuthenticatedFileHandler
 
     def _get_project_path(self, path):
         """ Return the project path where the path provided belongs to """

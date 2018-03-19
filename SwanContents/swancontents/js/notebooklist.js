@@ -14,6 +14,7 @@ define([
      */
 
     var swan_projects_name = 'SWAN_projects'
+    var swan_share_root = 'swan_sharing_folder'
 
     var parent_notebook_list = notebook_list.NotebookList;
     var child_notebook_list = function (selector, options) {
@@ -155,12 +156,25 @@ define([
          */
 
 
-        if (list.type === 'project') {
-            show_share_button(list.path);
+        if (list.type === 'project' || list.path.startsWith(swan_share_root)) {
+            show_share_related_buttons(list.path);
         } else if (list.type === 'directory' && list.project) {
-            show_share_button(list.project);
+            show_share_related_buttons(list.project);
         } else {
+            hide_share_related_buttons()
+        }
+
+        function show_share_related_buttons(path) {
+            if (path.startsWith(swan_share_root)) {
+                show_clone_button(path);
+            } else {
+                show_share_button(path);
+            }
+        }
+
+        function hide_share_related_buttons() {
             $('#share-project-button').hide();
+            $('#clone-button').hide();
         }
 
         function show_share_button(project) {
@@ -176,6 +190,26 @@ define([
             });
 
             share_button.show();
+        }
+
+        function show_clone_button(path) {
+
+            var clone_button = $('#clone-button');
+            clone_button.unbind();
+
+            path = path.split('/');
+
+            if (path.length >= 3) {
+                clone_button.on('click', function () {
+                    require(['nbextensions/swanshare/extension'], function (share) {
+                        share.clone_project(utils.url_path_join(swan_projects_name, path[2]), path[1]);
+                    }, function (err) {
+                        console.log('Failure while loading swanshare lib');
+                    });
+                });
+
+                clone_button.show();
+            }
         }
     };
 
@@ -197,15 +231,23 @@ define([
             icon = 'running_' + icon;
         }
         var uri_prefix = parent_notebook_list.uri_prefixes[model.type];
-        if (model.type === 'file' && this._is_viewable(model)) {
-            uri_prefix = 'view';
-        }
-        if (model.type === 'file' && this._is_pdflike(model)) {
-            uri_prefix = 'files';
-        }
 
-        if (model.type === 'file' && this._is_notebook(model)) {
-            uri_prefix = 'notebooks';
+        if (this.current_page === this.pages.share) {
+            uri_prefix = 'view';
+            if (model.type === 'notebook' || (model.type === 'file' && this._is_notebook(model))) {
+                uri_prefix = 'notebook';
+            }
+        } else if (model.type === 'file') {
+            if (this._is_viewable(model)) {
+                uri_prefix = 'view';
+            }
+            if (this._is_pdflike(model)) {
+                uri_prefix = 'files';
+            }
+
+            if (this._is_notebook(model)) {
+                uri_prefix = 'notebooks';
+            }
         }
 
         item.find(".item_icon").addClass(icon).addClass('icon-fixed-width');
@@ -740,9 +782,17 @@ define([
         );
 
         // Add the current page
-        $('<li/>')
-            .appendTo(breadcrumb)
-            .append(get_link(this.current_page.title, ''));
+        // The base share tab page does not load dynamically, so the link should be a normal one
+        if (this.current_page === this.pages.share) {
+
+            $('<li/>')
+                .appendTo(breadcrumb)
+                .append('<a href="' + base_url + '">' + this.current_page.title + '</a>');
+        } else {
+            $('<li/>')
+                .appendTo(breadcrumb)
+                .append(get_link(this.current_page.title, ''));
+        }
 
         if (this.notebook_path !== "" &&
             (this.current_page !== this.pages.projects || this.notebook_path !== swan_projects_name)) {
@@ -751,14 +801,25 @@ define([
             var up_button = null;
 
             var paths = this.notebook_path.split('/');
-            if (this.current_page === this.pages.projects) {
+            if (this.current_page === this.pages.projects || this.current_page === this.pages.share) {
                 paths = paths.slice(1);
+
+                if (paths.length == 2) {
+                    up_button = '<a href="' + base_url + '"><i class="icon-up" aria-hidden="true"></i></a>';
+                }
             }
 
             for (var i = 0; i < paths.length; i++) {
 
                 path_parts.push(paths[i]);
                 var path = path_parts.join('/');
+
+                if (i == 0 && this.current_page === this.pages.share) {
+                    $('<li/>')
+                        .appendTo(breadcrumb)
+                        .append(paths[i]);
+                    continue;
+                }
 
                 if (i == paths.length - 2) {
                     up_button = get_link(path, path, '<i class="icon-up" aria-hidden="true"></i>');
@@ -829,6 +890,8 @@ define([
 
         if (this.current_page === this.pages.projects) {
             this.update_location(utils.url_path_join(swan_projects_name, path));
+        } else if (this.current_page === this.pages.share) {
+            this.update_location(utils.url_path_join(swan_share_root, path));
         } else {
             this.update_location(path);
         }

@@ -22,7 +22,7 @@ data-server-root="{{server_root}}"
 
   <div id="ipython-main-app" class="container">
 
-        {% if share_page %}
+        {% if share_page and not share_tree %}
         <!-- Share -->
         <div id="share">
           <div id="share-projects-placeholder" class="row list_item" style="display: none;">
@@ -37,7 +37,9 @@ data-server-root="{{server_root}}"
                 </div>
                 <div class="col-xs-11 name">
                   <div>
-                    <span class="item_name"></span>
+                    <a class="item_link" href="">
+                      <span class="item_name"></span>
+                    </a>
                   </div>
                 </div>
               </div>
@@ -85,7 +87,6 @@ data-server-root="{{server_root}}"
             <ul class="breadcrumb">
               <li><a href="/">SWAN</a></li>
               <li><a href="{{base_url}}share">Share</a></li>
-
             </ul>
 
             <div>
@@ -179,6 +180,12 @@ data-server-root="{{server_root}}"
             -->{% for crumb in breadcrumbs[1:] %}<!--
             --><li><a href="{{crumb[0]}}">{{crumb[1]}}</a></li>
             {% endfor %}<!--
+            -->{% elif share_page %}<!--
+            --><li><a href="{{base_url}}share">Share</a></li><!--
+            --><li>{{breadcrumbs[1][1]}}</li><!--
+            -->{% for crumb in breadcrumbs[2:] %}<!--
+            --><li><a href="{{crumb[0]}}">{{crumb[1]}}</a></li><!--
+            -->{% endfor %}<!--
             -->{% else %}<!--
             --><li><a href="{{base_url}}cernbox">CERNBox</a></li><!--
             -->{% for crumb in breadcrumbs[1:] %}<!--
@@ -192,6 +199,10 @@ data-server-root="{{server_root}}"
               <h1>{% if breadcrumbs|length > 1 %}{{breadcrumbs[-1][1]}}{% else %}My Projects{% endif %}<!--
                 -->{% if breadcrumbs|length > 1 %}<a href="{{breadcrumbs[-2][0]}}"><i class="icon-up" aria-hidden="true"></i></a>{% endif %}
               </h1>
+              {% elif share_page %}
+              <h1>{{breadcrumbs[-1][1]}}<!--
+               --><a href="{% if breadcrumbs|length > 3 %}{{breadcrumbs[-2][0]}}{% else %}{{base_url}}share{% endif %}"><i class="icon-up" aria-hidden="true"></i></a>
+              </h1>
               {% else %}
               <h1>{% if breadcrumbs|length > 1 %}{{breadcrumbs[-1][1]}}{% else %}CERNBox{% endif %}<!--
                 -->{% if breadcrumbs|length > 1 %}<a href="{{breadcrumbs[-2][0]}}"><i class="icon-up" aria-hidden="true"></i></a>{% endif %}
@@ -204,6 +215,11 @@ data-server-root="{{server_root}}"
                 <div class="no-padding tree-buttons pull-right">
                   <div class="pull-right">
 
+                  {% if share_page %}
+                    <button title="Download selected" class="download-button btn btn-default btn-xs"><i class="fa fa-download fa-fw" aria-hidden="true"></i></button>
+                    <div class="separator"></div>
+                    <button title="Clone project" id="clone-button" class="btn btn-default btn-xs"><i class="icon-clone" aria-hidden="true"></i></button>
+                  {% else %}
                     <button title="Shutdown selected notebook(s)" class="shutdown-button btn btn-default btn-xs btn-warning"><i class="fa fa-stop" aria-hidden="true"></i></button>
                     <button title="Rename selected" class="rename-button btn btn-default btn-xs"><i class="fa fa-pencil fa-fw" aria-hidden="true"></i></button>
                     <span class="page-projects"{% if not projects_root %} style="display:none"{% endif %}>
@@ -244,6 +260,7 @@ data-server-root="{{server_root}}"
                         </ul>
                       </div>
                     </span>
+                  {% endif %}
                     <div class="btn-group">
 
                     </div>

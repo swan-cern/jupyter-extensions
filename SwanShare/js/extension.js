@@ -42,14 +42,19 @@ function refresh_share_page() {
                 var elem = elem_template.clone();
                 elem.attr('id', '');
                 var name = project.project.split('/');
-                elem.find('.item_name').text(name[name.length - 1]);
+                name = name[name.length - 1];
+                elem.find('.item_name').text(name);
                 elem.find('.shared_date').text(utils.format_datetime(project.shared_with[0].created));
                 elem.find('.shared_date').attr("title", moment(project.shared_with[0].created).format("YYYY-MM-DD HH:mm"));
                 elem.find('.shared_size').text(formatBytes(project.size));
                 elem.find('.shared_user').text(project.shared_by);
                 elem.find('.btn-clone').on('click', function () {
-                    modal.show_clone_modal(project.project, project.shared_by);
+                    clone_project(project.project, project.shared_by);
                 });
+
+                var this_path = Jupyter.notebook_list.base_url + 'share/' + project.shared_by + '/' + name;
+                elem.find('.item_link').attr('href', this_path);
+
                 elem.show();
                 elem_list_shared.append(elem);
             });
@@ -242,6 +247,10 @@ function share_button_click(project_path) {
     modal.show_share_modal(project_path);
 }
 
+function clone_project(project, shared_by) {
+    modal.show_clone_modal(project, shared_by);
+}
+
 function load_ipython_extension() {
     if (Jupyter.notebook != null) {
         start_notebook_view();
@@ -252,5 +261,6 @@ function load_ipython_extension() {
 
 export {
     share_button_click,
+    clone_project,
     load_ipython_extension
 }
