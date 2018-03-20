@@ -434,6 +434,11 @@ define([
                 $(sort_on === 'last-modified' ? "#sort-name i" : "#last-modified i").hide();
                 $("#" + sort_on + " i").show();
             });
+
+            $('.extend_name').on('click', function () {
+                $(this).parent().parent().parent().parent().toggleClass("extended_names");
+                $(this).find('i').toggleClass("fa-compress fa-expand");
+            });
         }
     };
 
