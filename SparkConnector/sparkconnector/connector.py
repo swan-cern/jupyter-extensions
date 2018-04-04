@@ -168,8 +168,16 @@ class SparkConnector:
                 else:
                     conf.set(name, value)
 
+        ld_library_path = conf.get('spark.executorEnv.LD_LIBRARY_PATH')
+        if ld_library_path:
+            ld_library_path = ld_library_path + ":" + os.environ.get('LD_LIBRARY_PATH')
+        else:
+            ld_library_path = os.environ.get('LD_LIBRARY_PATH')
+
+
         conf.set('spark.driver.extraJavaOptions', extra_java_options)
         conf.set('spark.driver.extraClassPath', extra_class_path)
+        conf.set('spark.executorEnv.LD_LIBRARY_PATH', ld_library_path)
 
     def create_properties_file(self, log_path):
         """ Creates a configuration file for Spark log4j """
