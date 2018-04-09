@@ -25,7 +25,7 @@
     {
       "name": "spark.jars.packages",
       "concatenate": ",",
-      "value": "com:databricks:spark-avro_2.11:4.0.0"
+      "value": "com.databricks:spark-avro_2.11:4.0.0"
     }
 ]
 }
