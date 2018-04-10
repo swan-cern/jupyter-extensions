@@ -14,5 +14,9 @@
   },
   "scripts": {
     "webpack": "webpack -p --config webpack.config.js"
+  },
+  "dependencies": {
+    "showdown": "^1.8.6",
+    "xss": "^0.3.7"
   }
 }

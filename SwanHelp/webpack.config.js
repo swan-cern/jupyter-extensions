@@ -8,10 +8,6 @@ module.exports = {
         filename: 'extension.js',
         libraryTarget: 'umd'
     },
-    externals: ['jquery', 'require', 'base/js/dialog'],
-    plugins: [
-        new CopyWebpackPlugin([
-            { from: './help', to: 'docs'  }
-            ])
-        ]
+    externals: ['jquery', 'require', 'base/js/dialog', 'codemirror/lib/codemirror',
+        'codemirror/mode/python/python', 'notebook/js/codemirror-ipython']
 };
