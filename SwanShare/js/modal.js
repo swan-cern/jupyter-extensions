@@ -221,6 +221,11 @@ function show_share_modal(project) {
                                 return null; // Return null to remove from the suggestions
                             }
 
+                            // TO BE REMOVED
+                            if (item.account_type === "egroup" || item.account_type === "unixgroup") {
+                                return null; // Return null to remove from the suggestions
+                            }
+
                             var converted_data = {
                                 name: item.cn,
                                 entity: item.account_type === "egroup" ? "egroup" : (item.account_type === "unixgroup" ? "g" : "u"),
