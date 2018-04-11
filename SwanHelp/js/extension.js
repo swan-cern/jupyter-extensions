@@ -34,7 +34,6 @@ function load_ipython_extension() {
                 modal.on('hidden.bs.modal', function () {
                     history_stack.splice(0);
                 });
-                gtag('event', 'help_click');
             })
             .parent().removeClass('disabled');
     }, "json");
