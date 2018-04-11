@@ -89,9 +89,6 @@ SparkConnector.prototype.on_comm_msg = function (msg) {
             break;
         default:
             show_page(this, msg.content.data.msgtype, msg.content.data.error);
-            if (msg.content.data.error) {
-                gtag('event', 'spark_connector_error');
-            }
             break;
     }
 
@@ -102,11 +99,9 @@ SparkConnector.prototype.on_comm_msg = function (msg) {
                 break;
             case 'sparkconn-config':
                 that.switch_state(that.states.configuring, error);
-                gtag('event', 'spark_connector_config');
                 break;
             case 'sparkconn-connected':
                 that.switch_state(that.states.connected);
-                gtag('event', 'spark_connector_connected');
                 break;
         }
     }
@@ -358,8 +353,6 @@ SparkConnector.prototype.add_toolbar_button = function () {
  */
 SparkConnector.prototype.open_modal = function () {
 
-    gtag('event', 'spark_connector_click');
-
     if (this.enabled && !(this.modal && this.modal.data('bs.modal') && this.modal.data('bs.modal').isShown)) {
         var that = this;
 
@@ -373,7 +366,6 @@ SparkConnector.prototype.open_modal = function () {
 
         this.modal.on('shown.bs.modal', function () {
             that.modal.find("input").first().focus();
-            gtag('event', 'spark_connector_show_modal');
         });
 
         this.modal.on('show.bs.modal', function () {

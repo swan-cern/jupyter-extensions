@@ -91,16 +91,6 @@
 
     </script>
 
-    <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-112763672-1"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-
-        gtag('config', 'UA-112763672-1');
-    </script>
-
     {% block meta %}
     {% endblock %}
 
@@ -139,33 +129,33 @@ dir="ltr">
                       <div id="options-buttons" class="btn-group">
                           {% if tree %}
                               {% if terminals_available %}
-                              <button id="new-terminal" onclick="gtag('event', 'interface_button_terminal')" role="presentation" class="btn btn-default btn-xs" title="New Terminal">
+                              <button id="new-terminal" role="presentation" class="btn btn-default btn-xs" title="New Terminal">
                                   <i class="fa fa-terminal" aria-hidden="true"></i>
                               </button>
                               {% endif %}
                           {% endif %}
-                          <button class="dropdown-toggle btn btn-default btn-xs" onclick="gtag('event', 'interface_button_options')" data-toggle="dropdown" title="Options">
+                          <button class="dropdown-toggle btn btn-default btn-xs" data-toggle="dropdown" title="Options">
                               <i class="icon-more" aria-hidden="true"></i>
                           </button>
                           <ul id="options-menu" class="dropdown-menu">
                               {% if tree %}
                               <li>
-                                  <a href="#" data-toggle="modal" data-target="#running-modal" onclick="gtag('event', 'interface_button_running')">Running Processes</a>
+                                  <a href="#" data-toggle="modal" data-target="#running-modal">Running Processes</a>
                               </li>
                               <li>
-                                  <a href="{{base_url}}nbextensions" onclick="gtag('event', 'interface_button_nbextensions')">Nbextensions configuration</a>
+                                  <a href="{{base_url}}nbextensions">Nbextensions configuration</a>
                               </li>
                               {% endif %}
                               <li role="presentation">
-                                  <a id="change-config" href="javascript:" onclick="gtag('event', 'interface_button_change_config')">Change configuration</a>
+                                  <a id="change-config" href="javascript:">Change configuration</a>
                               </li>
                               <li class="divider"></li>
                               <li role="presentation" class="disabled">
-                                  <a id="help-button" href="javascript:"  onclick="gtag('event', 'interface_button_guide')">Quickstart Guide</a>
+                                  <a id="help-button" href="javascript:">Quickstart Guide</a>
                               </li>
                           </ul>
                       </div>
-                      <button class="btn btn-default btn-xs" onclick="javascript: window.location = '{{base_url}}logout'" onclick="gtag('event', 'interface_button_logout')" title="Log out">
+                      <button class="btn btn-default btn-xs" onclick="javascript: window.location = '{{base_url}}logout'" title="Log out">
                           <i class="fa fa-sign-out" aria-hidden="true"></i>
                       </button>
                   </div>
@@ -183,9 +173,9 @@ dir="ltr">
               {% if menu %}
               <div id="menu">
                   <ul class="nav nav-tabs">
-                      <li {%if projects_page%} class="active"{%endif%}><a href="{{base_url}}projects" onclick="gtag('event', 'interface_tab_projects')"><i class="fa fa-archive" aria-hidden="true"></i><span class="text">Projects</span></a></li>
-                      <li {%if share_page%} class="active"{%endif%}><a href="{{base_url}}share" onclick="gtag('event', 'interface_tab_share')"><i class="fa fa-share-alt" aria-hidden="true"></i><span class="text">Share</span></a></li>
-                      <li {%if not projects_page and not share_page%} class="active"{%endif%}><a href="{{base_url}}cernbox" onclick="gtag('event', 'interface_tab_cernbox')"><i class="icon-cernbox-abstract" aria-hidden="true"></i><span class="text">CERNBox</span></a></li>
+                      <li {%if projects_page%} class="active"{%endif%}><a href="{{base_url}}projects"><i class="fa fa-archive" aria-hidden="true"></i><span class="text">Projects</span></a></li>
+                      <li {%if share_page%} class="active"{%endif%}><a href="{{base_url}}share"><i class="fa fa-share-alt" aria-hidden="true"></i><span class="text">Share</span></a></li>
+                      <li {%if not projects_page and not share_page%} class="active"{%endif%}><a href="{{base_url}}cernbox"><i class="icon-cernbox-abstract" aria-hidden="true"></i><span class="text">CERNBox</span></a></li>
                   </ul>
               </div>
               {% endif %}
@@ -245,7 +235,6 @@ dir="ltr">
                     'Change': {
                         class: 'btn-warning',
                         click: function () {
-                            gtag('event', 'change_config');
                             window.location.replace('/hub/home#changeconfig');
                         }
                     }
