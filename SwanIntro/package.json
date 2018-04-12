@@ -1,0 +1,24 @@
+{
+  "name": "sparkintro",
+  "version": "0.0.1",
+  "description": "SWAN extension to show an information pop up to new users",
+  "keywords": [
+    "Jupyter",
+    "Extension",
+    "Notebook"
+  ],
+  "author": "Diogo Castro",
+  "devDependencies": {
+    "copy-webpack-plugin": "^4.2.0",
+    "html-loader": "^0.5.1",
+    "webpack": "^3.3.0"
+  },
+  "scripts": {
+    "webpack": "webpack -p --config webpack.config.js",
+    "watch": "webpack --watch --config webpack.config.js"
+  },
+  "dependencies": {
+    "lory.js": "^2.4.2",
+    "tiny-slider": "^2.6.0"
+  }
+}
