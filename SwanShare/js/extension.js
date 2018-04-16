@@ -27,6 +27,49 @@ var configs = {
  */
 function refresh_share_page() {
 
+    api.get_shared_projects_with_me({}, function (shared_projects) {
+
+        /*
+         Put shared files in shared tab
+         */
+        var elem_list_shared = $('#shared-projects-list');
+        elem_list_shared.html('');
+
+        if (shared_projects.shares.length > 0) {
+            var elem_template = $('#shared-projects-project-element');
+
+            $.each(shared_projects.shares, function (i, project) {
+                var elem = elem_template.clone();
+                elem.attr('id', '');
+                var name = project.project.split('/');
+                elem.find('.item_name').text(name[name.length - 1]);
+                elem.find('.shared_date').text(utils.format_datetime(project.shared_with[0].created));
+                elem.find('.shared_date').attr("title", moment(project.shared_with[0].created).format("YYYY-MM-DD HH:mm"));
+                elem.find('.shared_size').text(formatBytes(project.size));
+                elem.find('.shared_user').text(project.shared_by);
+                elem.find('.btn-clone').on('click', function () {
+                    modal.show_clone_modal(project.project, project.shared_by);
+                });
+                elem.show();
+                elem_list_shared.append(elem);
+            });
+
+        } else {
+            var elem = $('#share-projects-placeholder').clone();
+            elem.show();
+            elem_list_shared.append(elem);
+        }
+
+        $('.notebook_list.collapse ').on('shown.bs.collapse', function () {
+            $(this).parent().find('h1 i, h2 i').removeClass('icon-expand').addClass('icon-collapse');
+        });
+
+        $('.notebook_list.collapse ').on('hidden.bs.collapse', function () {
+            $(this).parent().find('h1 i, h2 i').removeClass('icon-collapse').addClass('icon-expand');
+        });
+
+    });
+        
     api.get_shared_projects_by_me({}, function (sharing_projects_list) {
 
         var elem_list_sharing = $('#sharing-projects-list');
@@ -62,49 +105,6 @@ function refresh_share_page() {
             elem.show();
             elem_list_sharing.append(elem);
         }
-
-        api.get_shared_projects_with_me({}, function (shared_projects) {
-
-            /*
-             Put shared files in shared tab
-             */
-            var elem_list_shared = $('#shared-projects-list');
-            elem_list_shared.html('');
-
-            if (shared_projects.shares.length > 0) {
-                var elem_template = $('#shared-projects-project-element');
-
-                $.each(shared_projects.shares, function (i, project) {
-                    var elem = elem_template.clone();
-                    elem.attr('id', '');
-                    var name = project.project.split('/');
-                    elem.find('.item_name').text(name[name.length - 1]);
-                    elem.find('.shared_date').text(utils.format_datetime(project.shared_with[0].created));
-                    elem.find('.shared_date').attr("title", moment(project.shared_with[0].created).format("YYYY-MM-DD HH:mm"));
-                    elem.find('.shared_size').text(formatBytes(project.size));
-                    elem.find('.shared_user').text(project.shared_by);
-                    elem.find('.btn-clone').on('click', function () {
-                        modal.show_clone_modal(project.project, project.shared_by);
-                    });
-                    elem.show();
-                    elem_list_shared.append(elem);
-                });
-
-            } else {
-                var elem = $('#share-projects-placeholder').clone();
-                elem.show();
-                elem_list_shared.append(elem);
-            }
-
-            $('.notebook_list.collapse ').on('shown.bs.collapse', function () {
-                $(this).parent().find('h1 i, h2 i').removeClass('icon-expand').addClass('icon-collapse');
-            });
-
-            $('.notebook_list.collapse ').on('hidden.bs.collapse', function () {
-                $(this).parent().find('h1 i, h2 i').removeClass('icon-collapse').addClass('icon-expand');
-            });
-
-        });
     });
 }
 
