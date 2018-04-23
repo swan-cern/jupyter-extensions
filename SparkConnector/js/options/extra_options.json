@@ -27,5 +27,36 @@
       "concatenate": ",",
       "value": "com.databricks:spark-avro_2.11:4.0.0"
     }
+],
+ "EOS_ROOT": [
+    {
+      "name": "spark.executor.extraLibraryPath",
+      "concatenate": ",",
+      "value": "/usr/local/lib"
+    },
+    {
+      "name": "spark.yarn.dist.files",
+      "concatenate": ",",
+      "value": "{KRB5CCNAME}#krbcache,/eos/project/s/swan/public/PhysicsAnalysis/histogrammar.zip"
+    },
+      "name": "spark.executorEnv.KRB5CCNAME",
+      "value": "./krbcache"
+    },
+    {
+      "name": "spark.driver.extraLibraryPath",
+      "concatenate": ",",
+      "value": "/eos/project/s/swan/public/PhysicsAnalysis/lib"
+    },
+    {
+      "name": "spark.driver.extraClassPath",
+      "concatenate": ",",
+      "value": "/eos/project/s/swan/public/PhysicsAnalysis/EOSfs.jar"
+    },
+    {
+      "name": "spark.jars.packages",
+      "concatenate": ",",
+      "value": "org.diana-hep:spark-root_2.11:0.1.15,org.diana-hep:histogrammar-sparksql_2.11:1.0.4"
+    }
 ]
+
 }
