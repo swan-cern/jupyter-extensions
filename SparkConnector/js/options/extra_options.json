@@ -39,6 +39,7 @@
       "concatenate": ",",
       "value": "{KRB5CCNAME}#krbcache,/eos/project/s/swan/public/PhysicsAnalysis/histogrammar.zip"
     },
+    {
       "name": "spark.executorEnv.KRB5CCNAME",
       "value": "./krbcache"
     },
