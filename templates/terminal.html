@@ -20,6 +20,10 @@ data-ws-path="{{ws_path}}"
 <link rel="stylesheet" href="{{static_url("components/xterm.js/dist/xterm.css") }}" type="text/css" />
 {% endblock %}
 
+{% block headercontainer %}
+<span id="save_widget" class="save_widget"></span>
+{% endblock headercontainer %}
+
 {% block site %}
 <div id="header"></div>
 <div id="terminado-container" class="container" style="padding-yop: 25px;padding-bottom: 10px;"></div>

@@ -1,4 +1,7 @@
+from notebook import transutils #needs to be imported before Jupyter File Manager
 from notebook.services.contents.largefilemanager import LargeFileManager
+from .fileio import SwanFileManagerMixin
+from .handlers import SwanAuthenticatedFileHandler
 from tornado import web
 import nbformat
 from nbformat.v4 import new_notebook
@@ -6,12 +9,13 @@ from traitlets import Unicode
 import os, io
 import stat
 import shutil
+from notebook import _tz as tz
 from notebook.utils import (
     is_hidden, is_file_hidden
 )
 
 
-class SwanFileManager(LargeFileManager):
+class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
     """ SWAN File Manager Wrapper
         Adds "Project" as a new type of folder
     """
@@ -22,6 +26,23 @@ class SwanFileManager(LargeFileManager):
     untitled_project = Unicode("Project", config=True,
         help="The base name used when creating untitled projects."
     )
+
+    def _files_handler_params_default(self):
+        """
+            Define the root path for tornado StaticFileHandler object
+            This is necessary to open files from other users (for sharing tab)
+        """
+        if self.root_dir.startswith('/eos/user') :
+            return {'path': '/eos/user', 'default_path' : self.root_dir}
+        else:
+            return {'path': self.root_dir}
+
+    def _files_handler_class_default(self):
+        """
+            Return a SWAN personalised AuthenticatedFileHandler in order
+            to access files in other users paths
+        """
+        return SwanAuthenticatedFileHandler
 
     def _get_project_path(self, path):
         """ Return the project path where the path provided belongs to """
@@ -95,9 +116,7 @@ class SwanFileManager(LargeFileManager):
                     os_path = os.path.join(os_dir, name)
 
                 except UnicodeDecodeError as e:
-                    self.log.warning(
-                        "failed to decode filename '%s': %s", name, e)
-
+                    self.log.warning("failed to decode filename '%s': %s", name, e)
                     continue
 
                 try:
@@ -316,6 +335,9 @@ class SwanFileManager(LargeFileManager):
         path = path.strip('/')
         os_path = self._get_os_path(path)
         rm = os.unlink
+        if not os.path.exists(os_path):
+             raise web.HTTPError(404, u'File or directory does not exist: %s' % os_path)
+
         if os.path.isdir(os_path):
             listing = os.listdir(os_path)
             # Don't delete non-empty directories.
@@ -326,10 +348,6 @@ class SwanFileManager(LargeFileManager):
                 if entry != cp_dir and entry != self.swan_default_file:
                     raise web.HTTPError(400, u'Directory %s not empty' % os_path)
 
-        elif not os.path.isfile(os_path):
-            raise web.HTTPError(404, u'File does not exist: %s' % os_path)
-
-        if os.path.isdir(os_path):
             self.log.debug("Removing directory %s", os_path)
             with self.perm_to_403():
                 shutil.rmtree(os_path)

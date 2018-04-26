@@ -14,7 +14,8 @@ def load_jupyter_server_extension(nb_server_app):
                     (r"/cernbox%s" % path_regex, TreeHandler),
                     (r"/projects", ProjectsHandler),
                     (r"/projects%s" % path_regex, ProjectsHandler),
-                    (r"/share", ShareHandler)]
+                    (r"/share", ShareHandler),
+                    (r"/share%s" % path_regex, ShareHandler)]
 
     web_app = nb_server_app.web_app
     for handler in new_handlers:

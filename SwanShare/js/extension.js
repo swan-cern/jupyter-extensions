@@ -42,14 +42,19 @@ function refresh_share_page() {
                 var elem = elem_template.clone();
                 elem.attr('id', '');
                 var name = project.project.split('/');
-                elem.find('.item_name').text(name[name.length - 1]);
+                name = name[name.length - 1];
+                elem.find('.item_name').text(name);
                 elem.find('.shared_date').text(utils.format_datetime(project.shared_with[0].created));
                 elem.find('.shared_date').attr("title", moment(project.shared_with[0].created).format("YYYY-MM-DD HH:mm"));
                 elem.find('.shared_size').text(formatBytes(project.size));
                 elem.find('.shared_user').text(project.shared_by);
                 elem.find('.btn-clone').on('click', function () {
-                    modal.show_clone_modal(project.project, project.shared_by);
+                    clone_project(project.project, project.shared_by);
                 });
+
+                var this_path = Jupyter.notebook_list.base_url + 'share/' + project.shared_by + '/' + name;
+                elem.find('.item_link').attr('href', this_path);
+
                 elem.show();
                 elem_list_shared.append(elem);
             });
@@ -67,9 +72,8 @@ function refresh_share_page() {
         $('.notebook_list.collapse ').on('hidden.bs.collapse', function () {
             $(this).parent().find('h1 i, h2 i').removeClass('icon-collapse').addClass('icon-expand');
         });
-
     });
-        
+
     api.get_shared_projects_by_me({}, function (sharing_projects_list) {
 
         var elem_list_sharing = $('#sharing-projects-list');
@@ -114,46 +118,49 @@ function refresh_share_page() {
  */
 function refresh_tree_page() {
 
-    api.get_shared_projects_by_me({}, function (sharing_projects_list) {
+    if (Jupyter.notebook_list.notebook_path === "SWAN_projects") {
 
-        var sharing_projects = [];
-        $.each(sharing_projects_list.shares, function (i, project) {
-            sharing_projects.push(project.project);
-        });
+        api.get_shared_projects_by_me({}, function (sharing_projects_list) {
 
-        $('#notebook_list').find('.project_icon').each(function () {
-
-            var parent = $(this).closest('.list_item');
-
-            var this_project_path = parent.find('.item_link').attr('href')
-                .replace(Jupyter.notebook_list.base_url + 'cernbox/', '')
-                .replace(Jupyter.notebook_list.base_url + 'projects/', 'SWAN_projects/')
-                .replace(/%20/g, ' ').replace(/^\/|\/$/g, '');
-
-            parent.find('.sharing-button').remove();
-
-            var share_button_list;
-
-            if ($.inArray(this_project_path, sharing_projects) !== -1) {
-                share_button_list = $('<li><a href="javascript:" class="sharing-button blue">Edit sharing</a></li>');
-            } else {
-                share_button_list = $('<li><a href="javascript:" class="sharing-button green">Share</a></li>');
-            }
-
-            share_button_list.click(function () {
-                modal.show_share_modal(this_project_path);
-                return false;
+            var sharing_projects = [];
+            $.each(sharing_projects_list.shares, function (i, project) {
+                sharing_projects.push(project.project);
             });
 
-            parent.find('.actions').append(share_button_list);
+            $('#notebook_list').find('.project_icon').each(function () {
 
-            if ($.inArray(this_project_path, sharing_projects) !== -1) {
-                parent.find('.sharing-indicator').show();
-            } else {
-                parent.find('.sharing-indicator').hide();
-            }
+                var parent = $(this).closest('.list_item');
+
+                var this_project_path = parent.find('.item_link').attr('href')
+                    .replace(Jupyter.notebook_list.base_url + 'cernbox/', '')
+                    .replace(Jupyter.notebook_list.base_url + 'projects/', 'SWAN_projects/')
+                    .replace(/%20/g, ' ').replace(/^\/|\/$/g, '');
+
+                parent.find('.sharing-button').remove();
+
+                var share_button_list;
+
+                if ($.inArray(this_project_path, sharing_projects) !== -1) {
+                    share_button_list = $('<li><a href="javascript:" class="sharing-button blue">Edit sharing</a></li>');
+                } else {
+                    share_button_list = $('<li><a href="javascript:" class="sharing-button green">Share</a></li>');
+                }
+
+                share_button_list.click(function () {
+                    modal.show_share_modal(this_project_path);
+                    return false;
+                });
+
+                parent.find('.actions').append(share_button_list);
+
+                if ($.inArray(this_project_path, sharing_projects) !== -1) {
+                    parent.find('.sharing-indicator').show();
+                } else {
+                    parent.find('.sharing-indicator').hide();
+                }
+            });
         });
-    });
+    }
 }
 
 /**
@@ -166,11 +173,9 @@ function start_tree_view() {
     configs['tree'].load();
 
     var refresh_function;
-    if (window.location.pathname.startsWith(Jupyter.notebook_list.base_url + 'share')) {
+    if (Jupyter.notebook_list.current_page === Jupyter.notebook_list.pages.share) {
         refresh_function = refresh_share_page;
-
-    } else if (window.location.pathname.startsWith(Jupyter.notebook_list.base_url + 'projects') ||
-        (window.location.pathname.startsWith(Jupyter.notebook_list.base_url + 'cernbox/SWAN_projects'))) {
+    } else {
         refresh_function = refresh_tree_page;
     }
 
@@ -242,6 +247,10 @@ function share_button_click(project_path) {
     modal.show_share_modal(project_path);
 }
 
+function clone_project(project, shared_by) {
+    modal.show_clone_modal(project, shared_by);
+}
+
 function load_ipython_extension() {
     if (Jupyter.notebook != null) {
         start_notebook_view();
@@ -252,5 +261,6 @@ function load_ipython_extension() {
 
 export {
     share_button_click,
+    clone_project,
     load_ipython_extension
 }

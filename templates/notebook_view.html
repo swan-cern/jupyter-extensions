@@ -1,0 +1,43 @@
+{% extends "page.html" %}
+
+{% block stylesheet %}
+{{super()}}
+<style type="text/css">
+/* disable initial hide */
+div#header, div#site {
+    display: block;
+}
+
+{% for css in resources.inlining.css %}
+{{css}}
+{% endfor %}
+</style>
+{% endblock %}
+
+{% block headercontainer %}
+<span id="save_widget" class="save_widget">
+    <span id="notebook_name" class="filename" style="border:none">{{notebook_name}}</span>
+    <div class="status">
+        <span class="autosave_status">(view-only)</span>
+    </div>
+</span>
+{% endblock headercontainer %}
+
+{% block bodyclasses %}notebook_app {{super()}}{% endblock %}
+
+{% block site %}
+
+<div id="ipython-main-app">
+    <div id="notebook_panel">
+        <div id="notebook" >
+            <div class="container" id="notebook-container">
+                {{notebook | safe}}
+            </div>
+            <div class="end_space"></div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
