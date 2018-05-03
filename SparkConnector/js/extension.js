@@ -2,6 +2,7 @@ import $ from 'jquery';
 import dialog from 'base/js/dialog';
 import Jupyter from 'base/js/namespace';
 import events from 'base/js/events';
+import keyboard from 'base/js/keyboard';
 
 import autocomplete from 'devbridge-autocomplete';
 import InlineEdit from 'inline-edit-js';
@@ -410,7 +411,7 @@ SparkConnector.prototype.get_html_auth = function (error) {
         .attr('type', 'password')
         .appendTo(html)
         .keypress(function (e) {
-            if (e.which == 13) {
+            if (e.which == keyboard.keycodes.enter) {
                 that.states.auth.buttons.Authenticate.click();
             }
         });
@@ -499,7 +500,7 @@ SparkConnector.prototype.get_html_configuring = function (error) {
                 }
             })
             .keydown(function (e) {
-                if (e.keyCode == 13 && input.val() !== "") {
+                if (e.keyCode == keyboard.keycodes.enter && input.val() !== "") {
                     choose_option_value(input.val());
                 }
             });
@@ -534,7 +535,7 @@ SparkConnector.prototype.get_html_configuring = function (error) {
             .appendTo(new_option)
             .focus()
             .keydown(function (e) {
-                if (e.keyCode == 13 && input.val() !== "") {
+                if (e.keyCode == keyboard.keycodes.enter && input.val() !== "") {
 
                     var option = {
                         name: option_name,
@@ -595,7 +596,7 @@ SparkConnector.prototype.get_html_configuring = function (error) {
         var editing_element_name = document.createElement('input');
 
         $(editing_element_name).keydown(function (e) {
-            if (e.keyCode == 13) {
+            if (e.keyCode == keyboard.keycodes.enter) {
                 $(this).blur();
             }
         });
@@ -616,7 +617,7 @@ SparkConnector.prototype.get_html_configuring = function (error) {
         var editing_element_value = document.createElement('input');
 
         $(editing_element_value).keydown(function (e) {
-            if (e.keyCode == 13) {
+            if (e.keyCode == keyboard.keycodes.enter) {
                 $(this).blur();
             }
         });

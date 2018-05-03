@@ -7,7 +7,7 @@ module.exports = {
         filename: 'extension.js',
         libraryTarget: 'umd'
     },
-    externals: ['base/js/namespace', 'jquery', 'base/js/dialog', 'require', 'base/js/events'],
+    externals: ['base/js/namespace', 'jquery', 'base/js/dialog', 'require', 'base/js/events', 'base/js/keyboard'],
     module: {
         rules: [{
             test: /\.html$/,
