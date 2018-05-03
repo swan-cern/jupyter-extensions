@@ -20,6 +20,7 @@ var configs = {
     notebook: new configmod.ConfigSection('notebook', {base_url: base_url}),
     tree: new configmod.ConfigSection('tree', {base_url: base_url})
 };
+var sharing_projects = [];
 
 /**
  * Put sharing files in sharing tab
@@ -113,54 +114,68 @@ function refresh_share_page() {
 }
 
 /**
- * In the tree view puts the shared icon inline next to the shared files and links the share buttons to the modal box.
- * It also populates the share endpoint with the projects shared by me and with me.
+ * Put the shared icons in the tree view and refresh the list of shared projects.
+ * Refresh the list with old values while waiting for new ones (the API takes some time to reply)
  */
 function refresh_tree_page() {
+
+    // Refresh with the old values to prevent the sharing icons from disappearing while waiting for the API
+    refresh_notebook_list();
 
     if (Jupyter.notebook_list.notebook_path === "SWAN_projects") {
 
         api.get_shared_projects_by_me({}, function (sharing_projects_list) {
 
-            var sharing_projects = [];
+            var temp_sharing_projects = [];
             $.each(sharing_projects_list.shares, function (i, project) {
-                sharing_projects.push(project.project);
+                temp_sharing_projects.push(project.project);
             });
+            sharing_projects = temp_sharing_projects;
 
-            $('#notebook_list').find('.project_icon').each(function () {
-
-                var parent = $(this).closest('.list_item');
-
-                var this_project_path = parent.find('.item_link').attr('href')
-                    .replace(Jupyter.notebook_list.base_url + 'cernbox/', '')
-                    .replace(Jupyter.notebook_list.base_url + 'projects/', 'SWAN_projects/')
-                    .replace(/%20/g, ' ').replace(/^\/|\/$/g, '');
-
-                parent.find('.sharing-button').remove();
-
-                var share_button_list;
-
-                if ($.inArray(this_project_path, sharing_projects) !== -1) {
-                    share_button_list = $('<li><a href="javascript:" class="sharing-button blue">Edit sharing</a></li>');
-                } else {
-                    share_button_list = $('<li><a href="javascript:" class="sharing-button green">Share</a></li>');
-                }
-
-                share_button_list.click(function () {
-                    modal.show_share_modal(this_project_path);
-                    return false;
-                });
-
-                parent.find('.actions').append(share_button_list);
-
-                if ($.inArray(this_project_path, sharing_projects) !== -1) {
-                    parent.find('.sharing-indicator').show();
-                } else {
-                    parent.find('.sharing-indicator').hide();
-                }
-            });
+            // Refresh with the new values
+            refresh_notebook_list();
         });
     }
+}
+
+/**
+ * In the tree view puts the shared icon inline next to the shared files and links the share buttons to the modal box.
+ * It also populates the share endpoint with the projects shared by me and with me.
+ */
+function refresh_notebook_list() {
+
+    $('#notebook_list').find('.project_icon').each(function () {
+
+        var parent = $(this).closest('.list_item');
+
+        var this_project_path = parent.find('.item_link').attr('href')
+            .replace(Jupyter.notebook_list.base_url + 'cernbox/', '')
+            .replace(Jupyter.notebook_list.base_url + 'projects/', 'SWAN_projects/')
+            .replace(/%20/g, ' ').replace(/^\/|\/$/g, '');
+
+        parent.find('.sharing-button').remove();
+
+        var share_button_list;
+
+        if ($.inArray(this_project_path, sharing_projects) !== -1) {
+            share_button_list = $('<li><a href="javascript:" class="sharing-button blue">Edit sharing</a></li>');
+        } else {
+            share_button_list = $('<li><a href="javascript:" class="sharing-button green">Share</a></li>');
+        }
+
+        share_button_list.click(function () {
+            modal.show_share_modal(this_project_path);
+            return false;
+        });
+
+        parent.find('.actions').append(share_button_list);
+
+        if ($.inArray(this_project_path, sharing_projects) !== -1) {
+            parent.find('.sharing-indicator').show();
+        } else {
+            parent.find('.sharing-indicator').hide();
+        }
+    });
 }
 
 /**
