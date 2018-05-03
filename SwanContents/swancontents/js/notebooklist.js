@@ -5,8 +5,9 @@ define([
     'tree/js/notebooklist',
     'base/js/dialog',
     'base/js/utils',
-    'base/js/events'
-], function ($, require, Jupyter, notebook_list, dialog, utils, events) {
+    'base/js/events',
+    'base/js/keyboard'
+], function ($, require, Jupyter, notebook_list, dialog, utils, events, keyboard) {
 
     /**
      * Extends Jupyter notebooklist lib to cope with the new filemanager and handlers
@@ -327,6 +328,15 @@ define([
                             class: 'btn-primary size-100',
                             click: create_new_project
                         }
+                    },
+                    open : function () {
+                        modal.find('input[type="text"]').keydown(function (event) {
+                            if (event.which === keyboard.keycodes.enter) {
+                                modal.find('.btn-primary').first().click();
+                                return false;
+                            }
+                        });
+                        modal.find('input[type="text"]').focus().select();
                     }
                 });
                 modal.find(".modal-header").unbind("mousedown");

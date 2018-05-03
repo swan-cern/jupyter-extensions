@@ -4,6 +4,7 @@ import Jupyter from 'base/js/namespace';
 import events from 'base/js/events';
 import utils from 'base/js/utils';
 import dialog from 'base/js/dialog';
+import keyboard from 'base/js/keyboard';
 
 import autocomplete from 'devbridge-autocomplete';
 
@@ -323,7 +324,16 @@ function show_clone_modal(project, user) {
         notebook: Jupyter.notebook,
         body: $('<div><p class="rename-message">Enter the cloned Project name:</p><br>' +
             '<input id="new_name"  value="' + name[name.length - 1] + '"type="text" size="25" class="form-control"></div>'),
-        buttons: buttons.clone
+        buttons: buttons.clone,
+        open : function () {
+            modal_clone.find('input[type="text"]').keydown(function (event) {
+                if (event.which === keyboard.keycodes.enter) {
+                    modal_clone.find('.btn-primary').first().click();
+                    return false;
+                }
+            });
+            modal_clone.find('input[type="text"]').focus().select();
+        }
     });
 }
 
