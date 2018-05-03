@@ -36,6 +36,10 @@ define([
             }
         }
 
+        if (window.location.pathname.startsWith(this.base_url + 'tree')) {
+            window.location.replace(window.location.pathname.replace('tree', 'cernbox'));
+        }
+
         if (window.location.pathname.startsWith(this.base_url + this.pages.projects.path)) {
             this.current_page = this.pages.projects;
         } else if (window.location.pathname.startsWith(this.base_url + this.pages.share.path)) {
