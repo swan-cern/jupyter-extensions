@@ -94,34 +94,46 @@ data-server-root="{{server_root}}"
                 <div class="col-md-6">
                   <h1>
                     Projects shared with me
-                    <a data-toggle="collapse" data-target="#collapse-shared" href="javascript:" class="no-hover-efecct">
+                    <a data-toggle="collapse" data-target="#shared" href="javascript:" class="no-hover-efecct">
                       <i class="icon-collapse"></i>
                     </a>
                   </h1>
                 </div>
               </div>
 
-              <div id="collapse-shared" class="notebook_list collapse in">
+              <div id="shared" class="notebook_list collapse in">
                 <div id="notebook_list_header" class="row header list_header">
                   <div class="col-md-5 col-xs-9">
                     <div class="row">
                       <div class="col-xs-1">
                       </div>
                       <div class="col-xs-11 name">
-                        Name
+                         <span class="sort-action-share" data-sorter="sort-name">
+                             Name
+                             <i class="fa fa-sort-desc"></i>
+                         </span>
                       </div>
                     </div>
                   </div>
                   <div class="col-md-2 hidden-xs">
                   </div>
                   <div class="col-md-1 hidden-xs">
-                    Size
+                    <span class="sort-action-share" data-sorter="sort-size">
+                       Size
+                       <i class="fa fa-sort-desc" style="display: none"></i>
+                    </span>
                   </div>
                   <div class="col-md-2 hidden-xs">
-                    Shared by
+                    <span class="sort-action-share" data-sorter="sort-by">
+                       Shared by
+                       <i class="fa fa-sort-desc" style="display: none"></i>
+                    </span>
                   </div>
                   <div class="col-md-2 col-xs-3">
-                    Date
+                    <span class="sort-action-share" data-sorter="last-modified">
+                      Date
+                      <i class="fa fa-sort-desc" style="display: none"></i>
+                    </span>
                   </div>
                 </div>
                 <div id="shared-projects-list">
@@ -137,31 +149,40 @@ data-server-root="{{server_root}}"
                 <div class="col-md-6">
                   <h1>
                     Projects shared by me
-                    <a data-toggle="collapse" data-target="#collapse-sharing" href="javascript:" class="no-hover-efecct">
+                    <a data-toggle="collapse" data-target="#sharing" href="javascript:" class="no-hover-efecct">
                       <i class="icon-collapse"></i>
                     </a>
                   </h1>
                 </div>
               </div>
 
-              <div id="collapse-sharing" class="notebook_list collapse in">
+              <div id="sharing" class="notebook_list collapse in">
                 <div class="row header list_header">
                   <div class="col-md-5 col-xs-9">
                     <div class="row">
                       <div class="col-xs-1">
                       </div>
                       <div class="col-xs-11 name">
-                        Name
+                         <span class="sort-action-share" data-sorter="sort-name">
+                             Name
+                             <i class="fa fa-sort-desc"></i>
+                         </span>
                       </div>
                     </div>
                   </div>
                   <div class="col-md-3 hidden-xs">
                   </div>
                   <div class="col-md-2 hidden-xs">
-                    Shared with
+                    <span class="sort-action-share" data-sorter="sort-with">
+                      Shared with
+                      <i class="fa fa-sort-desc" style="display: none"></i>
+                    </span>
                   </div>
                   <div class="col-md-2 col-xs-3">
-                    Date
+                    <span class="sort-action-share" data-sorter="last-modified">
+                      Date
+                      <i class="fa fa-sort-desc" style="display: none"></i>
+                    </span>
                   </div>
                 </div>
                 <div id="sharing-projects-list">
