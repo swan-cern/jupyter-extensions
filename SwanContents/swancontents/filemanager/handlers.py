@@ -1,7 +1,11 @@
-from notebook.base.handlers import AuthenticatedFileHandler
+from notebook.base.handlers import (
+    AuthenticatedFileHandler, APIHandler
+)
+from notebook.services.contents.handlers import validate_model
 from notebook.utils import url_path_join
-from tornado import web
-import os
+from tornado import gen, web
+from swancontents.filemanager.proj_url_checker import check_url
+import os, json
 
 class SwanAuthenticatedFileHandler(AuthenticatedFileHandler):
     """
@@ -26,3 +30,29 @@ class SwanAuthenticatedFileHandler(AuthenticatedFileHandler):
                 path = url_path_join(self.default_path, path)
 
         return super(AuthenticatedFileHandler, self).get(path)
+
+
+class FetchHandler(APIHandler):
+    """
+         Handler for the API calls used by the fetcher.
+         Asks the file manager to download the project provided and retrieves the path where it was stored.
+    """
+
+    def _finish_model(self, model):
+        """Finish a JSON request with a model, setting relevant headers, etc."""
+        self.set_header('Content-Type', 'application/json')
+        self.finish(json.dumps(model))
+
+    @web.authenticated
+    @gen.coroutine
+    def get(self):
+
+        url = self.get_query_argument('url', default=None)
+        if not url:
+            raise web.HTTPError(400, u'No url provided')
+        check_url(url)
+
+        model = yield gen.maybe_future(self.contents_manager.download(
+            url=url
+        ))
+        self._finish_model(model)

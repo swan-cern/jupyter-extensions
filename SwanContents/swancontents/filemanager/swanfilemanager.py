@@ -1,14 +1,13 @@
 from notebook import transutils #needs to be imported before Jupyter File Manager
 from notebook.services.contents.largefilemanager import LargeFileManager
-from .fileio import SwanFileManagerMixin
-from .handlers import SwanAuthenticatedFileHandler
+from swancontents.filemanager.fileio import SwanFileManagerMixin
+from swancontents.filemanager.handlers import SwanAuthenticatedFileHandler
+from swancontents.filemanager.proj_url_checker import is_cernbox_shared_link, get_name_from_shared_from_link
 from tornado import web
 import nbformat
 from nbformat.v4 import new_notebook
 from traitlets import Unicode
-import os, io
-import stat
-import shutil
+import os, io, stat, shutil, subprocess, tempfile, requests
 from notebook import _tz as tz
 from notebook.utils import (
     is_hidden, is_file_hidden
@@ -356,3 +355,64 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
             self.log.debug("Unlinking file %s", os_path)
             with self.perm_to_403():
                 rm(os_path)
+
+    def download(self, url):
+        """ Downloads a Project from git or cernbox """
+
+        model = {}
+        tmp_dir_name = tempfile.mkdtemp()
+
+        if url.endswith('.git'):
+
+            rc = subprocess.call(['git', 'clone', url, tmp_dir_name])
+            if rc != 0:
+                raise web.HTTPError(400, "It was not possible to clone the repo %s" % url)
+
+            dest_dir_name_ext = os.path.basename(url)
+            repo_name_no_ext = os.path.splitext(dest_dir_name_ext)[0]
+            dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, repo_name_no_ext)
+
+            model['type'] = 'directory'
+            model['path'] = self.move_folder(tmp_dir_name, dest_dir_name)
+
+        else:
+            is_on_cernbox = is_cernbox_shared_link(url)
+
+            # Get the file name
+            file_name = os.path.basename(url)
+
+            # Download the file and store it with the correct name inside the temp folder
+            r = requests.get(url, verify=not is_on_cernbox)
+            if is_on_cernbox:
+                file_name = get_name_from_shared_from_link(r)
+            nb_path = os.path.join(tmp_dir_name, file_name)
+            nb = open(nb_path, "w+b")
+            nb.write(r.content)
+
+            # Get the destination folder path
+            file_name_no_ext = os.path.splitext(file_name)[0]
+            dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name_no_ext)
+
+            model['type'] = 'file'
+            model['path'] = os.path.join(self.move_folder(tmp_dir_name, dest_dir_name), file_name)
+
+        model['path'] = model['path'].replace(self.root_dir, '').strip('/')
+
+        return model
+
+    def move_folder(self, origin, dest):
+        """ Move a folder to a new location, but renames it if it already exists """
+
+        # If the name exists, get a new one
+        if os.path.isdir(dest):
+            count = 1
+            while os.path.isdir(dest + str(count)):
+                count += 1
+            dest += str(count)
+
+        path = shutil.move(origin, dest)
+
+        # Make the folder a SWAN Project
+        os.mknod(os.path.join(dest, self.swan_default_file))
+
+        return path

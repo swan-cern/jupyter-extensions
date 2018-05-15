@@ -1,0 +1,73 @@
+{% extends "page.html" %}
+
+{% block stylesheet %}
+{{super()}}
+<style type="text/css">
+/* disable initial hide */
+div#header, div#site {
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block params %}
+{{super()}}
+data-base-url="{{base_url | urlencode}}"
+{% endblock %}
+
+{% block site %}
+
+<div class="container">
+  <div class="row">
+    <div class="swan-info">
+      <div id="swan-loader">
+        <div class="loader-circle">
+          <img src="/hub/static/swan/logos/logo_swan_letters.png">
+        </div>
+        <div class="loader-line-mask">
+          <div class="loader-line"></div>
+        </div>
+        <span class="text">Downloading...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+    {{super()}}
+
+<script type = "text/javascript" >
+
+    require(['jquery', 'base/js/utils'], function ($, utils) {
+
+        var base_url = utils.get_body_data("baseUrl");
+        var proj_url = utils.get_url_param('projurl');
+
+        var settings = {
+            processData : false,
+            type : "GET",
+            contentType: 'application/json',
+            dataType : "json",
+        };
+
+        utils.promising_ajax(base_url +  'api/contents/fetch?url=' + proj_url, settings)
+            .then(function (result) {
+                if (result && result.path) {
+                    window.location.replace(base_url + (result.type == 'directory' ? result.path.replace('SWAN_projects', 'projects') : 'notebooks/' + result.path))
+                } else {
+                    error(result.reason || result.message);
+                }
+            }).catch(function (e) {
+            error(e.reason || e.message || e);
+        });
+
+        function error(reason) {
+            $('#swan-loader .loader-line-mask').hide();
+            $('#swan-loader .text').text('Error downloading Project: ' + reason);
+        }
+    });
+
+</script>
+{% endblock %}
