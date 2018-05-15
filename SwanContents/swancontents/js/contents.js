@@ -33,5 +33,16 @@ define([
         return utils.promising_ajax(this.api_url(path), settings);
     };
 
+    child_contents.prototype.download = function(url) {
+
+        var settings = {
+            processData : false,
+            type : "GET",
+            contentType: 'application/json',
+            dataType : "json",
+        };
+        return utils.promising_ajax(this.api_url('fetch')+'?url=' + url, settings);
+    };
+
     return {'Contents': child_contents};
 });

@@ -355,73 +355,76 @@ define([
                     if (proj_name === '') {
                         that.contents.new_untitled((that.notebook_path || ''), {type: 'project'})
                             .then(function (result) {
-                                create_new_project_success(result.path.replace(swan_projects_name, ''));
+                                new_project_success(modal, result.path.replace(swan_projects_name, ''));
                             }).catch(function (e) {
-                            create_new_project_error('Error creating project: ' + (e.message || e));
-                            console.warn('Error during New project creation', e);
+                            new_project_error(modal, 'Error creating project: ', e);
                         });
                     } else {
 
                         that.contents.get((that.notebook_path || '') + '/' + proj_name, {type: 'directory'})
                             .then(function () {
-                                create_new_project_error('Cannot create project. Directory/Project already exist.');
+                                new_project_error(modal, 'Cannot create project. Directory/Project already exist.');
                             }).catch(function (e) {
-
-                            that.contents.new(((that.notebook_path || '') + '/' + proj_name), {type: 'project'})
-                                .then(function (result) {
-                                    create_new_project_success(proj_name);
-                                }).catch(function (e) {
-
-                                create_new_project_error('Error creating project: ' + (e.message || e));
-                                console.warn('Error during New project creation', e);
-                            });
-
-                        });
+                                that.contents.new(((that.notebook_path || '') + '/' + proj_name), {type: 'project'})
+                                    .then(function (result) {
+                                        new_project_success(modal, proj_name);
+                                    }).catch(function (e) {
+                                        new_project_error(modal, 'Error creating project: ', e);
+                                    }
+                                );
+                            }
+                        );
                     }
                     that.load_sessions();
                 }
 
-                function create_new_project_success(path) {
+                return false;
+            });
 
-                    var url = utils.url_path_join(
-                        that.base_url,
-                        that.current_page.path,
-                        utils.encode_uri_components(path)
+            $('#download-project').click(function (e) {
+
+                var modal = dialog.modal({
+                    title: 'Download Project from git',
+                    body: $('<p class="rename-message">Project url to download:</p><br>\
+                            <input type="text" name="url" class="form-control">'),
+                    buttons: {
+                        'Upload': {
+                            class: 'btn-primary size-100',
+                            click: download_project
+                        }
+                    },
+                    open : function () {
+                        modal.find('input[type="text"]').keydown(function (event) {
+                            if (event.which === keyboard.keycodes.enter) {
+                                modal.find('.btn-primary').first().click();
+                                return false;
+                            }
+                        });
+                        modal.find('input[type="text"]').focus().select();
+                    }
+                });
+                modal.find(".modal-header").unbind("mousedown");
+
+                function download_project() {
+
+                    modal.find('.btn').prop('disabled', true);
+                    modal.data('bs.modal').isShown = false;
+
+                    var proj_url = modal.find('input[name="url"]').val();
+
+                    that.contents.download(proj_url)
+                        .then(function (result) {
+
+                            if(result && result.path) {
+                                new_project_success(modal, result.path.replace(swan_projects_name, ''));
+                            } else {
+                                new_project_error(modal, 'Error downloading project: ', e);
+                            }
+                        }).catch(function (e) {
+                            new_project_error(modal, 'Error downloading project: ', e);
+                        }
                     );
-
-                    modal.data('bs.modal').isShown = true;
-                    modal.modal('hide');
-
-                    window.history.pushState({
-                        path: path
-                    }, url, path);
-                    that.update_swan_location(path);
-                }
-
-                function create_new_project_error(message) {
-
-                    var alert = $('<div/>')
-                        .addClass('alert alert-dismissable')
-                        .addClass('alert-danger')
-                        .append(
-                            $('<button class="close" type="button" data-dismiss="alert" aria-label="Close"/>')
-                                .append($('<span aria-hidden="true"/>').html('&times;'))
-                        )
-                        .hide()
-                        .append(
-                            $('<p/>').text(message)
-                        );
-
-                    modal.find('.modal-body').prepend(alert);
-                    alert.slideDown('fast');
-
-                    modal.find('.btn').prop('disabled', false);
-                    modal.data('bs.modal').isShown = true;
-
-
-                    alert.fadeTo(4000, 500).slideUp(500, function () {
-                        alert.slideUp(500);
-                    });
+                    that.load_sessions();
                 }
 
                 return false;
@@ -453,6 +456,59 @@ define([
                 $(this).parent().parent().parent().parent().toggleClass("extended_names");
                 $(this).find('i').toggleClass("fa-compress fa-expand");
             });
+
+            /**
+             * Common functions for new projects (upload or create)
+             */
+
+            function new_project_success(modal, path) {
+
+                var url = utils.url_path_join(
+                    that.base_url,
+                    that.current_page.path,
+                    utils.encode_uri_components(path)
+                );
+
+                modal.data('bs.modal').isShown = true;
+                modal.modal('hide');
+
+                window.history.pushState({
+                    path: path
+                }, url, path);
+                that.update_swan_location(path);
+            }
+
+            function new_project_error(modal, message, exception) {
+
+                if (exception) {
+                    console.warn(message, exception);
+                }
+
+                var reason = exception ? (exception.reason || exception.message || exception) : '';
+
+                var alert = $('<div/>')
+                    .addClass('alert alert-dismissable')
+                    .addClass('alert-danger')
+                    .append(
+                        $('<button class="close" type="button" data-dismiss="alert" aria-label="Close"/>')
+                            .append($('<span aria-hidden="true"/>').html('&times;'))
+                    )
+                    .hide()
+                    .append(
+                        $('<p/>').text(message + reason)
+                    );
+
+                modal.find('.modal-body').prepend(alert);
+                alert.slideDown('fast');
+
+                modal.find('.btn').prop('disabled', false);
+                modal.data('bs.modal').isShown = true;
+
+
+                alert.fadeTo(4000, 500).slideUp(500, function () {
+                    alert.slideUp(500);
+                });
+            }
         }
     };
 
