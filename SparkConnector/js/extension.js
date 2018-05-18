@@ -660,7 +660,8 @@ SparkConnector.prototype.get_html_configuring = function (error) {
             option.name === 'spark.master' ||
             option.name === 'spark.authenticate' ||
             option.name === 'spark.network.crypto.enabled' ||
-            option.name === 'spark.authenticate.enableSaslEncryption') {
+            option.name === 'spark.authenticate.enableSaslEncryption' ||
+            option.name === 'spark.port.maxRetries') {
 
             errors.push('Redefining a SWAN configuration');
         }
