@@ -181,6 +181,10 @@ class SparkConnector:
         conf.set('spark.driver.extraClassPath', extra_class_path)
         conf.set('spark.executorEnv.LD_LIBRARY_PATH', ld_library_path)
 
+        # Allow the monitoring and filtering of SWAN jobs in the Spark clusters
+        app_name = conf.get('spark.app.name')
+        conf.set('spark.app.name', app_name + '_swan' if app_name else 'pyspark_shell_swan')
+
     def create_properties_file(self, log_path):
         """ Creates a configuration file for Spark log4j """
 
