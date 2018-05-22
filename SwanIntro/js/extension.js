@@ -4,9 +4,10 @@ import dialog from 'base/js/dialog';
 import notebooklist from 'tree/js/notebooklist';
 import {lory} from 'lory.js';
 
-import intro from './templates/intro.html'
+import welcome from './templates/welcome.html'
+import update from './templates/update.html'
 
-var current_iteration = 1;
+var current_iteration = 2;
 var temp_file = 'SWAN_projects/.intro';
 var base_url;
 
@@ -24,11 +25,13 @@ function load_ipython_extension() {
 
         Jupyter.notebook_list.contents.get(temp_file, {type: 'file'})
             .then(function (v) {
-                if(v.content < current_iteration) {
-                    show_modal();
+                if (v.content == 0) {
+                    show_modal(welcome);
+                } else if (v.content < current_iteration) {
+                    show_modal(update);
                 }
             }).catch(function (e) {
-            show_modal();
+            show_modal(welcome);
         });
     }
 }
@@ -38,9 +41,9 @@ function load_ipython_extension() {
  * If the user closes the model, saves the iteration in the temp_file
  * so that the popup doesn't show again.
  */
-function show_modal () {
+function show_modal (template) {
 
-    var html = intro.replace(/{root_path}/g, base_url + '/');
+    var html = template.replace(/{root_path}/g, base_url + '/');
 
     var modal = dialog.modal({
         draggable: false,
