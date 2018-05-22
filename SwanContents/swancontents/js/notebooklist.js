@@ -388,7 +388,7 @@ define([
                     body: $('<p class="rename-message">Project url to download:</p><br>\
                             <input type="text" name="url" class="form-control">'),
                     buttons: {
-                        'Upload': {
+                        'Download': {
                             class: 'btn-primary size-100',
                             click: download_project
                         }
@@ -416,9 +416,17 @@ define([
                         .then(function (result) {
 
                             if(result && result.path) {
-                                new_project_success(modal, result.path.replace(swan_projects_name, ''));
+
+                                var path = result.path.replace(swan_projects_name, '');
+
+                                if (extension(path)) {
+                                    path = path.split('/');
+                                    path.pop();
+                                    path = path.join('/');
+                                }
+                                new_project_success(modal, path);
                             } else {
-                                new_project_error(modal, 'Error downloading project: ', e);
+                                new_project_error(modal, 'Error downloading project.');
                             }
                         }).catch(function (e) {
                             new_project_error(modal, 'Error downloading project: ', e);
@@ -484,7 +492,7 @@ define([
                     console.warn(message, exception);
                 }
 
-                var reason = exception ? (exception.reason || exception.message || exception) : '';
+                var reason = exception ? (exception.xhr_error || exception.reason || exception.message || exception) : '';
 
                 var alert = $('<div/>')
                     .addClass('alert alert-dismissable')
