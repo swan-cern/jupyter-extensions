@@ -838,6 +838,21 @@ define([
     };
 
     /**
+     * Returns the protocol of the url
+     * @param path Url
+     * @returns {*} Protocol name
+     */
+    var protocol = function (path) {
+        var parts = path.split(':');
+        parts = parts.filter(function (n) {
+            return n !== ""
+        });
+        if (parts.length ==  2 && path.startsWith(parts[0] + ':'))
+            return parts[0];
+        return null;
+    };
+
+    /**
      * Check if the path given is external (if it conaint ://)
      * @param path Path/url to check
      * @returns {boolean}
@@ -903,9 +918,10 @@ define([
 
         var readme = $('#readme');
 
+        var fadein;
         if(change) {
             readme.hide();
-            readme.delay(70).fadeIn();
+            fadein = readme.delay(70).fadeIn().promise();
         }
 
         $.get(path, function (markdown) {
@@ -913,7 +929,8 @@ define([
             // Use showdown to convert markdown into HTML and xss to remove not allowed HTML elements
             // (for security reasons).
             // Replace the links with safer versions
-            require(['./libs/showdown.min', './libs/xss.min'], function (showdown) {
+            require(['codemirror/lib/codemirror', './libs/showdown.min', './libs/xss.min', 'codemirror/mode/python/python',
+                'notebook/js/codemirror-ipython'], function (CodeMirror, showdown) {
 
                 var whitelist = filterXSS.getDefaultWhiteList();
                 whitelist['h1'].push('id');
@@ -945,7 +962,9 @@ define([
 
                                                 if (temp_url.startsWith(window.location.pathname)) {
 
-                                                    if (!extension(value)) { //Not a file (could be a folder or anchor link)
+                                                    if (protocol(value)) {
+                                                        url_string = value;
+                                                    } else if (!extension(value)) { //Not a file (could be a folder or anchor link)
                                                         //Test if it's an anchor link
                                                         if (value.startsWith('#')) {
                                                             url_string = value;
@@ -1014,6 +1033,27 @@ define([
                     .appendTo(body);
 
                 readme.html(panel);
+
+                // Add syntax highlight to all pre code blocks
+                readme.find('pre code').each(function() {
+
+                    var this_obj = $(this),
+                        text = this_obj.text().trim();
+                    this_obj.empty();
+
+                    var codemirror = CodeMirror(this, {
+                        value: text,
+                        mode: 'python',
+                        lineNumbers: false,
+                        readOnly: true
+                    });
+
+                    if (fadein) {
+                        fadein.done(function () {
+                            codemirror.refresh();
+                        });
+                    }
+                });
             });
         });
     }
