@@ -2,7 +2,7 @@ from notebook import transutils #needs to be imported before Jupyter File Manage
 from notebook.services.contents.largefilemanager import LargeFileManager
 from swancontents.filemanager.fileio import SwanFileManagerMixin
 from swancontents.filemanager.handlers import SwanAuthenticatedFileHandler
-from swancontents.filemanager.proj_url_checker import is_cernbox_shared_link, get_name_from_shared_from_link
+from swancontents.filemanager.proj_url_checker import is_cernbox_shared_link, get_name_from_shared_from_link, is_file_on_eos
 from tornado import web
 import nbformat
 from nbformat.v4 import new_notebook
@@ -374,6 +374,25 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
             model['type'] = 'directory'
             model['path'] = self.move_folder(tmp_dir_name, dest_dir_name)
+
+        elif is_file_on_eos(url):
+            # Opened from "Open in SWAN" button
+            file_path = url[6:]
+
+            if file_path.startswith(self.root_dir):
+                # Inside user own directory
+                model['type'] = 'file'
+                model['path'] = file_path
+
+            else:
+                # Outside of user directory. Copy the file.
+                shutil.copy2(file_path, tmp_dir_name)
+                file_name = file_path.split('/').pop()
+                file_name_no_ext = os.path.splitext(file_name)[0]
+                dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name_no_ext)
+
+                model['type'] = 'file'
+                model['path'] = os.path.join(self.move_folder(tmp_dir_name, dest_dir_name), file_name)
 
         else:
             is_on_cernbox = is_cernbox_shared_link(url)
