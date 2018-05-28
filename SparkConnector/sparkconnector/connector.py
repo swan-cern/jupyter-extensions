@@ -142,8 +142,6 @@ class SparkConnector:
         conf.set('spark.authenticate', True)
         conf.set('spark.network.crypto.enabled', True)
         conf.set('spark.authenticate.enableSaslEncryption', True)
-        # Prevent Spark from trying a different, not opened, port
-        conf.set('spark.port.maxRetries', 0)
 
         extra_java_options = "-Dlog4j.configuration=file:%s" % self.log4j_file
 
