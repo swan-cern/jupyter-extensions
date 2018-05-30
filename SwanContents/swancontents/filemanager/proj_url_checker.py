@@ -79,7 +79,7 @@ def check_url(url):
     onEOS = is_file_on_eos(url)
     extra_chars = ""
     if onEOS:
-        extra_chars = " "
+        extra_chars = " ()"
     has_allowed_chars = has_good_chars(url, extra_chars)
     if not has_allowed_chars:
         raise_error('The URL of the project is invalid (some of its characters are not accepted).')
