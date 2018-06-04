@@ -211,7 +211,7 @@ class SparkConnector:
         in_use = True
         s = socket.socket()
         try:
-            s.connect(("172.17.0.2", int(os.environ.get('SPARK_PORT_1'))))
+            s.connect((socket.gethostname(), int(os.environ.get('SPARK_PORT_1'))))
         except socket.error:
             in_use = False
 
