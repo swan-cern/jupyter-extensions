@@ -1,14 +1,13 @@
 from notebook import transutils #needs to be imported before Jupyter File Manager
 from notebook.services.contents.largefilemanager import LargeFileManager
-from swancontents.filemanager.fileio import SwanFileManagerMixin
-from swancontents.filemanager.handlers import SwanAuthenticatedFileHandler
-from swancontents.filemanager.proj_url_checker import is_cernbox_shared_link, get_name_from_shared_from_link, is_file_on_eos
+from .fileio import SwanFileManagerMixin
+from .handlers import SwanAuthenticatedFileHandler
+from .proj_url_checker import is_cernbox_shared_link, get_name_from_shared_from_link, is_file_on_eos
 from tornado import web
 import nbformat
 from nbformat.v4 import new_notebook
 from traitlets import Unicode
 import os, io, stat, shutil, subprocess, tempfile, requests
-from notebook import _tz as tz
 from notebook.utils import (
     is_hidden, is_file_hidden
 )
@@ -285,7 +284,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
         path = path.strip('/')
         if not self.dir_exists(path):
-            raise HTTPError(404, 'No such directory: %s' % path)
+            raise web.HTTPError(404, 'No such directory: %s' % path)
 
         model = {}
         if type:
@@ -313,7 +312,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
             untitled = self.untitled_file
 
         else:
-            raise HTTPError(400, "Unexpected model type: %r" % model['type'])
+            raise web.HTTPError(400, "Unexpected model type: %r" % model['type'])
 
         name = self.increment_filename(untitled + ext, path, insert=insert)
         path = u'{0}/{1}'.format(path, name)
@@ -332,7 +331,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         """Delete a file/directory and any associated checkpoints."""
         path = path.strip('/')
         if not path:
-            raise HTTPError(400, "Can't delete root")
+            raise web.HTTPError(400, "Can't delete root")
         self.delete_file(path, force)
         self.checkpoints.delete_all_checkpoints(path)
 

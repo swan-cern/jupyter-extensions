@@ -1,11 +1,10 @@
 from notebook.base.handlers import (
     AuthenticatedFileHandler, APIHandler
 )
-from notebook.services.contents.handlers import validate_model
 from notebook.utils import url_path_join
 from notebook.base.handlers import json_errors
 from tornado import gen, web
-from swancontents.filemanager.proj_url_checker import check_url
+from .proj_url_checker import check_url
 import os, json
 
 class SwanAuthenticatedFileHandler(AuthenticatedFileHandler):

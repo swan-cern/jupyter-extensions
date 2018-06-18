@@ -2,11 +2,11 @@
 from notebook.utils import url_path_join
 from notebook.base.handlers import path_regex
 
-from swancontents.handlers.projects import ProjectsHandler
-from swancontents.handlers.share import ShareHandler
-from swancontents.handlers.tree import TreeHandler
-from swancontents.handlers.download import DownloadHandler
-from swancontents.filemanager.handlers import FetchHandler, ContentsHandler
+from .projects import ProjectsHandler
+from .share import ShareHandler
+from .tree import TreeHandler
+from .download import DownloadHandler
+from ..filemanager.handlers import FetchHandler, ContentsHandler
 
 def load_jupyter_server_extension(nb_server_app):
     """ Used as a server extension in order to install the new handlers """
