@@ -826,6 +826,63 @@ define([
         }
     };
 
+    child_notebook_list.prototype.delete_selected = function() {
+        var message;
+        var selected = this.selected.slice(); // Don't let that.selected change out from under us
+        if (selected.length === 1) {
+            message = '<p>Are you sure you want to permanently delete: ' + selected[0].name + '?<br>All of its contents will be lost.</p>';
+        } else {
+            message = '<p>Are you sure you want to permanently delete the ' + selected.length + ' files/folders/projects selected?<br>All of their contents will be lost.</p>';
+        }
+        var that = this;
+
+        dialog.modal({
+            title : "Delete",
+            body : $(message),
+            default_button: "Cancel",
+            buttons : {
+                Cancel: {},
+                Delete : {
+                    class: "btn-danger",
+                    click: function() {
+                        // Shutdown any/all selected notebooks before deleting
+                        // the files.
+                        that.shutdown_selected();
+
+                        // Delete selected.
+                        selected.forEach(function(item) {
+
+                            // Shutdown all the notebooks inside this folder
+                            for (var session in that.session_list.sessions) {
+                                if (session.startsWith(item.path + '/')) {
+                                    that.shutdown_notebook(session);
+                                }
+                            }
+
+                            that.contents.force_delete(item.path).then(function() {
+                                that.notebook_deleted(item.path);
+                            }).catch(function(e) {
+
+                                dialog.modal({
+                                    title: "Delete Failed",
+                                    body: $('<div/>')
+                                        .text("An error occurred while deleting \"" + path + "\".")
+                                        .append($('<div/>')
+                                            .addClass('alert alert-danger')
+                                            .text(e.message || e)),
+                                    buttons: {
+                                        OK: {'class': 'btn-primary'}
+                                    }
+                                });
+                                console.warn('Error during content deletion:', e);
+                            });
+                        });
+                    }
+                }
+            }
+        });
+    };
+
     /*
        Util functions for readme
      */

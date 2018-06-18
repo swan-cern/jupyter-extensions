@@ -6,7 +6,7 @@ from swancontents.handlers.projects import ProjectsHandler
 from swancontents.handlers.share import ShareHandler
 from swancontents.handlers.tree import TreeHandler
 from swancontents.handlers.download import DownloadHandler
-from swancontents.filemanager.handlers import FetchHandler
+from swancontents.filemanager.handlers import FetchHandler, ContentsHandler
 
 def load_jupyter_server_extension(nb_server_app):
     """ Used as a server extension in order to install the new handlers """
@@ -18,6 +18,7 @@ def load_jupyter_server_extension(nb_server_app):
                     (r"/share", ShareHandler),
                     (r"/share%s" % path_regex, ShareHandler),
                     (r"/api/contents/fetch", FetchHandler),
+                    (r"/api/swan/contents%s" % path_regex, ContentsHandler),
                     (r"/download", DownloadHandler)]
 
     web_app = nb_server_app.web_app

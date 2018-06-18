@@ -3,6 +3,7 @@ from notebook.base.handlers import (
 )
 from notebook.services.contents.handlers import validate_model
 from notebook.utils import url_path_join
+from notebook.base.handlers import json_errors
 from tornado import gen, web
 from swancontents.filemanager.proj_url_checker import check_url
 import os, json
@@ -56,3 +57,17 @@ class FetchHandler(APIHandler):
             url=url
         ))
         self._finish_model(model)
+
+
+class ContentsHandler(APIHandler):
+
+    @json_errors
+    @web.authenticated
+    @gen.coroutine
+    def delete(self, path=''):
+        """delete a file in the given path"""
+        cm = self.contents_manager
+        self.log.warning('delete %s', path)
+        yield gen.maybe_future(cm.delete(path, force=True))
+        self.set_status(204)
+        self.finish()

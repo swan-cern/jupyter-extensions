@@ -328,7 +328,15 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
         return super(LargeFileManager, self).update(model, path)
 
-    def delete_file(self, path):
+    def delete(self, path, force=False):
+        """Delete a file/directory and any associated checkpoints."""
+        path = path.strip('/')
+        if not path:
+            raise HTTPError(400, "Can't delete root")
+        self.delete_file(path, force)
+        self.checkpoints.delete_all_checkpoints(path)
+
+    def delete_file(self, path, force=False):
         """Delete file at path."""
 
         path = path.strip('/')
@@ -338,14 +346,15 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
              raise web.HTTPError(404, u'File or directory does not exist: %s' % os_path)
 
         if os.path.isdir(os_path):
-            listing = os.listdir(os_path)
-            # Don't delete non-empty directories.
-            # A directory containing only leftover checkpoints is
-            # considered empty.
-            cp_dir = getattr(self.checkpoints, 'checkpoint_dir', None)
-            for entry in listing:
-                if entry != cp_dir and entry != self.swan_default_file:
-                    raise web.HTTPError(400, u'Directory %s not empty' % os_path)
+            if not force:
+                listing = os.listdir(os_path)
+                # Don't delete non-empty directories.
+                # A directory containing only leftover checkpoints is
+                # considered empty.
+                cp_dir = getattr(self.checkpoints, 'checkpoint_dir', None)
+                for entry in listing:
+                    if entry != cp_dir and entry != self.swan_default_file:
+                        raise web.HTTPError(400, u'Directory %s not empty' % os_path)
 
             self.log.debug("Removing directory %s", os_path)
             with self.perm_to_403():

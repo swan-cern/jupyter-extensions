@@ -17,6 +17,14 @@ define([
     }
     child_contents.prototype = Object.create(parent_contents.prototype);
 
+    child_contents.prototype.swan_api_url = function() {
+        var url_parts = [
+            this.base_url, 'api/swan/contents',
+            utils.url_join_encode.apply(null, arguments),
+        ];
+        return utils.url_path_join.apply(null, url_parts);
+    };
+
     child_contents.prototype.new = function(path, options) {
         var data = JSON.stringify({
           ext: options.ext,
@@ -42,6 +50,26 @@ define([
             dataType : "json",
         };
         return utils.promising_ajax(this.api_url('fetch')+'?url=' + url, settings);
+    };
+
+    child_contents.prototype.force_delete = function(path) {
+        var settings = {
+            processData : false,
+            type : "DELETE",
+            dataType : "json",
+        };
+        var url = this.swan_api_url(path);
+        return utils.promising_ajax(url, settings).catch(
+            // Translate certain errors to more specific ones.
+            function(error) {
+                // TODO: update IPEP27 to specify errors more precisely, so
+                // that error types can be detected here with certainty.
+                if (error.xhr.status === 400) {
+                    throw new child_contents.DirectoryNotEmptyError();
+                }
+                throw error;
+            }
+        );
     };
 
     return {'Contents': child_contents};
