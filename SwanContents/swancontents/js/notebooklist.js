@@ -49,11 +49,11 @@ define([
         }
 
         $('.notebook_list.collapse ').on('shown.bs.collapse', function () {
-            $(this).parent().find('h1 i, h2 i').removeClass('icon-expand').addClass('icon-collapse');
+            $(this).parent().find('h1 i, h2 i.icon-expand').removeClass('icon-expand').addClass('icon-collapse');
         });
 
         $('.notebook_list.collapse ').on('hidden.bs.collapse', function () {
-            $(this).parent().find('h1 i, h2 i').removeClass('icon-collapse').addClass('icon-expand');
+            $(this).parent().find('h1 i, h2 i.icon-collapse').removeClass('icon-collapse').addClass('icon-expand');
         });
 
         parent_notebook_list.icons.project = 'project_icon';
