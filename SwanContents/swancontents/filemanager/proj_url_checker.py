@@ -13,6 +13,7 @@ from tornado import web
 CERNBoxPrefix = 'https://cernbox.cern.ch/index.php/s'
 CERNBoxPrefixTesting = 'https://cernboxwebpreview.cern.ch/index.php/s'
 EOSUserPrefix = 'file://eos/user'
+LocalPrefix = 'local:'
 
 def raise_error(emsg):
     raise web.HTTPError(400, reason = emsg)
@@ -71,26 +72,30 @@ def check_url(url):
                      url.startswith('https://root.cern.ch') or \
                      url.startswith(CERNBoxPrefix) or \
                      url.startswith(CERNBoxPrefixTesting) or \
-                     url.startswith(EOSUserPrefix)
+                     url.startswith(EOSUserPrefix) or \
+                     url.startswith(LocalPrefix)
     if not is_good_server:
         raise_error('The URL of the project is not a github, CERN gitlab, CERNBox shared link nor root.cern.ch URL. It is not a path on EOS either.')
 
     # Check the chars
     onEOS = is_file_on_eos(url)
+    local = url.startswith(LocalPrefix)
     extra_chars = ""
     if onEOS:
         extra_chars = " ()"
+    if local:
+        extra_chars = " ():"
     has_allowed_chars = has_good_chars(url, extra_chars)
     if not has_allowed_chars:
         raise_error('The URL of the project is invalid (some of its characters are not accepted).')
 
     # Limit the kind of project
     is_good_ext = is_good_proj_name(url)
-    if not is_good_ext:
+    if not local and not is_good_ext:
         raise_error('The project must be a notebook or a git repository.')
 
     # Check it exists
-    if not onEOS:
+    if not onEOS and not local:
         request = requests.get(url, verify=not is_cernbox_shared_link(url))
         sc = request.status_code
         if sc != 200:

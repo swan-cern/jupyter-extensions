@@ -402,6 +402,30 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
                 model['type'] = 'file'
                 model['path'] = os.path.join(self.move_folder(tmp_dir_name, dest_dir_name), file_name)
 
+        elif url.startswith('local:'):
+            path = url[6:]
+            file_name = path.split('/').pop()
+
+            if os.path.isdir(path):
+
+                dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name)
+
+                model['type'] = 'directory'
+                model['path'] = self.move_folder(path, dest_dir_name, preserve=True)
+
+            elif os.path.isfile(path):
+
+                shutil.copy2(path, tmp_dir_name)
+                file_name_no_ext = os.path.splitext(file_name)[0]
+                dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name_no_ext)
+
+                model['type'] = 'file'
+                model['path'] = os.path.join(self.move_folder(tmp_dir_name, dest_dir_name), file_name)
+
+            else:
+                raise web.HTTPError(404, u'File or directory does not exist: %s' % path)
+
+
         else:
             is_on_cernbox = is_cernbox_shared_link(url)
 
@@ -427,7 +451,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
         return model
 
-    def move_folder(self, origin, dest):
+    def move_folder(self, origin, dest, preserve=False):
         """ Move a folder to a new location, but renames it if it already exists """
 
         # If the name exists, get a new one
@@ -437,7 +461,10 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
                 count += 1
             dest += str(count)
 
-        path = shutil.move(origin, dest)
+        if preserve:
+            path = shutil.copytree(origin, dest)
+        else:
+            path = shutil.move(origin, dest)
 
         # Make the folder a SWAN Project
         os.mknod(os.path.join(dest, self.swan_default_file))
