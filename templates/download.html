@@ -57,15 +57,15 @@ data-base-url="{{base_url | urlencode}}"
                 if (result && result.path) {
                     window.location.replace(base_url + (result.type == 'directory' ? result.path.replace('SWAN_projects', 'projects') : 'notebooks/' + result.path))
                 } else {
-                    error(result.reason || result.message);
+                    error('Error downloading project.');
                 }
             }).catch(function (e) {
-            error(e.reason || e.message || e);
+            error(e.xhr_error || e.reason || e.message || e);
         });
 
         function error(reason) {
             $('#swan-loader .loader-line-mask').hide();
-            $('#swan-loader .text').text('Error downloading Project: ' + reason);
+            $('#swan-loader .text').html('<p class="extra">Error downloading Project: ' + reason + '</p>');
         }
     });
 
