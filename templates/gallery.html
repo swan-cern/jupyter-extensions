@@ -1,0 +1,69 @@
+{% set extension = True %}
+{% extends "page.html" %}
+
+{% block title %}{{page_title}}{% endblock %}
+
+{% block params %}
+{{super()}}
+data-current-page="{{current_page}}"
+data-base-url="{{base_url | urlencode}}"
+{% endblock %}
+
+{% block site %}
+
+<div class="container">
+
+  <div id="normal-page" class="gallery-page">
+    <ul class="breadcrumb"><!--
+            --><li><a href="/">SWAN</a></li><!--
+            --><li><a href="{{base_url}}gallery">Gallery</a></li>
+    </ul>
+    <div class="row title-bar">
+        <div class="row">
+            <div class="col-md-6">
+                <h1>Gallery</h1>
+            </div>
+            <div id="notebook_toolbar" class="col-md-6">
+                <div class="pull-right">
+                    <div id="clone-button" class="btn-group" style="display: none">
+                        <button title="Clone Gallery" class="dropdown-toggle btn btn-default btn-xs" data-toggle="dropdown">
+                            <i class="icon-clone" aria-hidden="true"></i>
+                        </button>
+                        <ul id="new-menu" class="dropdown-menu">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+      <div class="col-md-2">
+          <ul id="libraries_list" class="menu">
+          </ul>
+      </div>
+      <div class="col-md-10">
+          <div class="row">
+              <div id="gallery-content" class="col-md-11 col-sm-offset-1"></div>
+          </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+    {{super()}}
+
+<script type = "text/javascript" >
+
+    require(['base/js/utils', 'base/js/page'], function (utils, page) {
+        utils.load_extension('swangallery/extension');
+        page = new page.Page('div#header', 'div#site');
+        page.show_header();
+        page.show_site();
+    });
+
+</script>
+{% endblock %}

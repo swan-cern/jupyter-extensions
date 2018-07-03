@@ -14,8 +14,24 @@ data-terminals-available="{{terminals_available}}"
 data-server-root="{{server_root}}"
 {% endblock %}
 
-{% block headercontainer %}
-<span class="flex-spacer"></span>
+{% block extra_buttons %}
+  {% if terminals_available %}
+  <button id="new-terminal" role="presentation" class="btn btn-default btn-xs" title="New Terminal">
+    <i class="fa fa-terminal" aria-hidden="true"></i>
+  </button>
+  {% endif %}
+  <button class="btn btn-default btn-xs" onclick="javascript: window.location = '{{base_url}}gallery'" title="Examples Gallery">
+    <i class="fa fa-picture-o" aria-hidden="true"></i>
+  </button>
+{% endblock %}
+
+{% block extra_options %}
+<li>
+  <a href="#" data-toggle="modal" data-target="#running-modal">Running Processes</a>
+</li>
+<li>
+  <a href="{{base_url}}nbextensions">Nbextensions configuration</a>
+</li>
 {% endblock %}
 
 {% block site %}

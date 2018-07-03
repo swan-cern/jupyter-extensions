@@ -102,7 +102,7 @@
 
 </head>
 
-<body class="{% block bodyclasses %}{% endblock %}{% if not tree %} full-width{% endif %}"
+<body class="{% block bodyclasses %}{% endblock %}{% if not tree  and not extension%} full-width{% endif %}"
  {% block params %}
 {% if logged_in and token %}
 data-jupyter-api-token="{{token | urlencode}}"
@@ -129,29 +129,17 @@ dir="ltr">
 
 
               {% block header_buttons %}
-
               <div id="buttons-right-wrapper">
                   <div id="buttons-right">
                       <div id="options-buttons" class="btn-group">
-                          {% if tree %}
-                              {% if terminals_available %}
-                              <button id="new-terminal" role="presentation" class="btn btn-default btn-xs" title="New Terminal">
-                                  <i class="fa fa-terminal" aria-hidden="true"></i>
-                              </button>
-                              {% endif %}
-                          {% endif %}
+                          {% block extra_buttons %}
+                          {% endblock %}
                           <button class="dropdown-toggle btn btn-default btn-xs" data-toggle="dropdown" title="Options">
                               <i class="icon-more" aria-hidden="true"></i>
                           </button>
                           <ul id="options-menu" class="dropdown-menu">
-                              {% if tree %}
-                              <li>
-                                  <a href="#" data-toggle="modal" data-target="#running-modal">Running Processes</a>
-                              </li>
-                              <li>
-                                  <a href="{{base_url}}nbextensions">Nbextensions configuration</a>
-                              </li>
-                              {% endif %}
+                              {% block extra_options %}
+                              {% endblock %}
                               <li role="presentation">
                                   <a id="change-config" href="javascript:">Change configuration</a>
                               </li>
@@ -166,7 +154,6 @@ dir="ltr">
                       </button>
                   </div>
               </div>
-
               {% endblock header_buttons %}
           </div>
 

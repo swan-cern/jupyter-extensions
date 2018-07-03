@@ -1,0 +1,23 @@
+{
+  "name": "sparkgallery",
+  "version": "0.0.1",
+  "description": "Jupyter Notebook extension to display SWAN notebook examples",
+  "keywords": [
+    "Jupyter",
+    "Extension",
+    "Notebook"
+  ],
+  "author": "Diogo Castro",
+  "devDependencies": {
+    "copy-webpack-plugin": "^4.2.0",
+    "html-loader": "^0.5.1",
+    "webpack": "^3.3.0"
+  },
+  "scripts": {
+    "webpack": "webpack -p --config webpack.config.js",
+    "watch": "webpack --watch --config webpack.config.js"
+  },
+  "dependencies": {
+    "showdown": "^1.8.6"
+  }
+}
