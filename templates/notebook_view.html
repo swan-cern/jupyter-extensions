@@ -14,6 +14,15 @@ div#header, div#site {
 </style>
 {% endblock %}
 
+{% block extra_buttons %}
+{% if clonable %}
+    <button id="clone-button" role="presentation" class="btn btn-default btn-xs"
+            onclick="javascript: window.location = '{{base_url | urlencode}}download?projurl=local:{{clone_url | urlencode}}'"  title="Clone and edit">
+        <i class="fa fa-pencil" aria-hidden="true"></i>
+    </button>
+{% endif %}
+{% endblock %}
+
 {% block headercontainer %}
 <span id="save_widget" class="save_widget">
     <span id="notebook_name" class="filename" style="border:none">{{notebook_name}}</span>

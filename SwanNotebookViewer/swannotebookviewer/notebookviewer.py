@@ -1,6 +1,6 @@
 
 
-from notebook.base.handlers import IPythonHandler, path_regex
+from notebook.base.handlers import IPythonHandler, FilesRedirectHandler, path_regex
 from notebook.utils import url_path_join
 from tornado import web
 from traitlets.config import Config
@@ -8,48 +8,64 @@ from nbconvert import HTMLExporter
 import nbformat
 import logging
 
+def get_NotebookViewerHandler(show_clone=False, content_manager=None):
 
-class NotebookViewerHandler(IPythonHandler):
-    """
-        Jupyter server extension to provide a view-only mode to open notebooks.
-        When users receive a shared project, now they can open it and use this extension
-        to load the notebooks in view-mode (without the editing options that would allow
-        the them to edit the document, even without permissions to save the changes).
-        This creates a new endpoint called "notebook", followed by the path to the notebook
-        (the normal, editable mode, is called "notebooks").
-    """
+    class NotebookViewerHandlerClass(IPythonHandler):
+        """
+            Jupyter server extension to provide a view-only mode to open notebooks.
+            When users receive a shared project, now they can open it and use this extension
+            to load the notebooks in view-mode (without the editing options that would allow
+            the them to edit the document, even without permissions to save the changes).
+            This creates a new endpoint called "notebook", followed by the path to the notebook
+            (the normal, editable mode, is called "notebooks").
+            This extension is also used when viewing a notebook from a Gallery.
+        """
 
-    @web.authenticated
-    def get(self, path):
+        @web.authenticated
+        def get(self, path):
 
-        path = path.strip('/')
-        cm = self.contents_manager
+            path = path.strip('/')
 
-        log.info("Viewing notebook %s" % path)
+            cm = content_manager(self) if content_manager else self.contents_manager
 
-        try:
-            model = cm.get(path, content=True)
-        except web.HTTPError as e:
-            raise
+            log.info("Viewing notebook %s" % path)
 
-        if model['type'] != 'notebook':
-            # not a notebook, redirect to files
-            return FilesRedirectHandler.redirect_to_files(self, path)
+            try:
+                model = cm.get(path, content=True)
+            except web.HTTPError as e:
+                raise
 
-        html_exporter = HTMLExporter()
-        html_exporter.template_file = 'basic'
+            if model['type'] != 'notebook':
+                # not a notebook, redirect to files
+                return FilesRedirectHandler.redirect_to_files(self, path)
 
-        (body, resources) = html_exporter.from_notebook_node(model['content'])
+            html_exporter = HTMLExporter()
+            html_exporter.template_file = 'basic'
 
-        name = path.rsplit('/', 1)[-1]
+            (body, resources) = html_exporter.from_notebook_node(model['content'])
 
-        self.write(self.render_template('notebook_view.html',
-            notebook_name=name,
-            notebook=body,
-            resources=resources
+            name = path.rsplit('/', 1)[-1]
+
+            path = model['clone_url']
+            if model['clone_url'] and self.get_argument("clone_folder", False):
+                path = path.split('/')
+                path.pop(-1)
+                path = "/".join(path)
+
+            self.write(self.render_template('notebook_view.html',
+                notebook_name=name,
+                notebook=body,
+                resources=resources,
+                clonable=show_clone,
+                clone_url=path,
+                base_url=self.base_url
+                )
             )
-        )
-        self.finish()
+            self.finish()
+
+    return NotebookViewerHandlerClass
+
+NotebookViewerHandler = get_NotebookViewerHandler()
 
 
 def load_jupyter_server_extension(nb_server_app):
