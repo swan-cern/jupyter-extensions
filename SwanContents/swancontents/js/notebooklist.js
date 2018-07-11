@@ -956,7 +956,7 @@ define([
                                     if (tag == 'a') {
                                         if (name == 'href') {
 
-                                            var folder_path = path.replace('readme.md', '');
+                                            var folder_path = path.toLowerCase().replace('readme.md', '');
 
                                             var url_string;
                                             var blank = false;
