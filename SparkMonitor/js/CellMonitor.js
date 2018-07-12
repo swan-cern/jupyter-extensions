@@ -10,7 +10,6 @@ import livestamp from 'kuende-livestamp';   // Used for displaying auto-updating
 import WidgetHTML from './cellmonitor.html' // Template HTML for the display
 import './styles.css'                       // CSS styles
 import './jobtable.css'                     // CSS specific to job table
-import spinner from './images/spinner.gif'  // loading animation for spark-ui proxy
 import moment from 'moment'                 // For handling durations
 import 'moment-duration-format';            // Plugin for moment to format durations to strings
 
@@ -148,7 +147,7 @@ CellMonitor.prototype.removeDisplay = function () {
 CellMonitor.prototype.stopJobs = function () {
     Jupyter.notebook.kernel.interrupt(); // This does not stop the job..does not work as expected.
     this.monitor.send({
-        msgtype: 'sparkStopJobs',
+        msgtype: 'sparkStopJobs'
     });
 }
 
@@ -157,24 +156,9 @@ CellMonitor.prototype.stopJobs = function () {
  * @param {string} [url=] - A relative url to open within the main domain.
  */
 CellMonitor.prototype.openSparkUI = function (url) {
-    if (!url) url = '';
-    var iframe = $('\
-                    <div style="overflow:hidden">\
-                    <iframe src="'+ Jupyter.notebook.base_url + 'sparkmonitor/' + url + '" frameborder="0" scrolling="yes" class="sparkuiframe">\
-                    </iframe>\
-                    </div>\
-                    ');
-    iframe.find('.sparkuiframe').css('background-image', 'url("' + requirejs.toUrl('./' + spinner) + '")');
-    iframe.find('.sparkuiframe').css('background-repeat', 'no-repeat');
-    iframe.find('.sparkuiframe').css('background-position', "50% 50%");
-    iframe.find('.sparkuiframe').width('100%');
-    iframe.find('.sparkuiframe').height('100%');
-    iframe.dialog({
-        title: "Spark UI",
-        width: 1000,
-        height: 500,
-        autoResize: false,
-        dialogClass: "sparkui-dialog"
+    this.monitor.send({
+        action: 'openMonitor',
+        url: url
     });
 }
 

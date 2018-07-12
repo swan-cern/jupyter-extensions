@@ -2,7 +2,7 @@
 def _jupyter_server_extension_paths():
     """ Used by "jupyter serverextension" command to install web server extension """
     return [{
-        "module": "sparkconnector.connector"
+        "module": "sparkconnector.portallocator"
     }]
 
 def _jupyter_nbextension_paths():

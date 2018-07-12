@@ -3,11 +3,13 @@
  * @module SparkMonitor
  */
 
-import Jupyter from 'base/js/namespace';  // The main Jupyter object for all frontend APIs of the notebook
-import events from 'base/js/events';	  // Jupyter events module to listen for notebook page events
-import $ from 'jquery';					  // Used for certain utility function in this module
-import CellMonitor from './CellMonitor'   // CellMonitor object constructor
-import currentcell from './currentcell'   // Module to detect currently running cell
+import Jupyter from 'base/js/namespace';    // The main Jupyter object for all frontend APIs of the notebook
+import events from 'base/js/events';	    // Jupyter events module to listen for notebook page events
+import $ from 'jquery';					    // Used for certain utility function in this module
+import CellMonitor from './CellMonitor'     // CellMonitor object constructor
+import currentcell from './currentcell'     // Module to detect currently running cell
+import requirejs from 'require'             // Used to asynchronously load other modules - Timeline and TaskChart
+import spinner from './images/spinner.gif'  // loading animation for spark-ui proxy
 
 /**
  * SparkMonitor is the main singleton class that is responsible for managing CellMonitor instances for cells that run spark jobs.
@@ -353,6 +355,29 @@ SparkMonitor.prototype.onSparkExecutorRemoved = function (data) {
 	}
 }
 
+
+SparkMonitor.prototype.openSparkUIFrame = function (data) {
+    if (!data.url) data.url = '';
+    var iframe = $('<div style="overflow:hidden">\
+                    <iframe src="'+ Jupyter.notebook.base_url + 'sparkmonitor/' + data.port + '/' + data.url + '" \
+                    frameborder="0" scrolling="yes" class="sparkuiframe">\
+                    </iframe>\
+                    </div>');
+    iframe.find('.sparkuiframe')
+        .css('background-image', 'url("' + requirejs.toUrl('./' + spinner) + '")')
+        .css('background-repeat', 'no-repeat')
+        .css('background-position', "50% 50%")
+        .width('100%')
+        .height('100%');
+    iframe.dialog({
+        title: "Spark UI",
+        width: 1000,
+        height: 500,
+        autoResize: false,
+        dialogClass: "sparkui-dialog"
+    });
+}
+
 /**
  * Delegates a received message to corresponding function.
  *
@@ -361,8 +386,9 @@ SparkMonitor.prototype.onSparkExecutorRemoved = function (data) {
 SparkMonitor.prototype.handleMessage = function (msg) {
 	if (!msg.content.data.msgtype) {
 		console.warn("SparkMonitor: Unknown message");
-	}
-	if (msg.content.data.msgtype == "fromscala") {
+	} else if (msg.content.data.msgtype == "openSparkUIFrame") {
+        this.openSparkUIFrame(msg.content.data);
+    } else if (msg.content.data.msgtype == "fromscala") {
 		var data = JSON.parse(msg.content.data.msg);
 		switch (data.msgtype) {
 			case 'sparkJobStart':
@@ -392,9 +418,9 @@ SparkMonitor.prototype.handleMessage = function (msg) {
 			case 'sparkExecutorAdded':
 				this.onSparkExecutorAdded(data);
 				break;
-			case 'sparkExecutorRemoved':
-				this.onSparkExecutorRemoved(data);
-				break;
+            case 'sparkExecutorRemoved':
+                this.onSparkExecutorRemoved(data);
+                break;
 		}
 	}
 }

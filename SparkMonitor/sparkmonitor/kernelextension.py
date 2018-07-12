@@ -46,11 +46,13 @@ class ScalaMonitor:
         self.comm.send(msg)
 
     def handle_comm_message(self, msg):
-        """Handle message received from frontend 
-
-        Does nothing for now as this only works if kernel is not busy.
-        """
-        log.debug("Comm message received: %s", str(msg))
+        action = msg['content']['data']['action']
+        if action == 'openMonitor':
+            conf = self.ipython.user_ns.get('swan_spark_conf')
+            port = conf.get('spark.ui.port')
+            if not port:
+                port = 4040
+            self.send({'msgtype': 'openSparkUIFrame', 'port': port, 'url': msg['content']['data']['url']})
 
     def register_comm(self):
         """Register a comm_target which will be used by frontend to start communication."""

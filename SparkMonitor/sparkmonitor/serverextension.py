@@ -16,7 +16,7 @@ from traitlets.config import LoggingConfigurable
 from traitlets.traitlets import Unicode
 from bs4 import BeautifulSoup
 
-proxy_root = "/sparkmonitor"
+proxy_root = "sparkmonitor"
 
 
 class SparkMonitorHandler(IPythonHandler):
@@ -31,15 +31,25 @@ class SparkMonitorHandler(IPythonHandler):
         Fetches the Spark Web UI from the configured ports
         """
         # Without protocol and trailing slash
-        baseurl = os.environ.get("SPARKMONITOR_UI_HOST", "127.0.0.1")
-        port = os.environ.get("SPARKMONITOR_UI_PORT", "4040")
-        url = "http://" + baseurl + ":" + port
+        baseurl = os.environ.get("SERVER_HOSTNAME", "127.0.0.1")
 
-        self.request_path = self.request.uri[(
-            self.request.uri.index(proxy_root) + len(proxy_root) + 1):]
+        request_url = self.request.uri.split('/')
+        pos = request_url.index(proxy_root)
 
-        self.replace_path = self.request.uri[:self.request.uri.index(
-            proxy_root) + len(proxy_root)]
+        if pos >= len(request_url):
+            self.finish_error("application/json", {"error": "NO_PORT"})
+            return
+
+        try:
+            port = int(request_url[pos + 1])
+        except ValueError:
+            self.finish_error("application/json", {"error": "WRONG_PORT"})
+            return
+
+        self.replace_path = "/".join(request_url[0 : pos + 2])
+        self.request_path = "/".join(request_url[pos + 2:])
+
+        url = "http://" + baseurl + ":" + str(port)
 
         log.debug("GET: Request uri:%s Port: %s request_path: %s replace_path: %s", self.request.uri, port, self.request_path, self.replace_path)
 
@@ -91,7 +101,9 @@ class SparkMonitorHandler(IPythonHandler):
             else:
                 # Probably binary response, send it directly.
                 content = response.body
+        self.finish_error(content_type, content)
 
+    def finish_error(self, content_type, content):
         self.set_header("Content-Type", content_type)
         self.write(content)
         self.finish()
@@ -118,7 +130,7 @@ def load_jupyter_server_extension(nb_server_app):
     web_app = nb_server_app.web_app
     host_pattern = ".*$"
     route_pattern = url_path_join(
-        web_app.settings["base_url"], proxy_root + ".*")
+        web_app.settings["base_url"], '/' + proxy_root + ".*")
     web_app.add_handlers(host_pattern, [(route_pattern, SparkMonitorHandler)])
 
 

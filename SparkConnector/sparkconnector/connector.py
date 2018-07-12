@@ -5,12 +5,13 @@ try:
 except ImportError:
     ipykernel_imported = False
 
-import os, sys, json, logging, tempfile, time, subprocess, socket
+import os, sys, json, logging, tempfile, time, subprocess
 from pyspark import SparkConf, SparkContext
 from pyspark.sql import SparkSession
 from threading import Thread
 from string import Formatter
-from io import open
+
+from .portallocator import PortsAllocatorClient, NoPortsException, GeneralException
 
 class SparkConnector:
     """ Main singleton object for the kernel extension """
@@ -25,6 +26,7 @@ class SparkConnector:
         log_path = self.file_thread.create_file()
         self.log4j_file = self.create_properties_file(log_path)
         self.file_thread.start()
+        self.port_allocator = PortsAllocatorClient()
 
         self.cluster_name = os.environ.get('SPARK_CLUSTER_NAME')
         self.needs_auth = (self.cluster_name == "nxcals")
@@ -73,10 +75,6 @@ class SparkConnector:
                 self.send_error('sparkconn-auth', 'No valid credentials provided.')
                 return
 
-            # Check if there's another Spark connection open (check for the port open)
-            if self.is_port_in_use():
-                self.send_error('sparkconn-config', 'You already opened a Spark connection in this session. Please close it first if you want to open a new one.')
-                return
 
             try:
                 # Check if there's already a conf variable
@@ -86,20 +84,37 @@ class SparkConnector:
                 if conf:
                     self.log.warn("conf already exists: %s", conf.toDebugString())
                     if not isinstance(conf, SparkConf):
-                        self.send_error('sparkconn-config', 'There is already a "swan_spark_conf" variable defined and is not of type SparkConf.')
+                        self.send_error('sparkconn-config', 'There is already a "swan_spark_conf" variable defined and '
+                                                            'is not of type SparkConf.')
                         return
                 else:
                     conf = SparkConf()  # Create a new conf
 
-                self.configure(conf, msg['content']['data'])
+                # Ask port allocator to reserve and return 3 available ports
+                self.port_allocator.connect()
+                ports = self.port_allocator.get_ports(3)
+
+                self.configure(conf, msg['content']['data'], ports)
                 sc = SparkContext(conf = conf)
                 spark = SparkSession(sc)
 
                 self.ipython.push({"swan_spark_conf": conf, "sc": sc, "spark": spark})  # Add to users namespace
                 self.send_ok('sparkconn-connected') # Tell frontend
                 self.connected = True
+                # Tell port allocator that the connection was successfull to prevent it from cleaning the ports
+                self.port_allocator.set_connected()
+
+            except NoPortsException:
+                    self.send_error('sparkconn-config', 'You reached the maximum number of parallel Spark connections. '
+                                                        'Please shutdown a notebook connected to Spark to open more. '
+                                                        'If you already did, please wait a few seconds more.')
+
+            except GeneralException:
+                    self.send_error('sparkconn-config', 'Unknown error obtaining the ports for Spark connection.')
 
             except Exception as ex:
+                # Mark ports as available to get cleaned and given to other processes
+                self.port_allocator.set_disconnected()
                 self.send_error('sparkconn-config', str(ex))
                 self.log.error("Error creating Spark conf", exc_info=True)
 
@@ -115,7 +130,8 @@ class SparkConnector:
 
     def target_func(self, comm, msg):
         """ Callback function to be called when a frontend comm is opened """
-        self.log.info("Established connection to frontend: %s", str(msg))
+        self.log.info("Established connection to frontend")
+        self.log.debug("Received message: %s", str(msg))
         self.comm = comm
 
         @self.comm.on_msg
@@ -137,13 +153,13 @@ class SparkConnector:
                    'cluster': self.cluster_name,
                    'page': page})
 
-    def configure(self, conf, opts):
+    def configure(self, conf, opts, ports):
         """ Configures the provided conf object """
 
         conf.set('spark.driver.host', os.environ.get('SERVER_HOSTNAME'))
-        conf.set('spark.driver.port', os.environ.get('SPARK_PORT_1'))
-        conf.set('spark.blockManager.port', os.environ.get('SPARK_PORT_2'))
-        conf.set('spark.ui.port', os.environ.get('SPARK_PORT_3'))
+        conf.set('spark.driver.port', ports[0])
+        conf.set('spark.blockManager.port', ports[1])
+        conf.set('spark.ui.port', ports[2])
         conf.set('spark.master', 'yarn')
         conf.set('spark.authenticate', True)
         conf.set('spark.network.crypto.enabled', True)
@@ -211,19 +227,6 @@ class SparkConnector:
 
         return path
 
-    def is_port_in_use(self):
-        """ Check if there's already a Spark connection """
-
-        in_use = True
-        s = socket.socket()
-        try:
-            s.connect((socket.gethostname(), int(os.environ.get('SPARK_PORT_1'))))
-        except socket.error:
-            in_use = False
-
-        s.close()
-
-        return in_use
 
 class LogReader(Thread):
     """ Thread to read a file where the logs from Spark are being written """
@@ -268,8 +271,8 @@ class LogReader(Thread):
 def load_ipython_extension(ipython):
     """ Load Jupyter kernel extension """
 
-    log = logging.getLogger('tornado.sparkconnector')
-    log.name = 'SparkConnector'
+    log = logging.getLogger('tornado.sparkconnector.connector')
+    log.name = 'SparkConnector.connector'
     log.setLevel(logging.INFO)
     log.propagate = True
 
