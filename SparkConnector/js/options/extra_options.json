@@ -15,7 +15,7 @@
     {
       "name": "spark.driver.extraJavaOptions",
       "concatenate": " ",
-      "value": "-Dservice.url=https://cs-ccr-nxcalstb1.cern.ch:19093,https://cs-ccr-nxcalstb2.cern.ch:19093 -Djavax.net.ssl.trustStore=/etc/pki/tls/certs/truststore.jks -Djavax.net.ssl.trustStorePassword=password"
+      "value": "-Dservice.url=https://cs-ccr-nxcalstb1.cern.ch:19093,https://cs-ccr-testbed2.cern.ch:19093,https://cs-ccr-testbed3.cern.ch:19093 -Djavax.net.ssl.trustStore=/etc/pki/tls/certs/truststore.jks -Djavax.net.ssl.trustStorePassword=password"
     },
     {
       "name": "spark.jars",
