@@ -25,7 +25,7 @@ def get_name_from_shared_from_link(r):
     return finalFilename
 
 def is_cernbox_shared_link(proj_name):
-    return (proj_name.startswith(CERNBoxPrefix) or proj_name.startswith(CERNBoxPrefixTesting))and proj_name.endswith('download')
+    return (proj_name.startswith(CERNBoxPrefix) or proj_name.startswith(CERNBoxPrefixTesting)) and 'download' in proj_name
 
 def is_good_proj_name(proj_name):
     if proj_name.endswith('.git') or proj_name.endswith('.ipynb'):
@@ -80,7 +80,11 @@ def check_url(url):
     # Check the chars
     onEOS = is_file_on_eos(url)
     local = url.startswith(LocalPrefix)
+    cernbox = url.startswith(CERNBoxPrefix) or url.startswith(CERNBoxPrefixTesting)
+
     extra_chars = ""
+    if cernbox:
+        extra_chars = "?="
     if onEOS:
         extra_chars = " ()"
     if local:
