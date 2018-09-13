@@ -3,6 +3,7 @@ import Jupyter from 'base/js/namespace';
 import events from 'base/js/events';
 import utils from 'base/js/utils';
 import configmod from 'services/config';
+import moment from 'moment'
 
 import util from './util';
 import modal from './modal';
@@ -162,7 +163,7 @@ function draw_shared_with_me () {
             elem.find('.item_name').text(name);
             elem.find('.shared_date').text(utils.format_datetime(project.shared_with[0].created));
             elem.find('.shared_date').attr("title", moment(project.shared_with[0].created).format("YYYY-MM-DD HH:mm"));
-            elem.find('.shared_size').text(formatBytes(project.size));
+            elem.find('.shared_size').text(utils.format_filesize(parseInt(project.size)));
             elem.find('.shared_user').text(project.shared_by);
             elem.find('.btn-clone').on('click', function () {
                 clone_project(project.project, project.shared_by);
@@ -348,16 +349,6 @@ function start_notebook_view() {
 
         $('#buttons-right').prepend(share_button);
     });
-}
-
-// From https://stackoverflow.com/questions/15900485/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-in-javascript
-function formatBytes(bytes) {
-    if (bytes == 0) return 'Empty';
-    var k = 1024,
-        dm = 2,
-        sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'],
-        i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
 
 /**

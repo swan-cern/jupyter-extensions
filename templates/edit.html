@@ -107,4 +107,33 @@ data-file-path="{{file_path}}"
     {{super()}}
 
 <script src="{{ static_url("edit/js/main.min.js") }}" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" charset="utf-8">
+
+    require([
+        'jquery',
+        'base/js/events',
+        'edit/js/main',
+        'edit/js/editor'
+    ], function ($, events) {
+
+      var header = $("header")[0];
+      var footer = $("footer")[0];
+
+      function resize() {
+
+          var height = $(window).height() - header.offsetHeight - footer.offsetHeight - 33;
+          var backdrop = $("#texteditor-backdrop");
+
+          // account for padding on the backdrop wrapper
+          var padding = backdrop.outerHeight(true) - backdrop.height();
+          $('div.CodeMirror').height(height - padding);
+      }
+
+      events.on('file_loaded.Editor', function() {
+        window.onresize = resize;
+        resize(); 
+      });
+    });
+
+</script>
 {% endblock %}

@@ -6,8 +6,9 @@ define([
     'base/js/dialog',
     'base/js/utils',
     'base/js/events',
-    'base/js/keyboard'
-], function ($, require, Jupyter, notebook_list, dialog, utils, events, keyboard) {
+    'base/js/keyboard',
+    'moment'
+], function ($, require, Jupyter, notebook_list, dialog, utils, events, keyboard, moment) {
 
     /**
      * Extends Jupyter notebooklist lib to cope with the new filemanager and handlers
@@ -117,6 +118,11 @@ define([
 
             if (!is_project_view || model.type == 'project') {
                 item = this.new_item_swan(i + offset, true, len);
+
+                if (model.type === 'project') {
+                    model.size = undefined;
+                }
+
                 try {
                     this.add_link(model, item);
                 } catch (err) {
@@ -294,6 +300,11 @@ define([
             // push a new route without reloading the page
             link.click(function (e) {
 
+                // Allow the default browser action when the user holds a modifier (e.g., Ctrl-Click)
+                if(e.altKey || e.metaKey || e.shiftKey) {
+                    return true;
+                }
+
                 window.history.pushState({
                     path: url_path
                 }, url_path, utils.url_path_join(
@@ -309,6 +320,9 @@ define([
         // Add in the date that the file was last modified
         item.find(".item_modified").text(utils.format_datetime(model.last_modified));
         item.find(".item_modified").attr("title", moment(model.last_modified).format("YYYY-MM-DD HH:mm"));
+
+        var filesize = utils.format_filesize(model.size);
+        item.find(".file-size").text(filesize || '\xA0');
     };
 
     /**
@@ -535,9 +549,15 @@ define([
             .appendTo(row);
 
         var actions_column = $('<div/>')
-            .addClass("col-md-4")
+            .addClass("col-md-3")
             .addClass("hidden-xs")
             .append('<ul class="actions">')
+            .appendTo(row);
+
+        var size_column = $('<div/>')
+            .addClass("col-md-1")
+            .addClass("hidden-xs")
+            .addClass("file-size")
             .appendTo(row);
 
         var status_column = $('<div/>')
@@ -1133,7 +1153,8 @@ define([
         // Add an event handler browser back and forward events
         window.onpopstate = function (e) {
             if (e.state !== null) {
-                var path = window.history.state ? window.history.state.path : '';
+                var path = (window.history.state && window.history.state.path) ?
+                    window.history.state.path : '';
                 that.update_swan_location(path);
             }
         };
@@ -1263,6 +1284,12 @@ define([
             );
 
             return $('<a href="' + url + '">' + (html ? html : title) + '</a>').click(function (e) {
+
+                // Allow the default browser action when the user holds a modifier (e.g., Ctrl-Click)
+                if(e.altKey || e.metaKey || e.shiftKey) {
+                    return true;
+                }
+
                 window.history.pushState({
                     path: path
                 }, title, url);
@@ -1298,7 +1325,8 @@ define([
 
     var sort_functions = {
         'sort-name': name_sorter,
-        'last-modified': modified_sorter
+        'last-modified': modified_sorter,
+        'file-size': size_sorter
     };
 
     function name_sorter(ascending) {
@@ -1324,6 +1352,25 @@ define([
         return (function (a, b) {
             return utils.datetime_sort_helper(a.last_modified, b.last_modified,
                 order)
+        });
+    }
+
+    function size_sorter(ascending) {
+        // directories have file size of undefined
+        return (function(a, b) {
+          if (a.size === undefined) {
+             return (ascending) ? -1 : 1;
+          }
+           if (b.size === undefined) {
+             return (ascending) ? 1 : -1;
+          }
+           if (a.size > b.size) {
+            return (ascending) ? -1 : 1;
+          }
+           if (b.size > a.size) {
+            return (ascending) ? 1 : -1;
+          }
+           return 0;
         });
     }
 
