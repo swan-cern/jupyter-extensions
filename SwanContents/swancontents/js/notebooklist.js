@@ -496,7 +496,7 @@ define([
 
                 window.history.pushState({
                     path: path
-                }, url, path);
+                }, path, url);
                 that.update_swan_location(path);
             }
 
