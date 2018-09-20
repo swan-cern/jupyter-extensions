@@ -20,7 +20,7 @@ data-server-root="{{server_root}}"
     <i class="fa fa-terminal" aria-hidden="true"></i>
   </button>
   {% endif %}
-  <button class="btn btn-default btn-xs" onclick="javascript: window.location = '{{base_url}}gallery'" title="Examples Gallery">
+  <button class="btn btn-default btn-xs" onclick="window.open('{{base_url}}gallery', '_blank')" title="Examples Gallery">
     <i class="fa fa-picture-o" aria-hidden="true"></i>
   </button>
 {% endblock %}
@@ -30,7 +30,7 @@ data-server-root="{{server_root}}"
   <a href="#" data-toggle="modal" data-target="#running-modal">Running Processes</a>
 </li>
 <li>
-  <a href="{{base_url}}nbextensions">Nbextensions configuration</a>
+  <a href="{{base_url}}nbextensions" onclick="window.open('{{base_url}}nbextensions', '_blank');return false">Nbextensions configuration</a>
 </li>
 {% endblock %}
 
