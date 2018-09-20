@@ -1,7 +1,7 @@
 
-all: swanintro/js
+all: swanintro/js/extension.js
 
-swanintro/js: js/*
+swanintro/js/extension.js: js/*
 	yarn install
 	yarn run webpack
 

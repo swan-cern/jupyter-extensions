@@ -1,7 +1,7 @@
 
-all: swanhelp/js
+all: swanhelp/js/extension.js
 
-swanhelp/js: js/*
+swanhelp/js/extension.js: js/*
 	yarn install
 	yarn run webpack
 

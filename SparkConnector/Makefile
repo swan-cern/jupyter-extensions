@@ -1,7 +1,7 @@
 
-all: sparkconnector/js
+all: sparkconnector/js/extension.js
 
-sparkconnector/js: js/*
+sparkconnector/js/extension.js: js/*
 	yarn install
 	yarn run webpack
 

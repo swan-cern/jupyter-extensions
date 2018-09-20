@@ -1,7 +1,7 @@
 
-all: swanshare/js
+all: swanshare/js/extension.js
 
-swanshare/js: js/*
+swanshare/js/extension.js: js/*
 	yarn install
 	yarn run webpack
 

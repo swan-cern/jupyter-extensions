@@ -1,7 +1,7 @@
 
-all: swannotifications/js
+all: swannotifications/js/extension.js
 
-swannotifications/js: js/*
+swannotifications/js/extension.js: js/*
 	yarn install
 	yarn run webpack
 

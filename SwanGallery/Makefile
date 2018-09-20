@@ -1,7 +1,7 @@
 
-all: swangallery/js
+all: swangallery/js/extension.js
 
-swangallery/js: js/*
+swangallery/js/extension.js: js/*
 	yarn install
 	yarn run webpack
 
