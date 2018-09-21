@@ -26,6 +26,8 @@ class SparkConnector:
         self.log4j_file = self.create_properties_file(log_path)
         self.file_thread.start()
 
+        self.cluster_name = os.environ.get('SPARK_CLUSTER_NAME')
+        self.needs_auth = (self.cluster_name == "nxcals")
 
     def send(self, msg):
         """Send a message to the frontend"""
@@ -60,10 +62,9 @@ class SparkConnector:
                 self.send_ok('sparkconn-connected')
                 return
 
-            # Prevent the start os SparkSession before knowing that the ticket is there
-            # Otherwise the user needs to restart the kernel because the exception is not
-            # completely rolled out
-            if not subprocess.call(['klist', '-s']) == 0:
+            # As of today, NXCals still requires a valid kerberos token to
+            # access their own API.
+            if self.needs_auth and not subprocess.call(['klist', '-s']) == 0:
                 self.send_error('sparkconn-auth', 'No valid credentials provided.')
                 return
 
@@ -120,7 +121,7 @@ class SparkConnector:
         # If the user refreshes the page, he will still see the correct state
         if self.connected:
             page = 'sparkconn-connected'
-        elif not subprocess.call(['klist', '-s']) == 0:
+        elif self.needs_auth and not subprocess.call(['klist', '-s']) == 0:
             page = 'sparkconn-auth'
         else:
             page = 'sparkconn-config'
@@ -128,7 +129,7 @@ class SparkConnector:
         # Send information about the configs selected on spawner
         self.send({'msgtype': 'sparkconn-action-open',
                    'maxmemory': os.environ.get('MAX_MEMORY'),
-                   'cluster': os.environ.get('SPARK_CLUSTER_NAME'),
+                   'cluster': self.cluster_name,
                    'page': page})
 
     def configure(self, conf, opts):
