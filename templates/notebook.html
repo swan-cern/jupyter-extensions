@@ -413,13 +413,13 @@ data-notebook-path="{{notebook_path | urlencode}}"
 
     require(['jquery'], function($){
 
-        $(window).load(function() {
+        $(window).on('load', function() {
 
             var menu = $('#menubar-container');
             var main_app = $('#ipython-main-app');
 
-            var menu_pos = $('#menubar-container').offset().top;
-            var menu_height = $('#menubar-container').outerHeight();
+            var menu_pos = menu.offset().top;
+            var menu_height = menu.outerHeight();
 
             $(window).scroll(function (event) {
 
