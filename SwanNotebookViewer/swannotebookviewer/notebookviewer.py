@@ -46,13 +46,12 @@ def get_NotebookViewerHandler(show_clone=False, content_manager=None):
 
             name = path.rsplit('/', 1)[-1]
 
-            if 'clone_url' in model and model['clone_url'] and self.get_argument("clone_folder", False):
+            if 'clone_url' in model:
                 path = model['clone_url']
-                path = path.split('/')
-                path.pop(-1)
-                path = "/".join(path)
-            else:
-                path = ''
+                if model['clone_url'] and self.get_argument("clone_folder", False):
+                    path = path.split('/')
+                    path.pop(-1)
+                    path = "/".join(path)
 
             self.write(self.render_template('notebook_view.html',
                 notebook_name=name,
