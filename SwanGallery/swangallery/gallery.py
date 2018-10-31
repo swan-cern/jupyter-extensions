@@ -6,9 +6,9 @@ from notebook.utils import url_path_join
 from swannotebookviewer.notebookviewer import get_NotebookViewerHandler
 from tornado import gen, web
 from base64 import decodebytes
-import logging
+import logging, os
 
-gallery_path = '/extra_libs/gallery'
+gallery_path = os.getenv('GALLERY_PATH', '/eos/project/s/swan/public/Gallery')
 
 
 class GalleryHandler(IPythonHandler):
