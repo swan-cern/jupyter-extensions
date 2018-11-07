@@ -1,7 +1,7 @@
 
-all: hdfsbrowser/js
+all: hdfsbrowser/js/extension.js
 
-hdfsbrowser/js: js/*
+hdfsbrowser/js/extension.js: js/*
 	yarn install
 	yarn run webpack
 
