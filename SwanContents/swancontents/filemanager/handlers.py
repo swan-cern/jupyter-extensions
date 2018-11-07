@@ -22,7 +22,7 @@ class SwanAuthenticatedFileHandler(AuthenticatedFileHandler):
     @web.authenticated
     def get(self, path):
 
-        if self.root.startswith('/eos/user'):
+        if self.root.startswith('/eos/'):
             if path.startswith('swan_sharing_folder/'):
                 path = path.split('/')
                 path = url_path_join('/eos/user', path[1][0], path[1], 'SWAN_projects', "/".join(path[2:]))
