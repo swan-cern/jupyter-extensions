@@ -1,4 +1,3 @@
-
 ipykernel_imported = True
 try:
     from ipykernel import zmqshell
@@ -30,6 +29,12 @@ class SparkConnector:
 
         self.cluster_name = os.environ.get('SPARK_CLUSTER_NAME')
         self.needs_auth = (self.cluster_name == "nxcals")
+
+        # Define configuration based on cluster type
+        if self.cluster_name == 'k8s':
+            self.spark_configuration = SparkK8sConfiguration(self)
+        else:
+            self.spark_configuration = SparkYarnConfiguration(self)
 
     def send(self, msg):
         """Send a message to the frontend"""
@@ -77,25 +82,16 @@ class SparkConnector:
 
 
             try:
-                # Check if there's already a conf variable
-                # If using SparkMonitor, this is defined but is of type SparkConf
-                conf = self.ipython.user_ns.get('swan_spark_conf')
-
-                if conf:
-                    self.log.warn("conf already exists: %s", conf.toDebugString())
-                    if not isinstance(conf, SparkConf):
-                        self.send_error('sparkconn-config', 'There is already a "swan_spark_conf" variable defined and '
-                                                            'is not of type SparkConf.')
-                        return
-                else:
-                    conf = SparkConf()  # Create a new conf
-
                 # Ask port allocator to reserve and return 3 available ports
                 self.port_allocator.connect()
                 ports = self.port_allocator.get_ports(3)
 
-                self.configure(conf, msg['content']['data'], ports)
-                sc = SparkContext(conf = conf)
+                conf = self.spark_configuration.configure(
+                    msg['content']['data'],
+                    ports
+                )
+
+                sc = SparkContext(conf=conf)
                 spark = SparkSession(sc)
 
                 self.ipython.push({"swan_spark_conf": conf, "sc": sc, "spark": spark})  # Add to users namespace
@@ -153,58 +149,6 @@ class SparkConnector:
                    'cluster': self.cluster_name,
                    'page': page})
 
-    def configure(self, conf, opts, ports):
-        """ Configures the provided conf object """
-
-        conf.set('spark.driver.host', os.environ.get('SERVER_HOSTNAME'))
-        conf.set('spark.driver.port', ports[0])
-        conf.set('spark.blockManager.port', ports[1])
-        conf.set('spark.ui.port', ports[2])
-        conf.set('spark.master', 'yarn')
-        conf.set('spark.authenticate', True)
-        conf.set('spark.network.crypto.enabled', True)
-        conf.set('spark.authenticate.enableSaslEncryption', True)
-
-        extra_java_options = "-Dlog4j.configuration=file:%s" % self.log4j_file
-
-        analytics_extra_class = "/eos/project/s/swan/public/hadoop-mapreduce-client-core-2.6.0-cdh5.7.6.jar"
-        extra_class_path = conf.get('spark.driver.extraClassPath')
-        if extra_class_path:
-            extra_class_path = extra_class_path + ":" + analytics_extra_class
-        else:
-            extra_class_path = analytics_extra_class
-
-        if 'options' in opts:
-            for name, value in opts['options'].items():
-                replaceable_values = {}
-                for _, variable, _, _ in Formatter().parse(value):
-                    if variable is not None:
-                        replaceable_values[variable] = os.environ.get(variable)
-
-                value = value.format(**replaceable_values)
-
-                if name == "spark.driver.extraJavaOptions":
-                    extra_java_options = value + " " + extra_java_options
-                elif name == "spark.driver.extraClassPath":
-                    extra_class_path = extra_class_path + ":" + value
-                else:
-                    conf.set(name, value)
-
-        ld_library_path = conf.get('spark.executorEnv.LD_LIBRARY_PATH')
-        if ld_library_path:
-            ld_library_path = ld_library_path + ":" + os.environ.get('LD_LIBRARY_PATH')
-        else:
-            ld_library_path = os.environ.get('LD_LIBRARY_PATH')
-
-
-        conf.set('spark.driver.extraJavaOptions', extra_java_options)
-        conf.set('spark.driver.extraClassPath', extra_class_path)
-        conf.set('spark.executorEnv.LD_LIBRARY_PATH', ld_library_path)
-
-        # Allow the monitoring and filtering of SWAN jobs in the Spark clusters
-        app_name = conf.get('spark.app.name')
-        conf.set('spark.app.name', app_name + '_swan' if app_name else 'pyspark_shell_swan')
-
     def create_properties_file(self, log_path):
         """ Creates a configuration file for Spark log4j """
 
@@ -214,7 +158,7 @@ class SparkConnector:
 
         __location__ = os.path.realpath(
             os.path.join(os.getcwd(), os.path.dirname(__file__)))
-        f_configs = open(os.path.join(__location__, 'log4j_conf'), "r");
+        f_configs = open(os.path.join(__location__, 'log4j_conf'), "r")
 
         for line in f_configs:
             f.write(line)
@@ -226,6 +170,180 @@ class SparkConnector:
         self.log.info("Created temporary Log4j configuration file: %s", path)
 
         return path
+
+
+class SparkConfiguration(object):
+
+    def __init__(self, connector):
+        self.connector = connector
+
+    def _parse_options(self, _opts):
+        """ Parse options and set defaults """
+        _options = {}
+        if 'options' in _opts:
+            for name, value in _opts['options'].items():
+                replaceable_values = {}
+                for _, variable, _, _ in Formatter().parse(value):
+                    if variable is not None:
+                        replaceable_values[variable] = os.environ.get(variable)
+
+                value = value.format(**replaceable_values)
+                _options[name] = value
+        return _options
+
+    def configure(self, opts, ports):
+        """ Initializes Spark configuration object """
+
+        # Check if there's already a conf variablex
+        # If using SparkMonitor, this is defined but is of type SparkConf
+        conf = self.connector.ipython.user_ns.get('swan_spark_conf')
+        if conf:
+            self.connector.log.warn("conf already exists: %s", conf.toDebugString())
+            if not isinstance(conf, SparkConf):
+                raise Exception('There is already a "swan_spark_conf" variable defined and is not of type SparkConf.')
+        else:
+            conf = SparkConf()  # Create a new conf
+
+        options = self._parse_options(opts)
+
+        # Do not overwrite the existing driver extraClassPath with option, add instead
+        def_conf_extra_class_path = conf.get('spark.driver.extraClassPath', '')
+        options_extra_class_path = options.get('spark.driver.extraClassPath', '')
+        if def_conf_extra_class_path != '' and options_extra_class_path != '':
+            options['spark.driver.extraClassPath'] = def_conf_extra_class_path + ":" + options_extra_class_path
+        elif def_conf_extra_class_path != '' and options_extra_class_path == '':
+            options['spark.driver.extraClassPath'] = def_conf_extra_class_path
+        elif def_conf_extra_class_path == '' and options_extra_class_path != '':
+            options['spark.driver.extraClassPath'] = options_extra_class_path
+
+        # Add options to the default conf
+        for name, value in options.items():
+            conf.set(name, value)
+
+        # Extend conf adding logging of log4j to java options
+        base_extra_java_options = "-Dlog4j.configuration=file:%s" % self.connector.log4j_file
+        extra_java_options = conf.get("spark.driver.extraJavaOptions")
+        if extra_java_options:
+            extra_java_options = base_extra_java_options + " " + extra_java_options
+        else:
+            extra_java_options = base_extra_java_options
+        conf.set("spark.driver.extraJavaOptions", extra_java_options)
+
+        # Extend conf ensuring that LD_LIBRARY_PATH on executors is the same as on the driver
+        ld_library_path = conf.get('spark.executorEnv.LD_LIBRARY_PATH')
+        if ld_library_path:
+            ld_library_path = ld_library_path + ":" + os.environ.get('LD_LIBRARY_PATH')
+        else:
+            ld_library_path = os.environ.get('LD_LIBRARY_PATH')
+        conf.set('spark.executorEnv.LD_LIBRARY_PATH', ld_library_path)
+
+        # Extend conf with ports for the driver and block manager
+        conf.set('spark.driver.host', os.environ.get('SERVER_HOSTNAME'))
+        conf.set('spark.driver.port', ports[0])
+        conf.set('spark.blockManager.port', ports[1])
+        conf.set('spark.ui.port', ports[2])
+
+        # Extend conf with spark app name to allow the monitoring and filtering of SWAN jobs in the Spark clusters
+        app_name = conf.get('spark.app.name')
+        conf.set('spark.app.name', app_name + '_swan' if app_name else 'pyspark_shell_swan')
+
+        return conf
+
+
+class SparkK8sConfiguration(SparkConfiguration):
+
+    def _format_local_paths(self, path_array):
+        """ Dependencies which are in EOS HOME will be formatted to root:// """
+
+        spark_work_dir = None
+        for dh in self.connector.ipython.user_ns.get('_dh'):
+            if dh.startswith('/eos/home') and 'SWAN_projects' in dh:
+                # Adjust /eos/home path to /eos/user xrootd access
+                spark_work_dir = dh.replace('/eos/home', 'root://eoshome.cern.ch//eos/user', 1).replace('-', '/', 1)
+                break
+
+        adjusted_paths = []
+        for path in path_array:
+            if spark_work_dir and path.startswith('./'):
+                adjusted_path = path.replace('.', spark_work_dir, 1)
+                if " " in adjusted_path:
+                    raise Exception(
+                        'Could not stage dependencies with spark.files, spark.jars or spark.submit.pyFiles '
+                        'which include space in the name of the project or path')
+                adjusted_paths.append(adjusted_path)
+            elif path.startswith('/'):
+                raise Exception('Staging of dependencies not allowed from all local paths. '
+                                'Please use your notebook directory ./, root://, http:// or s3a://')
+            else:
+                adjusted_paths.append(path)
+
+        return ",".join(adjusted_paths)
+
+    def _retrieve_k8s_master(self, kubeconfig_path):
+        """ Extract k8s master ip from kubeconfig """
+        with open(kubeconfig_path) as f:
+            for line in f.readlines():
+                server = line.split("server:")
+                if len(server) == 2:
+                    return "k8s://" + server[1].strip()
+
+    def configure(self, opts, ports):
+        """ Initialize K8s configuration for Spark """
+
+        conf = super(self.__class__, self).configure(opts, ports)
+
+        # Set K8s configuration
+        conf.set('spark.kubernetes.namespace', os.environ.get('SPARK_USER'))
+        conf.set('spark.master', self._retrieve_k8s_master(os.environ.get('KUBECONFIG')))
+
+        # Ensure that Spark ENVs on executors are the same as on the driver
+        conf.set('spark.executorEnv.PYTHONPATH', os.environ.get('PYTHONPATH'))
+        conf.set('spark.executorEnv.JAVA_HOME', os.environ.get('JAVA_HOME'))
+        conf.set('spark.executorEnv.SPARK_HOME', os.environ.get('SPARK_HOME'))
+        conf.set('spark.executorEnv.SPARK_EXTRA_CLASSPATH', os.environ.get('SPARK_DIST_CLASSPATH'))
+
+        # There is no resource staging server for files, download directly from storage to executors
+        # Distribute files (for pyFiles add them also to files) and jars
+        spark_files = conf.get('spark.files', '')
+        conf.set('spark.files', self._format_local_paths(spark_files.split(",")))
+        spark_jars = conf.get('spark.jars', '')
+        conf.set('spark.jars', self._format_local_paths(spark_jars.split(",")))
+
+        if conf.get('spark.submit.pyFiles', None):
+            raise Exception('Option spark.submit.pyFiles is not recommended. '
+                            'Please use e.g. spark.files=./bigdl.zip and sc.addPyFile("./bigdl.zip")')
+
+        if conf.get('spark.yarn.dist.files', None) or \
+                conf.get('spark.yarn.dist.jars', None) or \
+                conf.get('spark.yarn.dist.archives', None):
+            raise Exception('Kubernetes does not support syntax for YARN, use spark.files or spark.jars')
+
+        return conf
+
+
+class SparkYarnConfiguration(SparkConfiguration):
+
+    def configure(self, opts, ports):
+        """ Initialize YARN configuration for Spark """
+
+        conf = super(self.__class__, self).configure(opts, ports)
+
+        # Initialize YARN Specific configuration
+        conf.set('spark.master', 'yarn')
+        conf.set('spark.authenticate', True)
+        conf.set('spark.network.crypto.enabled', True)
+        conf.set('spark.authenticate.enableSaslEncryption', True)
+
+        # Ensure that driver has extra classpath required for running on YARN
+        base_extra_class_path = "/eos/project/s/swan/public/hadoop-mapreduce-client-core-2.6.0-cdh5.7.6.jar"
+        extra_class_path = conf.get('spark.driver.extraClassPath')
+        if extra_class_path:
+            extra_class_path = base_extra_class_path + ":" + extra_class_path
+        else:
+            extra_class_path = base_extra_class_path
+        conf.set('spark.driver.extraClassPath', extra_class_path)
+
+        return conf
 
 
 class LogReader(Thread):
