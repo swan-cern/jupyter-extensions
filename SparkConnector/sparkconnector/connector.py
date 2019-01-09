@@ -50,7 +50,12 @@ class SparkConnector:
         # Try to get a kerberos ticket
         if action == 'sparkconn-action-auth':
 
-            if os.system("echo \"%s\" | kinit" % msg['content']['data']['password']) == 0:
+            # Execute kinit and pipe password directly to the process without exposing it.
+            auth_kinit = msg['content']['data']['password']
+            p = subprocess.Popen(['kinit'], stdin=subprocess.PIPE, universal_newlines=True)
+            p.communicate(input=auth_kinit)
+
+            if p.wait() == 0:
                 self.send_ok('sparkconn-config')
             else:
                 self.send_error('sparkconn-auth', 'Error obtaining the ticket. Is the password correct?')
