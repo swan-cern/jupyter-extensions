@@ -192,12 +192,15 @@ SparkConnector.prototype.connect = function () {
 
     var options = {};
 
+    // Add user options
     $.each(this.options.list_of_options, function (i, option) {
         options[option.name] = option.value
     });
 
+    // Add bundled options
     $.each(this.options.bundled_options, function (i, bundle) {
         $.each(extra_options[bundle], function (i, option) {
+            // Do not overwrite user options, add new or concatenate
             if (!(option.name in options)) {
                 options[option.name] = option.value
             } else if ("concatenate" in option) {
