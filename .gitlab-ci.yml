@@ -1,70 +1,51 @@
+image: gitlab-registry.cern.ch/swan/docker-images/builder
+
 stages:
-  - start
   - build
-  #- test
   - release
-  
-start:
-  stage: start
-  when: manual
-  allow_failure: false
-  script:
-    - echo "Starting Jupyter jobs"
-  only:
-    - schedules
-    - web
 
-build-sparkmonitor-js:
+build-release:
   stage: build
   script:
-    - echo "Building Sparkmonitor JS"
-    - cd SparkMonitor
-    - yarn config set cache-folder .yarn
-    - yarn install
-    - yarn run webpack
+    - echo "Building Extensions"
+    - ls -d ./*/ | xargs -n1 sh -c 'if [ -e $0Makefile ]; then echo "Building $0" ; cd $0 ; make ; fi'
   cache:
-    untracked: true
-    key: "$CI_PROJECT_ID.js"
+    key: "$CI_COMMIT_REF_SLUG"
     paths:
-      - SparkMonitor/node_modules/
-      - SparkMonitor/.yarn
-  artifacts:
-    paths:
-      - SparkMonitor/sparkmonitor/
-  only:
-    - schedules
-    - web
+      - ./
+  tags:
+    - docker
 
-build-sparkmonitor-scala:
-  stage: build
-  script:
-    - echo "Building Sparkmonitor Scala"
-    - cd SparkMonitor/scalalistener/
-    - sbt package
-  cache:
-    untracked: true
-    key: "$CI_PROJECT_ID.scala"
-    paths:
-      - SparkMonitor/scalalistener/target/
-  artifacts:
-    paths:
-      - SparkMonitor/sparkmonitor/
-  only:
-    - schedules
-    - web
-
-release-extra_libs:
+release-version:
   stage: release
   script:
-    - echo "Compiling artifacts for extra_libs"
-  artifacts:
-    name: "extra_libs"
+    - echo "Releasing $CI_COMMIT_TAG"
+    - rm -rf ./*/js ./*/node_modules ./*/Makefile ./*/package.json ./*/webpack.config.js ./*/yarn.lock ./*/conf.json ./*/scalalistener .git*
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
     paths:
-      - SparkMonitor/sparkmonitor/
-      - Swan*
-      - scripts
-      - templates
+      - ./
+  artifacts:
+    name: $CI_COMMIT_TAG
+    paths:
+      - ./*
+    expire_in: 4 weeks
+  only: 
+      - /^v.*$/
+
+release-daily:
+  stage: release
+  script:
+    - echo "Temporary release"
+    - rm -rf ./*/js ./*/node_modules ./*/Makefile ./*/package.json ./*/webpack.config.js ./*/yarn.lock ./*/conf.json ./*/scalalistener .git*
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - ./
+  artifacts:
+    name: "daily"
+    paths:
+      - ./*
     expire_in: 3 days
   only:
-    - schedules
-    - web
+    - qa
