@@ -7,3 +7,7 @@ def _jupyter_nbextension_paths():
                 dest="swanintro",
                 require="swanintro/extension"),
             ]
+
+def _jupyter_server_extension_paths():
+    # Empty to avoid error when automatically trying to enable all serverextensions
+    return []
