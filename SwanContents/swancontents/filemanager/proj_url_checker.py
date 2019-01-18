@@ -12,8 +12,9 @@ from tornado import web
 
 CERNBoxPrefix = 'https://cernbox.cern.ch/index.php/s'
 CERNBoxPrefixTesting = 'https://cernboxwebpreview.cern.ch/index.php/s'
-EOSUserPrefix = 'file://eos/user'
+EOSUserPrefix = 'file://eos/'
 LocalPrefix = 'local:'
+EOSUserRE = '/eos/(docker/)?(user/[a-z]|home-[a-z])/([a-z]+)'
 
 def raise_error(emsg):
     raise web.HTTPError(400, reason = emsg)
@@ -36,6 +37,12 @@ def is_good_proj_name(proj_name):
 
 def is_file_on_eos(proj_name):
     return proj_name.startswith(EOSUserPrefix)
+
+def get_eos_username(eos_path):
+    try:
+        return re.search(EOSUserRE, eos_path).group(3)
+    except AttributeError:
+        return None
 
 def has_good_chars(name, extra_chars=''):
     '''Check if contains only good characters.
