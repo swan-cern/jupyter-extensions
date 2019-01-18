@@ -9,7 +9,7 @@ setup(name='swancontents',
       packages=find_packages(),
       zip_safe=False,
       install_requires=[
-          'notebook==5.6.*',
+          'notebook==5.7.*',
           'tornado',
           'jupyter_core'
       ],

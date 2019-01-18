@@ -44,9 +44,9 @@
             jquery: 'components/jquery/jquery.min',
             json: 'components/requirejs-plugins/src/json',
             text: 'components/requirejs-text/text',
-            bootstrap: 'components/bootstrap/js/bootstrap.min',
+            bootstrap: 'components/bootstrap/dist/js/bootstrap.min',
             bootstraptour: 'components/bootstrap-tour/build/js/bootstrap-tour.min',
-            'jquery-ui': 'components/jquery-ui/ui/minified/jquery-ui.min',
+            'jquery-ui': 'components/jquery-ui/jquery-ui.min',
             moment: 'components/moment/min/moment-with-locales',
             codemirror: 'components/codemirror',
             termjs: 'components/xterm.js/xterm',
@@ -123,7 +123,7 @@ dir="ltr">
   <div id="header-container" class="container">
       <div class="row">
           <div class="{% if tree %}col-md-3{% else %}col-md-1{% endif %} col-xs-6">
-              <div id="ipython_notebook" class="nav navbar-brand"><a href="{{base_url}}projects" title='Swan Projects'>{% block logo %}<img src='/hub/static/swan/logos/logo_swan_cloudhisto.png' alt='SWAN'/>{% endblock %}</a></div>
+              <div id="ipython_notebook" class="nav navbar-brand"><a href="{{base_url}}projects" title='Swan Projects'>{% block logo %}<img src='/hub/logo' alt='SWAN'/>{% endblock %}</a></div>
           </div>
 
           <div class="col-md-3 {% if tree %}col-md-push-6{% else %}col-md-push-8{% endif %} col-xs-6 control">
@@ -194,7 +194,7 @@ dir="ltr">
     <div class="container">
         <div class="row">
             <div class="col-xs-8 text">
-                    <span class="text-muted">SWAN &copy; Copyright CERN 2016-2018. All rights reserved.</span>
+                    <span class="text-muted">SWAN &copy; Copyright CERN 2016-2019. All rights reserved.</span>
                     <ul class="text-muted">
                         <li><a target="_blank" href="http://swan.web.cern.ch/">Home</a></li>
                         <li><a href="mailto:swan-talk@cern.ch">Contact</a></li>
