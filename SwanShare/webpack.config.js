@@ -8,7 +8,7 @@ module.exports = {
         libraryTarget: 'umd'
     },
     externals: ['jquery', 'base/js/namespace', 'base/js/utils', 'base/js/events', 'services/config', 'services/contents',
-        'require', 'base/js/dialog', 'base/js/keyboard', 'moment'],
+        'require', 'base/js/dialog', 'base/js/keyboard', 'moment', 'services/config'],
     module: {
         rules: [{
             test: /\.html$/,

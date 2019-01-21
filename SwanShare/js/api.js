@@ -1,11 +1,41 @@
 import $ from 'jquery';
 import require from 'require';
-import endpoints from './api_endpoints.json'
+import utils from 'base/js/utils';
+import configmod from 'services/config';
+import endpoints_default from './api_endpoints.json';
 
 /**
  * CERNBox API connector
  * Converts API calls in callable functions and hides the complexities of getting and keeping track of a token
  */
+
+var base_url = utils.get_body_data('baseUrl');
+var endpoints;
+
+/**
+ * Create a promise to load the endpoints configs.
+ * Useful to provide different endpoints than the default ones.
+ */
+var configs_check = new Promise(function(resolve, _) {
+    var config = new configmod.ConfigSection('sharing', {base_url: base_url});
+    config.load();
+    config.loaded.then(function() {
+        if (config.data.sharing) {
+            console.log("Found configurations for SwanShare", config.data.sharing);
+            endpoints = config.data.sharing;
+            resolve();
+        } else {
+            console.log("Using default configuration for SwanShare");
+            endpoints = endpoints_default;
+            resolve();
+        }
+    }).catch(function(){
+        console.warn("Error getting SwanShare config: Using default");
+        endpoints = endpoints_default;
+        resolve();
+    });
+});
+
 
 function TokenError(message) {
     this.name = "TokenError";
@@ -69,11 +99,14 @@ var authtoken = {
      */
     ready: function (func, config, success, failure) {
 
-        if (this._token == -1 || new Date(this._token.expire) < new Date()) {
-            this._get_auth_token(func, config, success, failure);
-        } else {
-            func(this._token.authtoken, config, success, failure);
-        }
+        var that = this;
+        configs_check.then(function() {
+            if (that._token == -1 || new Date(that._token.expire) < new Date()) {
+                that._get_auth_token(func, config, success, failure);
+            } else {
+                func(that._token.authtoken, config, success, failure);
+            }
+        });
     },
 
     /**
@@ -226,10 +259,18 @@ function execute_function(func) {
                     authtoken.invalidate();
                     authtoken.ready(func, config, success, failure);
                 } catch (e2) {
-                    failure(_, e.message, e2);
+                    if(failure) {
+                        failure(_, e.message, e2);
+                    } else {
+                        console.error("SwanShare API error", e2);
+                    }
                 }
             } else {
-                failure(_, e.message, e);
+                if(failure) {
+                    failure(_, e.message, e);
+                }else {
+                    console.error("SwanShare API error getting Token", e);
+                }
             }
         }
 
