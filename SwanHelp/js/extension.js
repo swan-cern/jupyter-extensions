@@ -1,5 +1,7 @@
 import $ from 'jquery';
 import dialog from 'base/js/dialog';
+import utils from 'base/js/utils'
+import configmod from 'services/config'
 import CodeMirror from 'codemirror/lib/codemirror';
 import cmpython from 'codemirror/mode/python/python';
 import cmip from 'notebook/js/codemirror-ipython'
@@ -12,7 +14,34 @@ var modal;
 var history_stack = [];
 var pages = {};
 
-var repo_url = "https://raw.githubusercontent.com/swan-cern/help/master/";
+var base_url = utils.get_body_data('baseUrl');
+var repo_url_default = "https://raw.githubusercontent.com/swan-cern/help/master/";
+var repo_url;
+
+
+/**
+ * Create a promise to load the endpoints configs.
+ * Useful to provide different endpoints than the default ones.
+ */
+var configs_check = new Promise(function(resolve, _) {
+    var config = new configmod.ConfigSection('help', {base_url: base_url});
+    config.load();
+    config.loaded.then(function() {
+        if (config.data.help) {
+            console.log("Found configurations for SwanHelp", config.data.help);
+            repo_url = config.data.help;
+            resolve();
+        } else {
+            console.log("Using default configuration for SwanHelp");
+            repo_url = repo_url_default;
+            resolve();
+        }
+    }).catch(function(){
+        console.warn("Error getting SwanHelp config: Using default");
+        repo_url = repo_url_default;
+        resolve();
+    });
+});
 
 /**
  * Load extension
@@ -20,30 +49,32 @@ var repo_url = "https://raw.githubusercontent.com/swan-cern/help/master/";
  */
 function load_ipython_extension() {
 
-    $.get(repo_url + 'README.md', function (response) {
+    configs_check.then(function() {
+        $.get(repo_url + 'README.md', function (response) {
 
-        var html = markdown_to_html(response, '');
-        html.addClass('home_wrapper');
-        html.find('ul').first().addClass('toc');
-        pages['main'] = html;
-        toc = convert_ul_json(html);
+            var html = markdown_to_html(response, '');
+            html.addClass('home_wrapper');
+            html.find('ul').first().addClass('toc');
+            pages['main'] = html;
+            toc = convert_ul_json(html);
 
-        $('#help-button')
-            .on('click', function () {
+            $('#help-button')
+                .on('click', function () {
 
-                modal = dialog.modal({
-                    draggable: false,
-                    title: 'Help',
-                    body: pages.main
-                }).attr('id', 'help-modal').addClass('right full-body');
+                    modal = dialog.modal({
+                        draggable: false,
+                        title: 'Help',
+                        body: pages.main
+                    }).attr('id', 'help-modal').addClass('right full-body');
 
-                modal.find(".modal-header").unbind("mousedown");
+                    modal.find(".modal-header").unbind("mousedown");
 
-                modal.on('hidden.bs.modal', function () {
-                    history_stack.splice(0);
-                });
-            })
-            .parent().removeClass('disabled');
+                    modal.on('hidden.bs.modal', function () {
+                        history_stack.splice(0);
+                    });
+                })
+                .parent().removeClass('disabled');
+        });
     });
 }
 

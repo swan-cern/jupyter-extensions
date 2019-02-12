@@ -9,5 +9,6 @@ module.exports = {
         libraryTarget: 'umd'
     },
     externals: ['jquery', 'require', 'base/js/dialog', 'codemirror/lib/codemirror',
-        'codemirror/mode/python/python', 'notebook/js/codemirror-ipython']
+        'codemirror/mode/python/python', 'notebook/js/codemirror-ipython',
+        'services/config', 'base/js/utils']
 };
