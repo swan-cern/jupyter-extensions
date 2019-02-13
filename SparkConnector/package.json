@@ -17,7 +17,8 @@
     "webpack": "^3.3.0"
   },
   "scripts": {
-    "webpack": "webpack -p --config webpack.config.js"
+    "webpack": "webpack -p --config webpack.config.js",
+    "dev": "webpack --watch --config webpack.config.js"
   },
   "dependencies": {
     "devbridge-autocomplete": "^1.4.5",

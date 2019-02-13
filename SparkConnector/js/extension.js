@@ -3,11 +3,12 @@ import dialog from 'base/js/dialog';
 import Jupyter from 'base/js/namespace';
 import events from 'base/js/events';
 import keyboard from 'base/js/keyboard';
+import utils from 'base/js/utils';
+import configmod from 'services/config';
 
 import autocomplete from 'devbridge-autocomplete';
 import InlineEdit from 'inline-edit-js';
 
-import extra_options from './options/extra_options.json'
 import spark_options from './options/spark_options.json'
 
 import template_configuring from './templates/configuring.html'
@@ -66,7 +67,21 @@ function SparkConnector() {
 
     this.options = this.get_notebook_metadata();
 
-    this.start_comm();
+    var that = this;
+    var base_url = utils.get_body_data('baseUrl');
+    var config = new configmod.ConfigSection('sparkconnector', {base_url: base_url});
+    config.load();
+    config.loaded.then(function() {
+        if (config.data.sparkconnector) {
+            console.log("Found configurations for SparkConnector");
+            that.extra_options = config.data.sparkconnector;
+        }
+        that.start_comm();
+    }).catch(function(){
+        console.warn("Error getting SparkConnector config. Continuing without them.");
+        that.start_comm();
+    });
+
     events.on('kernel_connected.Kernel', $.proxy(this.start_comm, this));//Make sure there is always a comm when the kernel connects.
 }
 
@@ -198,8 +213,9 @@ SparkConnector.prototype.connect = function () {
     });
 
     // Add bundled options
+    var that = this;
     $.each(this.options.bundled_options, function (i, bundle) {
-        $.each(extra_options[bundle], function (i, option) {
+        $.each(that.extra_options[bundle], function (i, option) {
             // Do not overwrite user options, add new or concatenate
             if (!(option.name in options)) {
                 options[option.name] = option.value
@@ -451,7 +467,7 @@ SparkConnector.prototype.get_html_configuring = function (error) {
     var options_list = html.find('.spark-options');
 
     // Add the bundle options to the panel
-    $.each(extra_options, function (name, options) {
+    $.each(this.extra_options, function (name, options) {
         $('<div><input type="checkbox" ' + (that.options.bundled_options.includes(name) ? 'checked' : '') + '> Include ' + name + ' options</div>')
             .appendTo(bundled_options)
             .find('input').on('click', function () {
@@ -464,6 +480,10 @@ SparkConnector.prototype.get_html_configuring = function (error) {
             }
         });
     });
+
+    if (!this.extra_options) {
+        html.find('#bundled-options').hide();
+    }
 
     // Show the first step of adding an option
     choose_option_name();
@@ -690,7 +710,7 @@ SparkConnector.prototype.get_html_configuring = function (error) {
 
         var duplicates_bundles = [];
         $.each(that.options.bundled_options, function (i, bundle) {
-            $.each(extra_options[bundle], function (i, option) {
+            $.each(that.extra_options[bundle], function (i, option) {
                 if (!("concatenate" in option)
                     && keys.some(key => key === option.name)
                     && !(option.name in duplicates_bundles)) {
@@ -755,7 +775,7 @@ SparkConnector.prototype.get_html_configuring = function (error) {
             .html(option)
             .appendTo(pair);
 
-        $.each(extra_options[option], function (i, value) {
+        $.each(that.extra_options[option], function (i, value) {
 
             var elem_value = $('<li>')
                 .append('<i class="fa fa-cog" aria-hidden="true">')
