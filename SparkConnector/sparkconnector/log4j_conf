@@ -16,3 +16,6 @@ log4j.appender.file.layout.ConversionPattern=%m%n
 
 log4j.logger.org.apache.spark.api.python.PythonGatewayServer=INFO
 log4j.logger.org.apache.spark=INFO, file
+
+log4j.logger.sparkmonitor.listener.JupyterSparkMonitorListener=WARN
+log4j.logger.sparkmonitor.listener=WARN, console
