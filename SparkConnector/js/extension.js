@@ -51,15 +51,33 @@ function SparkConnector() {
                 }
             }
         },
+        reconfigure: {
+            get_html: $.proxy(this.get_html_reconfigure, this),
+            hide_close: true,
+            buttons: {
+            }
+        },
+        connect_error: {
+            get_html: $.proxy(this.get_html_connect_error, this),
+            buttons: {
+                'Go back to configuration': {
+                    class: 'btn-primary size-100 btn-reconfig',
+                    click: $.proxy(this.back_to_config, this)
+                }
+            }
+        },
         connected: {
             get_html: $.proxy(this.get_html_connected, this),
             buttons: {
-                'Go to the notebook': {
-                    class: 'btn-primary size-100',
-                }
+                'Restart Spark session': {
+                    class: 'btn-danger size-100',
+                    click: $.proxy(this.back_to_config, this)
+                },
             }
         }
     }
+
+    console.log('SparkConnector start')
 
     this.comm = null;
 
@@ -114,8 +132,12 @@ SparkConnector.prototype.on_comm_msg = function (msg) {
             this.cluster = msg.content.data.cluster;
             show_page(this, msg.content.data.page);
             break;
-        case 'sparkconn-action-log':
-            this.connecting_logs.append(msg.content.data.msg + "\n\n");
+        case 'sparkconn-action-follow-log':
+            this.connecting_logs.append(msg.content.data.msg);
+            this.connecting_logs.scrollTop(this.connecting_logs.get(0).scrollHeight);
+            break;
+        case 'sparkconn-action-tail-log':
+            this.connecting_logs.html(msg.content.data.msg);
             this.connecting_logs.scrollTop(this.connecting_logs.get(0).scrollHeight);
             break;
         default:
@@ -133,6 +155,9 @@ SparkConnector.prototype.on_comm_msg = function (msg) {
                 break;
             case 'sparkconn-connected':
                 that.switch_state(that.states.connected);
+                break;
+            case 'sparkconn-connect-error':
+                that.switch_state(that.states.connect_error, error);
                 break;
         }
     }
@@ -170,7 +195,6 @@ SparkConnector.prototype.start_comm = function () {
             {'msgtype': 'sparkconn-action-open'});
         this.comm.on_msg($.proxy(that.on_comm_msg, that));
         this.comm.on_close($.proxy(that.on_comm_close, that));
-
     } else {
         console.log("SparkConnector: No communication established, kernel null");
     }
@@ -182,6 +206,24 @@ SparkConnector.prototype.start_comm = function () {
  */
 SparkConnector.prototype.send = function (msg) {
     this.comm.send(msg);
+}
+
+/**
+ * Action for the restart spark session button
+ * @returns {boolean} Returns false to prevent the modal box from closing
+ */
+SparkConnector.prototype.back_to_config = function () {
+    this.send({
+        action: 'sparkconn-action-disconnect',
+    });
+
+    // Switch to connect restart
+    this.switch_state(this.states.reconfigure)
+
+    // Failure of creating Spark Context needs to restart JVM due to Spark Context caching
+    Jupyter.notebook.kernel.restart();
+
+    return false;
 }
 
 /**
@@ -399,6 +441,14 @@ SparkConnector.prototype.open_modal = function () {
             title: 'Spark clusters connection',
         }).attr('id', 'sparkclusters-modal').addClass('right');
 
+
+        this.modal.click(function(e) {
+            // Close modal on click outside of connector area when in not "hide_close" state
+            if ($(e.target).is("div") && !$(e.target).closest('.modal-dialog').length && !that.state.hide_close) {
+                that.modal.modal('hide');
+            }
+        });
+
         this.modal.on('shown.bs.modal', function () {
             that.modal.find("input").first().focus();
         });
@@ -471,7 +521,7 @@ SparkConnector.prototype.get_html_configuring = function (error) {
             .append(
                 $('<button class="close" type="button" data-dismiss="alert" aria-label="Close"/>')
                     .append($('<span aria-hidden="true"/>').html('&times;'))
-            ).append($('<p/>').text(error))
+                ).append($('<p/>').text(error.msg))
             .appendTo(html);
     }
 
@@ -813,6 +863,67 @@ SparkConnector.prototype.get_html_configuring = function (error) {
 }
 
 /**
+ * Generates the HTML corresponding to the "restart kernel and session" state of Spark connector.
+ */
+SparkConnector.prototype.get_html_reconfigure = function () {
+    var html = this.modal.find('.modal-body');
+    var buttons = this.modal.find('.modal-footer');
+
+    // Display context restart
+    var loading = $('<div>')
+        .addClass('loading')
+        .appendTo(html);
+
+    var wrapper = $('<div>')
+        .addClass('wrapper')
+        .appendTo(loading);
+
+    $('<div>')
+        .addClass('spin')
+        .append('<i class="icon-clockwise fa fa-spin"></i>')
+        .appendTo(wrapper);
+
+    wrapper.append('Stopping Spark Context.<br>This may take a while...');
+
+    buttons.find('.btn-reconfig').hide();
+}
+
+
+/**
+ * Generates the HTML corresponding to the state of the Spark connector when starting up spark context has failed
+ */
+SparkConnector.prototype.get_html_connect_error = function (error) {
+
+    var html = this.modal.find('.modal-body');
+
+    // Display error
+    $('<div/>')
+        .addClass('alert alert-danger')
+        .css("max-height", "30%")
+        .css("overflow", "scroll")
+        .css("word-wrap", "break-word")
+        .append(
+            $('<p/>').css("font-weight", "bold").text('Error while connecting to Spark cluster')
+        )
+        .append(
+            $('<p/>').text(error)
+        )
+        .appendTo(html);
+
+    var that = this;
+    var logs_wrapper = $('<div>')
+        .addClass('connecting')
+        .appendTo(html);
+
+    logs_wrapper
+        .append($('<p/>').css("font-weight", "bold").text("Spark driver logs"))
+        .append(this.connecting_logs)
+
+    this.connecting_logs.show()
+}
+
+
+/**
  * Generates the HTML corresponding to the "connecting" state of this Spark connector.
  * In this state the logs are displayed, while the connection is ongoing.
  */
@@ -851,22 +962,34 @@ SparkConnector.prototype.get_html_connecting = function () {
 SparkConnector.prototype.get_html_connected = function () {
 
     var html = this.modal.find('.modal-body');
+    var that = this;
 
     html.html(template_connected);
 
-    if (this.connecting_logs != null) {
+    var logs_wrapper = $('<div>')
+        .addClass('connecting')
+        .appendTo(html);
 
-        var that = this;
-        $('<a>')
-            .attr('href', 'javascript:')
-            .text('Show/Hide connection logs')
-            .on('click', function () {
-                that.connecting_logs.toggle();
-            })
-            .appendTo(html);
+    this.connecting_logs = $('<pre>')
+        .addClass('logs')
+        .append('Waiting for the remaining job to finish to retrieve the logs..')
 
-        this.connecting_logs.appendTo(html);
-    }
+    var show_logs_action = $('<a>').attr('href', 'javascript:').text('show')
+
+    show_logs_action.on('click', function () {
+        show_logs_action.text('refresh')
+        that.send({
+            action: 'sparkconn-action-getlogs'
+        });
+        that.connecting_logs.show();
+    });
+
+    $('<p/>').css("font-weight", "bold").text("Spark driver logs (").append(show_logs_action).append(")").appendTo(logs_wrapper);
+    $('<p/>').text("These are the Spark Application logs. Running any Spark action in the notebook will update the driver logs file.").appendTo(logs_wrapper);
+
+    this.connecting_logs.appendTo(logs_wrapper);
+
+    this.connecting_logs.hide()
 }
 
 /**
@@ -922,9 +1045,12 @@ SparkConnector.prototype.get_notebook_metadata = function () {
     if (Jupyter.notebook.metadata &&
         Jupyter.notebook.metadata.sparkconnect) {
 
+        console.log("SparkConnector retrieve configs")
+
         //Clone the metadata so that users can recover the old configs if they choose not to save
         to_return = $.extend(true, to_return, Jupyter.notebook.metadata.sparkconnect);
     }
+
     return to_return;
 }
 
@@ -934,6 +1060,8 @@ SparkConnector.prototype.get_notebook_metadata = function () {
 SparkConnector.prototype.save_notebook_metadata = function () {
 
     var sparkconnect_metadata = $.extend(true, {}, this.options);
+
+    console.log("SparkConnector save configs")
 
     var metadata = Jupyter.notebook.metadata;
     metadata.sparkconnect = sparkconnect_metadata;

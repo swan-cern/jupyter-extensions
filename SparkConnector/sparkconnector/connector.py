@@ -116,8 +116,19 @@ class SparkConnector:
             except Exception as ex:
                 # Mark ports as available to get cleaned and given to other processes
                 self.port_allocator.set_disconnected()
-                self.send_error('sparkconn-config', str(ex))
-                self.log.error("Error creating Spark conf", exc_info=True)
+
+                # Java errors follow specific format
+                exact_java_error = str(ex).split('\n\tat')[0]
+                self.send_error('sparkconn-connect-error', exact_java_error)
+                self.log.error("Error creating Spark application", exc_info=True)
+
+        elif action == 'sparkconn-action-getlogs':
+            self.file_thread.send_log_tail()
+            return
+
+        elif action == 'sparkconn-action-disconnect':
+            self.close_spark_session()
+            self.connected = False
 
         else:
             # Unknown action requested
@@ -153,6 +164,11 @@ class SparkConnector:
                    'maxmemory': os.environ.get('MAX_MEMORY'),
                    'cluster': self.cluster_name,
                    'page': page})
+
+    def close_spark_session(self):
+        spark_context = self.ipython.user_ns.get('sc')
+        if spark_context and isinstance(spark_context, SparkContext):
+            spark_context.stop()
 
     def create_properties_file(self, log_path):
         """ Creates a configuration file for Spark log4j """
@@ -263,7 +279,6 @@ class SparkLocalConfiguration(SparkConfiguration):
         conf = super(self.__class__, self).configure(opts, ports)
 
         conf.set('spark.master', 'local[*]')
-
         return conf
 
 class SparkK8sConfiguration(SparkConfiguration):
@@ -371,9 +386,33 @@ class LogReader(Thread):
         self.path = None
         Thread.__init__(self)
 
+    def format_log_line(self, line):
+        return line.strip() + "\n\n"
+
+    def tail(self, max_size=10*1024*1024):
+        # Use rb mode to be able to seek backwards
+        with open(self.path, 'rb') as f:
+            try:
+                # Seek in file from the end to max size
+                f.seek(-max_size, os.SEEK_END)
+            except IOError as e:
+                # the file is below the max size
+                f.seek(0)
+
+            formatted_lines = []
+            for line in f.readlines():
+                formatted_lines.append(self.format_log_line(line.decode('utf-8')))
+            return formatted_lines
+
+    def send_log_tail(self):
+        self.connector.send({
+            'msgtype': 'sparkconn-action-tail-log',
+            'msg': self.tail()
+        })
+
     def create_file(self):
         """ Create a temporary file and return the path to it"""
-        fd, path = tempfile.mkstemp()
+        fd, path = tempfile.mkstemp(prefix="driver_log_")
         os.close(fd)
         self.log.info("Created temporary Log4j log file: %s", path)
         self.path = path
@@ -384,9 +423,10 @@ class LogReader(Thread):
         logfile = open(self.path,"r")
         log_lines = self.follow(logfile)
         for line in log_lines:
+            # Add double lines to the log-line for better readability
             self.connector.send({
-                "msgtype": "sparkconn-action-log",
-                "msg": line.strip()
+                "msgtype": "sparkconn-action-follow-log",
+                "msg": self.format_log_line(line)
             })
 
     # from "Generator Tricks for Systems Programmers"

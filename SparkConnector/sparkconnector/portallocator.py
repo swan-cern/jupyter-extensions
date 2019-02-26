@@ -54,7 +54,7 @@ class PortsAllocator(threading.Thread):
         with open(opened_port_file, 'w+') as f:
             f.write(str(self.queue_port))
 
-        super().__init__()
+        super(self.__class__, self).__init__()
 
     def get_ports(self, process, n):
         """
