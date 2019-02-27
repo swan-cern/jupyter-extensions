@@ -9,8 +9,6 @@ import configmod from 'services/config';
 import autocomplete from 'devbridge-autocomplete';
 import InlineEdit from 'inline-edit-js';
 
-import spark_options from './options/spark_options.json'
-
 import template_configuring from './templates/configuring.html'
 import template_connected from './templates/connected.html'
 
@@ -66,19 +64,36 @@ function SparkConnector() {
     this.comm = null;
 
     this.options = this.get_notebook_metadata();
+    this.extra_options = {};
+    this.spark_options = {};
 
     var that = this;
     var base_url = utils.get_body_data('baseUrl');
-    var config = new configmod.ConfigSection('sparkconnector', {base_url: base_url});
-    config.load();
-    config.loaded.then(function() {
-        if (config.data.sparkconnector) {
-            console.log("Found configurations for SparkConnector");
-            that.extra_options = config.data.sparkconnector;
-        }
+    var config_bundles = new configmod.ConfigSection('sparkconnector_bundles', {base_url: base_url});
+    var config_spark_options = new configmod.ConfigSection('sparkconnector_spark_options', {base_url: base_url});
+    config_bundles.load();
+    config_spark_options.load();
+
+    Promise.all([config_bundles, config_spark_options]).then(function(values) {
+
+        values[0].loaded.then(function() {
+            if (values[0].data.bundles) {
+                console.log("SparkConnector: found bundles");
+                that.extra_options = values[0].data.bundles;
+            }
+        });
+
+        values[1].loaded.then(function() {
+            if (values[1].data.spark_options) {
+                console.log("SparkConnector: found spark_options");
+                that.spark_options = values[1].data.spark_options;
+            }
+        });
+
         that.start_comm();
+
     }).catch(function(){
-        console.warn("Error getting SparkConnector config. Continuing without them.");
+        console.warn("Error getting SparkConnector configs. Continuing without them.");
         that.start_comm();
     });
 
@@ -515,7 +530,7 @@ SparkConnector.prototype.get_html_configuring = function (error) {
             .focus()
             .devbridgeAutocomplete({
                 minChars: 1,
-                lookup: spark_options,
+                lookup: that.spark_options,
                 groupBy: 'category',
                 triggerSelectOnValidInput: false,
                 onSelect: function () {

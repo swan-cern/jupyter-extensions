@@ -1,5 +1,5 @@
 {
-  "sparkconnector" : {
+  "bundles" : {
     "NXCALS": [
       {
         "name": "spark.driver.extraJavaOptions",
