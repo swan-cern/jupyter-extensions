@@ -1,4 +1,3 @@
-image: gitlab-registry.cern.ch/swan/docker-images/builder
 
 stages:
   - build
@@ -6,6 +5,7 @@ stages:
 
 build-release:
   stage: build
+  image: gitlab-registry.cern.ch/swan/docker-images/builder
   script:
     - echo "Building Extensions"
     - ls -d ./*/ | xargs -n1 sh -c 'if [ -e $0Makefile ]; then echo "Building $0" ; cd $0 ; make ; fi'
