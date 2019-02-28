@@ -49,3 +49,5 @@ release-daily:
     expire_in: 3 days
   only:
     - qa
+    - web
+    - schedules
