@@ -83,7 +83,7 @@ var authtoken = {
             }
         });
 
-        frame.attr("src", endpoints.domain + endpoints.base + endpoints.authentication + '?Origin=' + window.location.protocol + "//" + window.location.hostname);
+        frame.attr("src", endpoints.domain + endpoints.base + endpoints.authentication + '?Origin=' + window.location.origin);
         $("body").append(frame);
 
     },
