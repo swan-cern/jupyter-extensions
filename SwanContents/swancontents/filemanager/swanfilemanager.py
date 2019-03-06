@@ -2,7 +2,7 @@ from notebook import transutils #needs to be imported before Jupyter File Manage
 from notebook.services.contents.largefilemanager import LargeFileManager
 from .fileio import SwanFileManagerMixin
 from .handlers import SwanAuthenticatedFileHandler
-from .proj_url_checker import is_cernbox_shared_link, get_name_from_shared_from_link, is_file_on_eos,get_eos_username
+from .proj_url_checker import is_cernbox_shared_link, get_name_from_shared_from_link, is_file_on_eos,get_eos_username, get_path_without_eos_base
 from tornado import web
 import nbformat
 from nbformat.v4 import new_notebook
@@ -390,7 +390,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
             if username == get_eos_username(self.root_dir):
                 # Inside user own directory
                 model['type'] = 'file'
-                model['path'] = file_path.split(username, maxsplit=1)[1]
+                model['path'] = get_path_without_eos_base(file_path)
 
             else:
                 # Outside of user directory. Copy the file.
