@@ -31,9 +31,14 @@ class SparkConnector:
         self.needs_auth = (self.cluster_name == "nxcals")
 
         # Define configuration based on cluster type
-        if self.cluster_name == 'k8s':
+        if self.cluster_name == 'local':
+            # local
+            self.spark_configuration = SparkLocalConfiguration(self)
+        elif self.cluster_name == 'k8s':
+            # kubernetes
             self.spark_configuration = SparkK8sConfiguration(self)
         else:
+            # yarn
             self.spark_configuration = SparkYarnConfiguration(self)
 
     def send(self, msg):
@@ -249,6 +254,17 @@ class SparkConfiguration(object):
 
         return conf
 
+
+class SparkLocalConfiguration(SparkConfiguration):
+
+    def configure(self, opts, ports):
+        """ Initialize YARN configuration for Spark """
+
+        conf = super(self.__class__, self).configure(opts, ports)
+
+        conf.set('spark.master', 'local[*]')
+
+        return conf
 
 class SparkK8sConfiguration(SparkConfiguration):
 
