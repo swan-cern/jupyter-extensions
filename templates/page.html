@@ -5,7 +5,7 @@
     <meta charset="utf-8">
 
     <title>{% block title %}Swan{% endblock %}</title>
-    <link rel="shortcut icon" type="image/x-icon" href="/hub/static/swan/logos/favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="{{hub_prefix}}static/swan/logos/favicon.ico">
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <link rel="stylesheet" href="{{static_url('components/jquery-ui/themes/smoothness/jquery-ui.min.css') }}" type="text/css" />
     <link rel="stylesheet" href="{{static_url('components/jquery-typeahead/dist/jquery.typeahead.min.css') }}" type="text/css" />
@@ -21,7 +21,7 @@
     <link rel="stylesheet" href="/custom/css/style.css" type="text/css"/> <!-- For Dev purposes-->
     {% endif %}
     {% endblock %}
-    <link rel="stylesheet" href="/hub/static/swan/css/style.css" type="text/css" />
+    <link rel="stylesheet" href="{{hub_prefix}}static/swan/css/style.css" type="text/css" />
     <script src="{{static_url('components/es6-promise/promise.min.js')}}" type="text/javascript" charset="utf-8"></script>
     <script src="{{static_url('components/preact/index.js')}}" type="text/javascript"></script>
     <script src="{{static_url('components/proptypes/index.js')}}" type="text/javascript"></script>
@@ -123,7 +123,7 @@ dir="ltr">
   <div id="header-container" class="container">
       <div class="row">
           <div class="{% if tree %}col-md-3{% else %}col-md-1{% endif %} col-xs-6">
-              <div id="ipython_notebook" class="nav navbar-brand"><a href="{{base_url}}projects" title='Swan Projects'>{% block logo %}<img src='/hub/logo' alt='SWAN'/>{% endblock %}</a></div>
+              <div id="ipython_notebook" class="nav navbar-brand"><a href="{{base_url}}projects" title='Swan Projects'>{% block logo %}<img src='{{hub_prefix}}logo' alt='SWAN'/>{% endblock %}</a></div>
           </div>
 
           <div class="col-md-3 {% if tree %}col-md-push-6{% else %}col-md-push-8{% endif %} col-xs-6 control">
@@ -203,7 +203,7 @@ dir="ltr">
                     </ul>
             </div>
             <div class="col-xs-4 logo">
-                <img src='/hub/static/swan/logos/logo_cern.png' alt='CERN'/>
+                <img src='{{hub_prefix}}static/swan/logos/logo_cern.png' alt='CERN'/>
             </div>
         </div>
     </div>
@@ -228,7 +228,7 @@ dir="ltr">
                     'Change': {
                         class: 'btn-warning',
                         click: function () {
-                            window.location.replace('/hub/home#changeconfig');
+                            window.location.replace('{{hub_prefix}}home#changeconfig');
                         }
                     }
                 }
