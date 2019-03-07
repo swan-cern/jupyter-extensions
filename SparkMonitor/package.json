@@ -27,7 +27,7 @@
     "webpack": "^3.3.0"
   },
   "scripts": {
-    "webpack": "webpack -p --config webpack.config.js",
+    "webpack": "webpack --config webpack.config.js",
     "webpackwatch": "webpack --watch --config webpack.config.js",
     "docs": "jsdoc -c conf.json ./js/"
   },

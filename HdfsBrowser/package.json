@@ -18,7 +18,7 @@
     "style-loader": "^0.18.2"
   },
   "scripts": {
-    "webpack": "webpack -p --config webpack.config.js"
+    "webpack": "webpack --config webpack.config.js"
   },
   "dependencies": {
   }

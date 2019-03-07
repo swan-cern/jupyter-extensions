@@ -17,7 +17,7 @@
     "webpack": "^3.3.0"
   },
   "scripts": {
-    "webpack": "webpack -p --config webpack.config.js",
+    "webpack": "webpack --config webpack.config.js",
     "dev": "webpack --watch --config webpack.config.js"
   },
   "dependencies": {
