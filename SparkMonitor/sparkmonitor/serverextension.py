@@ -60,41 +60,37 @@ class SparkMonitorHandler(IPythonHandler):
         else:
             self.fetch_content(url)
 
-
     def fetch_url(self, url):
         """Fetches the root url to get the redirection url"""
         log.debug("Fetching redirection url from: %s", url)
         self.http.fetch(url, self.handle_url_response)
-
 
     def handle_url_response(self, response):
         """Gets the redirection url and uses that as base url to fetch the content"""
         if response.error:
             self.handle_content_response(response)
         else:
-            url = url_path_join(response.effective_url, self.request_path)
+            effective_url = adjust_url(response.effective_url)
+            url = url_path_join(effective_url, self.request_path)
             self.fetch_content(url)
-
 
     def fetch_content(self, url):
         """Fetches the requested content"""
         log.debug("Fetching content from: %s", url)
         self.http.fetch(url, self.handle_content_response)
 
-
     def handle_content_response(self, response):
         """Sends the fetched page as response to the GET request"""
 
         if response.error:
-            content_type = "application/json"
-            content = json.dumps({"error": "SPARK_UI_NOT_RUNNING",
-                                  "backendurl": response.effective_url, "replace_path": self.replace_path})
+            content_type = "application/txt"
+            content = "Cannot access Spark Driver UI. Visit YARN Applications page directly"
             log.debug("Spark UI not running")
 
         else:
             content_type = response.headers["Content-Type"]
             if "text/html" in content_type:
-                content = replace(response.body, self.replace_path)
+                content = adjust_content(response.body, self.replace_path)
             elif "javascript" in content_type:
                 content = response.body.decode().replace(
                     "location.origin", "location.origin +'" + self.replace_path + "' ")
@@ -142,6 +138,7 @@ else:
     BEAUTIFULSOUP_BUILDER = "lxml"
 # a regular expression to match paths against the Spark on EMR proxy paths
 PROXY_PATH_RE = re.compile(r"\/proxy\/application_\d+_\d+\/(.*)")
+JOBS_PATH_RE = re.compile(r"(.*)\/jobs\/(.*)")
 # a tuple of tuples with tag names and their attribute to automatically fix
 PROXY_ATTRIBUTES = (
     (("a", "link"), "href"),
@@ -149,9 +146,18 @@ PROXY_ATTRIBUTES = (
 )
 
 
-def replace(content, root_url):
-    """Replace all the links with our prefixed handler links,
+def adjust_url(effective_url):
+    # Adjust to original url in case of /jobs redirect, as driver does not expect redirection in this mode
+    match = JOBS_PATH_RE.match(effective_url)
+    if match is not None:
+        return match.groups()[0]
 
+    # Redirect in case of e.g. yarn proxy
+    return effective_url
+
+
+def adjust_content(content, root_url):
+    """Adjust all the links with our prefixed handler links,
      e.g.:
     /proxy/application_1467283586194_0015/static/styles.css" or
     /static/styles.css
