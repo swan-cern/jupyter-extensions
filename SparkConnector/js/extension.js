@@ -467,7 +467,7 @@ SparkConnector.prototype.open_modal = function () {
 
         this.modal.on('show.bs.modal', function () {
 
-            that.switch_state(that.state);
+            that.switch_state(that.state, that.state_config, that.state_error);
 
         }).modal('show');
         this.modal.find(".modal-header").unbind("mousedown");
@@ -518,7 +518,7 @@ SparkConnector.prototype.get_html_auth = function (config, error) {
  * In this state the user can configure the options that will be added to SparkConf.
  * @param error Error message received upon connection failed
  */
-SparkConnector.prototype.get_html_configuring = function (error) {
+SparkConnector.prototype.get_html_configuring = function (config, error) {
 
     this.options = this.get_notebook_metadata();
 
@@ -898,7 +898,7 @@ SparkConnector.prototype.get_html_configuring = function (error) {
 /**
  * Generates the HTML corresponding to the "restart kernel and session" state of Spark connector.
  */
-SparkConnector.prototype.get_html_reconfigure = function () {
+SparkConnector.prototype.get_html_reconfigure = function (config, error) {
     var html = this.modal.find('.modal-body');
     var buttons = this.modal.find('.modal-footer');
 
@@ -925,7 +925,7 @@ SparkConnector.prototype.get_html_reconfigure = function () {
 /**
  * Generates the HTML corresponding to the state of the Spark connector when starting up spark context has failed
  */
-SparkConnector.prototype.get_html_connect_error = function (error) {
+SparkConnector.prototype.get_html_connect_error = function (config, error) {
 
     var html = this.modal.find('.modal-body');
 
@@ -960,7 +960,7 @@ SparkConnector.prototype.get_html_connect_error = function (error) {
  * Generates the HTML corresponding to the "connecting" state of this Spark connector.
  * In this state the logs are displayed, while the connection is ongoing.
  */
-SparkConnector.prototype.get_html_connecting = function () {
+SparkConnector.prototype.get_html_connecting = function (config, error) {
 
     var html = this.modal.find('.modal-body');
 
@@ -999,24 +999,24 @@ SparkConnector.prototype.get_html_connected = function (config, error) {
 
     html.html(template_connected);
 
-    if (config.sparkmetrics != 'OFF') {
+    if (config.sparkmetrics) {
         var metricsURL = $('<a>').attr('href', config.sparkmetrics).attr('target','_blank').text('here')
-
-        this.metrics = $('<div>')
+        $('<div>')
             .addClass('metrics')
             .text('Spark Metrics are available ')
             .append(metricsURL)
             .appendTo(html)
     }
 
-    var historyserverURL = $('<a>').attr('href', config.sparkhistoryserver).attr('target','_blank').text('here')
-
-    this.metrics = $('<div>')
-        .addClass('metrics')
-        .text('Spark History Server is available ')
-        .append(historyserverURL)
-        .appendTo(html)
-        .after("<br>")
+    if (config.sparkhistoryserver) {
+        var historyserverURL = $('<a>').attr('href', config.sparkhistoryserver).attr('target','_blank').text('here')
+        $('<div>')
+            .addClass('metrics')
+            .text('Spark History Server is available ')
+            .append(historyserverURL)
+            .appendTo(html)
+            .after("<br>")
+    }
 
     var logs_wrapper = $('<div>')
         .addClass('connecting')
@@ -1050,8 +1050,10 @@ SparkConnector.prototype.get_html_connected = function (config, error) {
  * @param new_state State to display
  * @param error Error message to display (depends on the state)
  */
-SparkConnector.prototype.switch_state = function (new_state, config, error) {
+SparkConnector.prototype.switch_state = function (new_state, new_config, new_error) {
     this.state = new_state;
+    this.state_config = new_config;
+    this.state_error = new_error;
 
     if (this.modal) {
         var header = this.modal.find('.modal-header');
@@ -1061,7 +1063,7 @@ SparkConnector.prototype.switch_state = function (new_state, config, error) {
         body.html('');
         footer.html('');
 
-        new_state.get_html(config, error);
+        new_state.get_html(new_config, new_error);
 
         $.each(new_state.buttons, function (name, options) {
             $('<button>')

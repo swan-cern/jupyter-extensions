@@ -28,7 +28,7 @@ class SparkConnector:
         self.file_thread.start()
         self.port_allocator = PortsAllocatorClient()
 
-        self.cluster_name = os.environ.get('SPARK_CLUSTER_NAME')
+        self.cluster_name = os.environ.get('SPARK_CLUSTER_NAME', 'local')
         self.needs_auth = (self.cluster_name == "nxcals")
 
         # Define configuration based on cluster type
@@ -46,7 +46,7 @@ class SparkConnector:
         """Send a message to the frontend"""
         self.comm.send(msg)
 
-    def send_ok(self, page, config=""):
+    def send_ok(self, page, config=None):
         """Send a message to frontend to switch to a specific page and append spark config"""
         self.send({'msgtype': page, 'config': config})
 
@@ -77,7 +77,10 @@ class SparkConnector:
 
             # The user is already connected, tell the frontend
             if self.connected:
-                self.send_ok('sparkconn-connected')
+                self.send_ok(
+                    'sparkconn-connected',
+                    self.get_spark_session_config()
+                )
                 return
 
             # As of today, NXCals still requires a valid kerberos token to
@@ -102,20 +105,13 @@ class SparkConnector:
 
                 self.ipython.push({"swan_spark_conf": conf, "sc": sc, "spark": spark})  # Add to users namespace
 
-                # set the metrics URL if the config bundle is selected
-                if sc._conf.get('spark.metrics.conf.driver.sink.graphite.class') is not None:
-                    metricsurl = 'https://hadoop-grafana.web.cern.ch/d/T6lgZ90mk/sparkmetrics?orgId=1&var-ClusterName='+self.cluster_name+'&var-UserName=pkothuri&var-ApplicationId='+sc._conf.get('spark.app.id')
-                else:
-                    metricsurl = "OFF"
+                # Tell frontend
+                self.send_ok(
+                    'sparkconn-connected',
+                    self.get_spark_session_config()
+                )
 
-                # determine the history server URL depending on the selected resource manager (yarn, k8s, local etc)
-                if "yarn" in sc._conf.get('spark.master'):
-                    historyserver = sc._conf.get('spark.org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter.param.PROXY_URI_BASES').split(',', 1)[0]
-                else:
-                    historyserver = 'http://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
-
-                sparkconfig = {'sparkmetrics': metricsurl, 'sparkhistoryserver': historyserver}
-                self.send_ok('sparkconn-connected', sparkconfig) # Tell frontend
+                # Set state to connected for connector
                 self.connected = True
                 # Tell port allocator that the connection was successfull to prevent it from cleaning the ports
                 self.port_allocator.set_connected()
@@ -176,10 +172,33 @@ class SparkConnector:
 
         # Send information about the configs selected on spawner
         self.send({'msgtype': 'sparkconn-action-open',
-                   'maxmemory': os.environ.get('MAX_MEMORY'),
+                   'maxmemory': os.environ.get('MAX_MEMORY', '2'),
                    'sparkversion': spark_version,
                    'cluster': self.cluster_name,
                    'page': page})
+
+    def get_spark_session_config(self):
+        sc = self.ipython.user_ns.get('sc')
+        # set the metrics URL if the config bundle is selected
+        conn_config = {}
+        if sc._conf.get('spark.cern.grafana.url') is not None:
+            # if spark.cern.grafana.url is set, use cern spark monitoring dashboard
+            conn_config['sparkmetrics'] = sc._conf.get('spark.cern.grafana.url') + \
+                                                '?orgId=1' + \
+                                                '&var-ClusterName=' + self.cluster_name + \
+                                                '&var-UserName=' + os.environ.get('SPARK_USER', '') + \
+                                                '&var-ApplicationId=' + sc._conf.get('spark.app.id')
+
+        # determine the history server URL depending on the selected resource manager (yarn, k8s, local etc)
+        if "yarn" in sc._conf.get('spark.master'):
+            history_url = sc._conf.get(
+                'spark.org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter.param.PROXY_URI_BASES'
+            ).split(',', 1)[0]
+        else:
+            history_url = 'http://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
+        conn_config['sparkhistoryserver'] = history_url
+
+        return conn_config
 
     def close_spark_session(self):
         spark_context = self.ipython.user_ns.get('sc')
@@ -269,13 +288,13 @@ class SparkConfiguration(object):
         # Extend conf ensuring that LD_LIBRARY_PATH on executors is the same as on the driver
         ld_library_path = conf.get('spark.executorEnv.LD_LIBRARY_PATH')
         if ld_library_path:
-            ld_library_path = ld_library_path + ":" + os.environ.get('LD_LIBRARY_PATH')
+            ld_library_path = ld_library_path + ":" + os.environ.get('LD_LIBRARY_PATH', '')
         else:
-            ld_library_path = os.environ.get('LD_LIBRARY_PATH')
+            ld_library_path = os.environ.get('LD_LIBRARY_PATH', '')
         conf.set('spark.executorEnv.LD_LIBRARY_PATH', ld_library_path)
 
         # Extend conf with ports for the driver and block manager
-        conf.set('spark.driver.host', os.environ.get('SERVER_HOSTNAME'))
+        conf.set('spark.driver.host', os.environ.get('SERVER_HOSTNAME', 'localhost'))
         conf.set('spark.driver.port', ports[0])
         conf.set('spark.blockManager.port', ports[1])
         conf.set('spark.ui.port', ports[2])
