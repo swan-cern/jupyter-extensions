@@ -142,23 +142,26 @@ SparkConnector.prototype.on_comm_msg = function (msg) {
             this.connecting_logs.scrollTop(this.connecting_logs.get(0).scrollHeight);
             break;
         default:
-            show_page(this, msg.content.data.msgtype, msg.content.data.error);
+            var page = msg.content.data.msgtype;
+            var config = msg.content.data.config;
+            var error = msg.content.data.error;
+            show_page(this, page, config, error);
             break;
     }
 
-    function show_page(that, page, error) {
+    function show_page(that, page, config, error) {
         switch (page) {
             case 'sparkconn-auth':
-                that.switch_state(that.states.auth, error);
+                that.switch_state(that.states.auth, config, error);
                 break;
             case 'sparkconn-config':
-                that.switch_state(that.states.configuring, error);
+                that.switch_state(that.states.configuring, config, error);
                 break;
             case 'sparkconn-connected':
-                that.switch_state(that.states.connected);
+                that.switch_state(that.states.connected, config, error);
                 break;
             case 'sparkconn-connect-error':
-                that.switch_state(that.states.connect_error, error);
+                that.switch_state(that.states.connect_error, config, error);
                 break;
         }
     }
@@ -479,7 +482,7 @@ SparkConnector.prototype.open_modal = function () {
  * In this state the user has to input the password to generate a kerberos ticket.
  * @param error Error message received upon authentication failed
  */
-SparkConnector.prototype.get_html_auth = function (error) {
+SparkConnector.prototype.get_html_auth = function (config, error) {
 
     var that = this;
     var html = this.modal.find('.modal-body');
@@ -980,12 +983,31 @@ SparkConnector.prototype.get_html_connecting = function () {
  * Generates the HTML corresponding to the "connected" state of this Spark connector.
  * In this state the user is informed that everything is ok and that it is connected.
  */
-SparkConnector.prototype.get_html_connected = function () {
+SparkConnector.prototype.get_html_connected = function (config, error) {
 
     var html = this.modal.find('.modal-body');
     var that = this;
 
     html.html(template_connected);
+
+    if (config.sparkmetrics != 'OFF') {
+        var metricsURL = $('<a>').attr('href', config.sparkmetrics).attr('target','_blank').text('here')
+
+        this.metrics = $('<div>')
+            .addClass('metrics')
+            .text('Spark Metrics are available ')
+            .append(metricsURL)
+            .appendTo(html)
+    }
+
+    var historyserverURL = $('<a>').attr('href', config.sparkhistoryserver).attr('target','_blank').text('here')
+
+    this.metrics = $('<div>')
+        .addClass('metrics')
+        .text('Spark History Server is available ')
+        .append(historyserverURL)
+        .appendTo(html)
+        .after("<br>")
 
     var logs_wrapper = $('<div>')
         .addClass('connecting')
@@ -1019,7 +1041,7 @@ SparkConnector.prototype.get_html_connected = function () {
  * @param new_state State to display
  * @param error Error message to display (depends on the state)
  */
-SparkConnector.prototype.switch_state = function (new_state, error) {
+SparkConnector.prototype.switch_state = function (new_state, config, error) {
     this.state = new_state;
 
     if (this.modal) {
@@ -1030,7 +1052,7 @@ SparkConnector.prototype.switch_state = function (new_state, error) {
         body.html('');
         footer.html('');
 
-        new_state.get_html(error);
+        new_state.get_html(config, error);
 
         $.each(new_state.buttons, function (name, options) {
             $('<button>')

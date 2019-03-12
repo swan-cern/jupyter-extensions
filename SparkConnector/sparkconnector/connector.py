@@ -45,9 +45,9 @@ class SparkConnector:
         """Send a message to the frontend"""
         self.comm.send(msg)
 
-    def send_ok(self, page):
-        """Send a message to frontend to switch to a specific page """
-        self.send({'msgtype': page})
+    def send_ok(self, page, config=""):
+        """Send a message to frontend to switch to a specific page and append spark config"""
+        self.send({'msgtype': page, 'config': config})
 
     def send_error(self, page, error):
         """Send a message to frontend to switch to a specific page and append error message"""
@@ -100,7 +100,21 @@ class SparkConnector:
                 spark = SparkSession(sc)
 
                 self.ipython.push({"swan_spark_conf": conf, "sc": sc, "spark": spark})  # Add to users namespace
-                self.send_ok('sparkconn-connected') # Tell frontend
+
+                # set the metrics URL if the config bundle is selected
+                if sc._conf.get('spark.metrics.conf.driver.sink.graphite.class') is not None:
+                    metricsurl = 'https://hadoop-grafana.web.cern.ch/d/T6lgZ90mk/sparkmetrics?orgId=1&var-ClusterName='+self.cluster_name+'&var-UserName=pkothuri&var-ApplicationId='+sc._conf.get('spark.app.id')
+                else:
+                    metricsurl = "OFF"
+
+                # determine the history server URL depending on the selected resource manager (yarn, k8s, local etc)
+                if "yarn" in sc._conf.get('spark.master'):
+                    historyserver = sc._conf.get('spark.org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter.param.PROXY_URI_BASES').split(',', 1)[0]
+                else:
+                    historyserver = 'http://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
+
+                sparkconfig = {'sparkmetrics': metricsurl, 'sparkhistoryserver': historyserver}
+                self.send_ok('sparkconn-connected', sparkconfig) # Tell frontend
                 self.connected = True
                 # Tell port allocator that the connection was successfull to prevent it from cleaning the ports
                 self.port_allocator.set_connected()
