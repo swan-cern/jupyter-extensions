@@ -36,6 +36,13 @@ var configs_check = new Promise(function(resolve, _) {
     });
 });
 
+/**
+ * Function to give access to the endpoints outside of API
+ */
+function get_endpoints() {
+    return endpoints;
+}
+
 
 function TokenError(message) {
     this.name = "TokenError";
@@ -284,5 +291,6 @@ export default {
     set_shared_project: execute_function(set_shared_project),
     remove_sharing_project: execute_function(remove_sharing_project),
     clone_shared_project: execute_function(clone_shared_project),
+    get_endpoints: get_endpoints,
     authtoken: authtoken
 };

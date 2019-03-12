@@ -9,7 +9,6 @@ import keyboard from 'base/js/keyboard';
 import autocomplete from 'devbridge-autocomplete';
 
 import share_widget from './templates/share_widget.html'
-import endpoints from './api_endpoints.json'
 
 import util from './util';
 import api from './api';
@@ -196,7 +195,7 @@ function show_share_modal(project) {
             }
 
             modal_share.find('#name-search').devbridgeAutocomplete({
-                serviceUrl: require.toUrl(endpoints.domain + endpoints.base + endpoints.search),
+                serviceUrl: require.toUrl(api.get_endpoints().domain + api.get_endpoints().base + api.get_endpoints().search),
                 showNoSuggestionNotice: true,
                 minChars: 2,
                 deferRequestBy: 400,
