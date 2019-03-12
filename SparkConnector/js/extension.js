@@ -131,6 +131,7 @@ SparkConnector.prototype.on_comm_msg = function (msg) {
             this.enable();
             this.max_memory = parseInt(msg.content.data.maxmemory.replace('g', ''));
             this.cluster = msg.content.data.cluster;
+            this.spark_version = msg.content.data.sparkversion;
             show_page(this, msg.content.data.page);
             break;
         case 'sparkconn-action-follow-log':
@@ -544,22 +545,30 @@ SparkConnector.prototype.get_html_configuring = function (error) {
 
     // Add the bundle options to the panel
     $.each(this.extra_options, function (name, data) {
-        if (data.cluster_filter.length == 0 || data.cluster_filter.includes(that.cluster)) {
-            // Bundle is available for this cluster, allow to select it in UX
-            $('<div><input type="checkbox" ' + (that.options.bundled_options.includes(name) ? 'checked' : '') + '> Include ' + name + ' options</div>')
-                .appendTo(bundled_options)
-                .find('input')
-                .on('click', function () {
-                    // on select, add/remove bundle to/from the metadata
-                    if (that.options.bundled_options.includes(name)) {
-                        that.options.bundled_options.splice(that.options.bundled_options.indexOf(name), 1);
-                        hide_bundle_option(name);
-                    } else {
-                        that.options.bundled_options.push(name);
-                        show_bundle_option(name);
-                    }
-                });
+        // Dont add bundle if currently selected cluster is filtered out
+        if (data.cluster_filter && data.cluster_filter.length != 0 && !data.cluster_filter.includes(that.cluster)) {
+            return;
         }
+
+        // Dont add bundle if currently selected spark version is filtered out
+        if (data.spark_version_filter && data.spark_version_filter.length != 0 && !data.spark_version_filter.includes(that.spark_version)) {
+            return;
+        }
+
+        // Add bundle checkbox and action to show options on checkbox click
+        $('<div><input type="checkbox" ' + (that.options.bundled_options.includes(name) ? 'checked' : '') + '> Include ' + name + ' options</div>')
+            .appendTo(bundled_options)
+            .find('input')
+            .on('click', function () {
+                // on select, add/remove bundle to/from the metadata
+                if (that.options.bundled_options.includes(name)) {
+                    that.options.bundled_options.splice(that.options.bundled_options.indexOf(name), 1);
+                    hide_bundle_option(name);
+                } else {
+                    that.options.bundled_options.push(name);
+                    show_bundle_option(name);
+                }
+            });
     });
 
     if (!this.extra_options) {

@@ -6,6 +6,7 @@ except ImportError:
 
 import os, sys, json, logging, tempfile, time, subprocess
 from pyspark import SparkConf, SparkContext
+from pyspark import __version__ as spark_version
 from pyspark.sql import SparkSession
 from threading import Thread
 from string import Formatter
@@ -176,6 +177,7 @@ class SparkConnector:
         # Send information about the configs selected on spawner
         self.send({'msgtype': 'sparkconn-action-open',
                    'maxmemory': os.environ.get('MAX_MEMORY'),
+                   'sparkversion': spark_version,
                    'cluster': self.cluster_name,
                    'page': page})
 
