@@ -95,9 +95,10 @@ function SparkConnector() {
     Promise.all([config_bundles, config_spark_options]).then(function(values) {
 
         values[0].loaded.then(function() {
-            if (values[0].data.bundles) {
+            if (values[0].data.bundled_options) {
                 console.log("SparkConnector: found bundles");
-                that.extra_options = values[0].data.bundles;
+
+                that.extra_options = values[0].data.bundled_options;
             }
         });
 
@@ -272,7 +273,13 @@ SparkConnector.prototype.connect = function () {
     // Add bundled options
     var that = this;
     $.each(this.options.bundled_options, function (i, bundle) {
-        $.each(that.extra_options[bundle], function (i, option) {
+        // Make sure bundle option from notebook metadata can be displayed in this environment
+        if (!that.extra_options[bundle]) {
+            return;
+        }
+
+        // For each bundle, loop over available options
+        $.each(that.extra_options[bundle].options, function (i, option) {
             // Do not overwrite user options, add new or concatenate
             if (!(option.name in options)) {
                 options[option.name] = option.value
@@ -282,6 +289,7 @@ SparkConnector.prototype.connect = function () {
         });
     });
 
+    // Spawn spark session with available options
     this.send({
         action: 'sparkconn-action-connect',
         options: options
@@ -532,18 +540,23 @@ SparkConnector.prototype.get_html_configuring = function (error) {
     var options_list = html.find('.spark-options');
 
     // Add the bundle options to the panel
-    $.each(this.extra_options, function (name, options) {
-        $('<div><input type="checkbox" ' + (that.options.bundled_options.includes(name) ? 'checked' : '') + '> Include ' + name + ' options</div>')
-            .appendTo(bundled_options)
-            .find('input').on('click', function () {
-            if (that.options.bundled_options.includes(name)) {
-                that.options.bundled_options.splice(that.options.bundled_options.indexOf(name), 1);
-                hide_bundle_option(name);
-            } else {
-                that.options.bundled_options.push(name);
-                show_bundle_option(name);
-            }
-        });
+    $.each(this.extra_options, function (name, data) {
+        if (data.cluster_filter.length == 0 || data.cluster_filter.includes(that.cluster)) {
+            // Bundle is available for this cluster, allow to select it in UX
+            $('<div><input type="checkbox" ' + (that.options.bundled_options.includes(name) ? 'checked' : '') + '> Include ' + name + ' options</div>')
+                .appendTo(bundled_options)
+                .find('input')
+                .on('click', function () {
+                    // on select, add/remove bundle to/from the metadata
+                    if (that.options.bundled_options.includes(name)) {
+                        that.options.bundled_options.splice(that.options.bundled_options.indexOf(name), 1);
+                        hide_bundle_option(name);
+                    } else {
+                        that.options.bundled_options.push(name);
+                        show_bundle_option(name);
+                    }
+                });
+        }
     });
 
     if (!this.extra_options) {
@@ -775,7 +788,12 @@ SparkConnector.prototype.get_html_configuring = function (error) {
 
         var duplicates_bundles = [];
         $.each(that.options.bundled_options, function (i, bundle) {
-            $.each(that.extra_options[bundle], function (i, option) {
+            // Ignore metadata entries that are not supported
+            if (!that.extra_options[bundle]) {
+                return;
+            }
+
+            $.each(that.extra_options[bundle].options, function (i, option) {
                 if (!("concatenate" in option)
                     && keys.some(key => key === option.name)
                     && !(option.name in duplicates_bundles)) {
@@ -824,11 +842,15 @@ SparkConnector.prototype.get_html_configuring = function (error) {
      * Display the bundle individual options
      * @param option Name of the bundle
      */
-    function show_bundle_option(option) {
+    function show_bundle_option(bundle) {
+        // Make sure bundle option from notebook metadata can be displayed in this environment
+        if (!that.extra_options[bundle]) {
+            return;
+        }
 
         var entry = $('<li>')
             .addClass('bundle')
-            .addClass('bundle_' + option)
+            .addClass('bundle_' + bundle)
             .append('<i class="fa fa-cogs" aria-hidden="true">')
             .appendTo(options_list);
 
@@ -837,11 +859,10 @@ SparkConnector.prototype.get_html_configuring = function (error) {
 
         $('<li>')
             .addClass('option')
-            .html(option)
+            .html(bundle)
             .appendTo(pair);
 
-        $.each(that.extra_options[option], function (i, value) {
-
+        $.each(that.extra_options[bundle].options, function (i, value) {
             var elem_value = $('<li>')
                 .append('<i class="fa fa-cog" aria-hidden="true">')
                 .appendTo(pair);
