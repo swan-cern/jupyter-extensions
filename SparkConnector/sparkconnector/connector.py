@@ -6,12 +6,12 @@ except ImportError:
 
 import os, sys, json, logging, tempfile, time, subprocess
 from pyspark import SparkConf, SparkContext
-from pyspark import __version__ as spark_version
 from pyspark.sql import SparkSession
 from threading import Thread
 from string import Formatter
 
 from .portallocator import PortsAllocatorClient, NoPortsException, GeneralException
+
 
 class SparkConnector:
     """ Main singleton object for the kernel extension """
@@ -21,26 +21,12 @@ class SparkConnector:
         self.ipython = ipython
         self.log = log
         self.connected = False
-
         self.file_thread = LogReader(self, log)
         log_path = self.file_thread.create_file()
         self.log4j_file = self.create_properties_file(log_path)
         self.file_thread.start()
         self.port_allocator = PortsAllocatorClient()
-
-        self.cluster_name = os.environ.get('SPARK_CLUSTER_NAME', 'local')
-        self.needs_auth = (self.cluster_name == "nxcals")
-
-        # Define configuration based on cluster type
-        if self.cluster_name == 'local':
-            # local
-            self.spark_configuration = SparkLocalConfiguration(self)
-        elif self.cluster_name == 'k8s':
-            # kubernetes
-            self.spark_configuration = SparkK8sConfiguration(self)
-        else:
-            # yarn
-            self.spark_configuration = SparkYarnConfiguration(self)
+        self.spark_configuration = SparkConfigurationFactory(connector=self).create()
 
     def send(self, msg):
         """Send a message to the frontend"""
@@ -53,7 +39,6 @@ class SparkConnector:
     def send_error(self, page, error):
         """Send a message to frontend to switch to a specific page and append error message"""
         self.send({'msgtype': page, 'error': error})
-
 
     def handle_comm_message(self, msg):
         """ Handle message received from frontend """
@@ -85,7 +70,7 @@ class SparkConnector:
 
             # As of today, NXCals still requires a valid kerberos token to
             # access their own API.
-            if self.needs_auth and not subprocess.call(['klist', '-s']) == 0:
+            if self.spark_configuration.get_spark_needs_auth():
                 self.send_error('sparkconn-auth', 'No valid credentials provided.')
                 return
 
@@ -165,16 +150,16 @@ class SparkConnector:
         # If the user refreshes the page, he will still see the correct state
         if self.connected:
             page = 'sparkconn-connected'
-        elif self.needs_auth and not subprocess.call(['klist', '-s']) == 0:
+        elif self.spark_configuration.get_spark_needs_auth():
             page = 'sparkconn-auth'
         else:
             page = 'sparkconn-config'
 
         # Send information about the configs selected on spawner
         self.send({'msgtype': 'sparkconn-action-open',
-                   'maxmemory': os.environ.get('MAX_MEMORY', '2'),
-                   'sparkversion': spark_version,
-                   'cluster': self.cluster_name,
+                   'maxmemory': self.spark_configuration.get_spark_memory(),
+                   'sparkversion': self.spark_configuration.get_spark_version(),
+                   'cluster': self.spark_configuration.get_cluster_name(),
                    'page': page})
 
     def get_spark_session_config(self):
@@ -185,8 +170,8 @@ class SparkConnector:
             # if spark.cern.grafana.url is set, use cern spark monitoring dashboard
             conn_config['sparkmetrics'] = sc._conf.get('spark.cern.grafana.url') + \
                                                 '?orgId=1' + \
-                                                '&var-ClusterName=' + self.cluster_name + \
-                                                '&var-UserName=' + os.environ.get('SPARK_USER', '') + \
+                                                '&var-ClusterName=' + self.spark_configuration.get_cluster_name() + \
+                                                '&var-UserName=' + self.spark_configuration.get_spark_user() + \
                                                 '&var-ApplicationId=' + sc._conf.get('spark.app.id')
 
         # determine the history server URL depending on the selected resource manager (yarn, k8s, local etc)
@@ -228,10 +213,52 @@ class SparkConnector:
         return path
 
 
-class SparkConfiguration(object):
+class SparkConfigurationFactory:
 
     def __init__(self, connector):
         self.connector = connector
+
+    def create(self):
+        cluster_name = os.environ.get('SPARK_CLUSTER_NAME', 'local')
+
+        # Define configuration based on cluster type
+        if cluster_name == 'local':
+            # local
+            return SparkLocalConfiguration(self.connector, cluster_name)
+        elif cluster_name == 'k8s':
+            # kubernetes
+            return SparkK8sConfiguration(self.connector, cluster_name)
+        else:
+            # yarn
+            return SparkYarnConfiguration(self.connector, cluster_name)
+
+
+class SparkConfiguration(object):
+
+    def __init__(self, connector, cluster_name):
+        self.cluster_name = cluster_name
+        self.connector = connector
+
+    def get_cluster_name(self):
+        """ Get cluster name """
+        return self.cluster_name
+
+    def get_spark_memory(self):
+        """ Get spark max memory """
+        return os.environ.get('MAX_MEMORY', '2')
+
+    def get_spark_version(self):
+        """ Get spark version """
+        from pyspark import __version__ as spark_version
+        return spark_version
+
+    def get_spark_user(self):
+        """ Get cluster name """
+        return os.environ.get('SPARK_USER', '')
+
+    def get_spark_needs_auth(self):
+        """ When NXCals no longer require kinit, remove the function """
+        return self.cluster_name == "nxcals" and subprocess.call(['klist', '-s']) != 0
 
     def _parse_options(self, _opts):
         """ Parse options and set defaults """
@@ -315,6 +342,7 @@ class SparkLocalConfiguration(SparkConfiguration):
 
         conf.set('spark.master', 'local[*]')
         return conf
+
 
 class SparkK8sConfiguration(SparkConfiguration):
 
