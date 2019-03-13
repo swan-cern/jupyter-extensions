@@ -999,35 +999,30 @@ SparkConnector.prototype.get_html_connected = function (config, error) {
 
     html.html(template_connected);
 
+    html.find('.success-cluster').css("font-weight", "bold").text(that.cluster)
+
+    html.find('.success-version').text(that.spark_version)
+
     if (config.sparkmetrics) {
         var metricsURL = $('<a>').attr('href', config.sparkmetrics).attr('target','_blank').text('here')
-        $('<div>')
-            .addClass('metrics')
+        html.find('.success-metrics')
             .text('Spark Metrics are available ')
             .append(metricsURL)
-            .appendTo(html)
     }
 
     if (config.sparkhistoryserver) {
         var historyserverURL = $('<a>').attr('href', config.sparkhistoryserver).attr('target','_blank').text('here')
-        $('<div>')
-            .addClass('metrics')
+        html.find('.success-history')
             .text('Spark History Server is available ')
             .append(historyserverURL)
-            .appendTo(html)
-            .after("<br>")
     }
 
-    var logs_wrapper = $('<div>')
-        .addClass('connecting')
-        .appendTo(html);
+    this.connecting_logs = html.find('.logs');
+    this.connecting_logs.hide()
 
-    this.connecting_logs = $('<pre>')
-        .addClass('logs')
-        .append('Waiting for the remaining job to finish to retrieve the logs..')
-
-    var show_logs_action = $('<a>').attr('href', 'javascript:').text('show')
-
+    var show_logs_action = $('<a>')
+        .attr('href', 'javascript:')
+        .text('show')
     show_logs_action.on('click', function () {
         show_logs_action.text('refresh')
         that.send({
@@ -1035,13 +1030,8 @@ SparkConnector.prototype.get_html_connected = function (config, error) {
         });
         that.connecting_logs.show();
     });
+    html.find('.success-logs-button').append(show_logs_action);
 
-    $('<p/>').css("font-weight", "bold").text("Spark driver logs (").append(show_logs_action).append(")").appendTo(logs_wrapper);
-    $('<p/>').text("These are the Spark Application logs. Running any Spark action in the notebook will update the driver logs file.").appendTo(logs_wrapper);
-
-    this.connecting_logs.appendTo(logs_wrapper);
-
-    this.connecting_logs.hide()
 }
 
 /**

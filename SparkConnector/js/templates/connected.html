@@ -1,4 +1,4 @@
-<p class="success"><i class="icon-checked"></i>You are now connected</p>
+<p class="success"><i class="icon-checked"></i><span>You are connected to </span><span class="success-cluster"></span></p>
 <p>The following variables were instantiated:</p>
 <ul class="variables">
     <li><b>sc</b> = <a href="https://spark.apache.org/docs/latest/api/python/pyspark.html#pyspark.SparkContext"
@@ -7,3 +7,13 @@
             href="https://spark.apache.org/docs/latest/api/python/pyspark.sql.html#pyspark.sql.SparkSession"
             target="_blank">SparkSession</a></li>
 </ul>
+<p style="font-weight:bold;">Connection details</p>
+<p><span>Spark version is </span><span class="success-version"></span></p>
+<p class="success-metrics">Spark Metrics are not available (requires enabled bundle)</p>
+<p class="success-history">Spark History not available</p>
+<br>
+<p><span style="font-weight:bold;">Spark driver logs </span><span class="success-logs-button"></span></p>
+<p>These are application logs. Any Spark action will update the logfile.</p>
+<div class="connecting">
+    <pre class="logs">Waiting for the remaining job to finish to retrieve the logs..</pre>
+</div>
