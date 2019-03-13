@@ -119,6 +119,25 @@ function SparkConnector() {
     events.on('kernel_connected.Kernel', $.proxy(this.start_comm, this));//Make sure there is always a comm when the kernel connects.
 }
 
+SparkConnector.prototype.filter_bundle_options = function (bundled_options) {
+    var that = this;
+    var filtered_options = {};
+    $.each(bundled_options, function (name, data) {
+        // Dont add bundle if currently selected cluster is filtered out
+        if (data.cluster_filter && data.cluster_filter.length != 0 && !data.cluster_filter.includes(that.cluster)) {
+            return;
+        }
+
+        // Dont add bundle if currently selected spark version is filtered out
+        if (data.spark_version_filter && data.spark_version_filter.length != 0 && !data.spark_version_filter.includes(that.spark_version)) {
+            return;
+        }
+
+        filtered_options[name] = data;
+    });
+    return filtered_options;
+}
+
 /**
  * Handler for messages received from the kernel
  * Messages can be an action or a page to show, which switched the current state
@@ -543,18 +562,11 @@ SparkConnector.prototype.get_html_configuring = function (config, error) {
     var bundled_options = html.find('#bundled-options');
     var options_list = html.find('.spark-options');
 
+    // Filter bundle options
+    this.extra_options = this.filter_bundle_options(this.extra_options);
+
     // Add the bundle options to the panel
     $.each(this.extra_options, function (name, data) {
-        // Dont add bundle if currently selected cluster is filtered out
-        if (data.cluster_filter && data.cluster_filter.length != 0 && !data.cluster_filter.includes(that.cluster)) {
-            return;
-        }
-
-        // Dont add bundle if currently selected spark version is filtered out
-        if (data.spark_version_filter && data.spark_version_filter.length != 0 && !data.spark_version_filter.includes(that.spark_version)) {
-            return;
-        }
-
         // Add bundle checkbox and action to show options on checkbox click
         $('<div><input type="checkbox" ' + (that.options.bundled_options.includes(name) ? 'checked' : '') + '> Include ' + name + ' options</div>')
             .appendTo(bundled_options)
