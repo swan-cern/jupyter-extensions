@@ -237,15 +237,33 @@ SparkConnector.prototype.send = function (msg) {
  * @returns {boolean} Returns false to prevent the modal box from closing
  */
 SparkConnector.prototype.back_to_config = function () {
-    this.send({
-        action: 'sparkconn-action-disconnect',
+    var that = this;
+
+    dialog.modal({
+        notebook: Jupyter.notebook,
+        keyboard_manager: Jupyter.keyboard_manager,
+        title: 'Restarting Spark connection',
+        body: 'This will reset your notebook state by restarting your notebook kernel. Do you wish to proceed?',
+        buttons: {
+            'No': {},
+            'Restart kernel': {
+                class: 'btn-danger size-100',
+                click: restart_connection
+            }
+        }
     });
 
-    // Switch to connect restart
-    this.switch_state(this.states.reconfigure)
+    function restart_connection() {
+        that.send({
+            action: 'sparkconn-action-disconnect',
+        });
 
-    // Failure of creating Spark Context needs to restart JVM due to Spark Context caching
-    Jupyter.notebook.kernel.restart();
+        // Switch to connect restart
+        that.switch_state(that.states.reconfigure)
+
+        // Failure of creating Spark Context needs to restart JVM due to Spark Context caching
+        Jupyter.notebook.kernel.restart();
+    }
 
     return false;
 }
