@@ -1,9 +1,73 @@
 from notebook.services.contents.fileio import FileManagerMixin
 from notebook.utils import url_path_join
 from tornado.web import HTTPError
+from contextlib import contextmanager
 import io, os, nbformat
 
 swan_sharing_folder = 'swan_sharing_folder/'
+
+
+@contextmanager
+def atomic_writing(path, text=True, encoding='utf-8', log=None, **kwargs):
+    """Context manager to write to a file only if the entire write is successful.
+
+    This works by writing the contents to a temp file and rename it to the target.
+    If writing fails, we remove the temp file and leave the target unchanged.
+
+    Parameters
+    ----------
+    path : str
+      The target file to write to.
+
+    text : bool, optional
+      Whether to open the file in text mode (i.e. to write unicode). Default is
+      True.
+
+    encoding : str, optional
+      The encoding to use for files opened in text mode. Default is UTF-8.
+
+    **kwargs
+      Passed to :func:`io.open`.
+    """
+    # realpath doesn't work on Windows: http://bugs.python.org/issue9949
+    # Luckily, we only need to resolve the file itself being a symlink, not
+    # any of its directories, so this will suffice:
+    if os.path.islink(path):
+        path = os.path.join(os.path.dirname(path), os.readlink(path))
+
+    dirname, basename = os.path.split(path)
+    # The .~ prefix will make Dropbox ignore the temporary file.
+    tmp_path = os.path.join(dirname, '.~'+basename)
+
+    if text:
+        # Make sure that text files have Unix linefeeds by default
+        kwargs.setdefault('newline', '\n')
+        fileobj = io.open(tmp_path, 'w', encoding=encoding, **kwargs)
+    else:
+        fileobj = io.open(tmp_path, 'wb', **kwargs)
+
+    try:
+        yield fileobj
+
+        # Flush to disk
+        fileobj.flush()
+        os.fsync(fileobj.fileno())
+        fileobj.close()
+
+        # Try to rename tmp file to the original name
+        # This is an atomic operation and will silently replace the current file
+        os.replace(tmp_path, path)
+
+    except:
+        # Close the file in case it failed writing
+        fileobj.close()
+        # Remove the tmp file
+        if os.path.isfile(tmp_path):
+            os.remove(tmp_path)
+
+        # Even if renaming failed, there's nothing else to do because the temp was already deleted....
+        raise
+
 
 class SwanFileManagerMixin(FileManagerMixin):
     """
@@ -86,3 +150,20 @@ class SwanFileManagerMixin(FileManagerMixin):
         # In all cases, save on eos via fuse
         with self.atomic_writing(os_path, encoding='utf-8') as f:
             nbformat.write(nb, f, version=nbformat.NO_CONVERT)
+
+    @contextmanager
+    def atomic_writing(self, os_path, *args, **kwargs):
+        """Overload the default atomic_writing to use a different write method
+        From the original documentation:
+        wrapper around atomic_writing that turns permission errors to 403.
+        Depending on flag 'use_atomic_writing', the wrapper perform an actual atomic writing or
+        simply writes the file (whatever an old exists or not)"""
+
+
+        if self.use_atomic_writing:
+            with self.perm_to_403(os_path):
+                with atomic_writing(os_path, *args, log=self.log, **kwargs) as f:
+                    yield f
+        else:
+            # Return to the default behaviour
+            super().atomic_writing(os_path, *args, **kwargs)
