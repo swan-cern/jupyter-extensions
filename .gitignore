@@ -6,3 +6,4 @@ SparkMonitor/scalalistener/project/
 SparkMonitor/scalalistener/target/
 SparkMonitor/sparkmonitor/listener.jar
 .idea/
+__pycache__
