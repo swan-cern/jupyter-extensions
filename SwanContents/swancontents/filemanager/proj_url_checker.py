@@ -14,7 +14,7 @@ CERNBoxPrefix = 'https://cernbox.cern.ch/index.php/s'
 CERNBoxPrefixTesting = 'https://cernboxwebpreview.cern.ch/index.php/s'
 EOSUserPrefix = 'file://eos/'
 LocalPrefix = 'local:'
-EOSUserRE = '/eos/(docker/)?(user/[a-z]|home-[a-z])/([a-z0-9]+)'
+EOSUserRE = '/eos/(docker/|up2u/)?(user/[a-z]|home-[a-z])/([a-z0-9]+)'
 
 def raise_error(emsg):
     raise web.HTTPError(400, reason = emsg)
