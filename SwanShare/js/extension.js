@@ -326,7 +326,7 @@ function start_notebook_view() {
             if (folder_path.indexOf(Jupyter.notebook.base_url + 'notebooks/SWAN_projects/') !== -1) {
 
                 folder_path = folder_path.replace('/notebooks/SWAN_projects/', '/api/contents/SWAN_projects/')
-                    .split(Jupyter.notebook.notebook_name)[0];
+                    .split(encodeURI(Jupyter.notebook.notebook_name))[0];
 
                 $.get(folder_path, function (folder) {
 
