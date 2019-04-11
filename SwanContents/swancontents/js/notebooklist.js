@@ -399,7 +399,7 @@ define([
 
                 var modal = dialog.modal({
                     title: 'Download Project from git',
-                    body: $('<p class="rename-message">Project url to download:</p><br>\
+                    body: $('<p class="rename-message">Project url to download (it will also download submodules if they exist):</p><br>\
                             <input type="text" name="url" class="form-control">'),
                     buttons: {
                         'Download': {

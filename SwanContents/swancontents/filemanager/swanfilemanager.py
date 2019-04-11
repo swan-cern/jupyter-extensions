@@ -376,6 +376,9 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
             if rc != 0:
                 raise web.HTTPError(400, "It was not possible to clone the repo %s" % url)
 
+            # Also download submodules if they exist
+            subprocess.call(['git', 'submodule', 'update', '--init', '--recursive'], cwd=tmp_dir_name)
+
             dest_dir_name_ext = os.path.basename(url)
             repo_name_no_ext = os.path.splitext(dest_dir_name_ext)[0]
             dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, repo_name_no_ext)
