@@ -61,7 +61,7 @@ function SparkConnector() {
             get_html: $.proxy(this.get_html_connect_error, this),
             buttons: {
                 'Go back to configuration': {
-                    class: 'btn-primary size-100 btn-reconfig',
+                    class: 'btn-primary size-100',
                     click: $.proxy(this.back_to_config, this)
                 }
             }
@@ -69,8 +69,11 @@ function SparkConnector() {
         connected: {
             get_html: $.proxy(this.get_html_connected, this),
             buttons: {
+                'Go to the notebook': {
+                    class: 'btn-primary size-50',
+                },
                 'Restart Spark session': {
-                    class: 'btn-danger size-100',
+                    class: 'btn-danger size-50',
                     click: $.proxy(this.back_to_config, this)
                 },
             }
@@ -947,8 +950,6 @@ SparkConnector.prototype.get_html_reconfigure = function (config, error) {
         .appendTo(wrapper);
 
     wrapper.append('Stopping Spark Context.<br>This may take a while...');
-
-    buttons.find('.btn-reconfig').hide();
 }
 
 
@@ -961,12 +962,9 @@ SparkConnector.prototype.get_html_connect_error = function (config, error) {
 
     // Display error
     $('<div/>')
-        .addClass('alert alert-danger')
-        .css("max-height", "30%")
-        .css("overflow", "scroll")
-        .css("word-wrap", "break-word")
+        .addClass('alert alert-danger connect-error')
         .append(
-            $('<p/>').css("font-weight", "bold").text('Error while connecting to Spark cluster')
+            $('<p/>').addClass("header").text('Error while connecting to Spark cluster')
         )
         .append(
             $('<p/>').text(error)
@@ -975,11 +973,11 @@ SparkConnector.prototype.get_html_connect_error = function (config, error) {
 
     var that = this;
     var logs_wrapper = $('<div>')
-        .addClass('connecting')
+        .addClass('log-connect-error')
         .appendTo(html);
 
     logs_wrapper
-        .append($('<p/>').css("font-weight", "bold").text("Spark driver logs"))
+        .append($('<p/>').text("These are the logs of the failed application."))
         .append(this.connecting_logs)
 
     this.connecting_logs.show()
@@ -1010,7 +1008,7 @@ SparkConnector.prototype.get_html_connecting = function (config, error) {
     wrapper.append('Trying to connect to Spark Clusters.<br>This may take a while...');
 
     var logs_wrapper = $('<div>')
-        .addClass('connecting')
+        .addClass('log-connecting')
         .appendTo(html);
 
     this.connecting_logs = $('<pre>')
@@ -1027,55 +1025,53 @@ SparkConnector.prototype.get_html_connected = function (config, error) {
     var html = this.modal.find('.modal-body');
     var that = this;
 
-    html.html(template_connected);
+    var template = template_connected
+        .replace('{spark_version}', that.spark_version)
+        .replace('{cluster_name}', that.cluster);
+    html.html(template);
 
-    html.find('.success-cluster').css("font-weight", "bold").text(that.cluster)
-
-    html.find('.success-version').text(that.spark_version)
-
-    if (config.sparkmetrics) {
+    if (config && config.sparkmetrics) {
         var metricsURL = $('<a>').attr('href', config.sparkmetrics).attr('target','_blank').text('here')
-        html.find('.success-metrics')
+        html.find('.success-metrics-text')
             .text('Spark Metrics are available ')
             .append(metricsURL)
     }
 
-    if (config.sparkhistoryserver) {
+    if (config && config.sparkhistoryserver) {
         var historyserverURL = $('<a>').attr('href', config.sparkhistoryserver).attr('target','_blank').text('here')
-        html.find('.success-history')
+        html.find('.success-history-text')
             .text('Spark History Server is available ')
             .append(historyserverURL)
     }
 
+    html.find('.success-show-logs-action')
+        .attr('href', 'javascript:')
+        .text('show/hide')
+        .on('click', function () {
+            that.send({
+                action: 'sparkconn-action-getlogs'
+            });
+            that.connecting_logs.toggle();
+        });
+
     this.connecting_logs = html.find('.logs');
     this.connecting_logs.hide()
-
-    var show_logs_action = $('<a>')
-        .attr('href', 'javascript:')
-        .text('show')
-    show_logs_action.on('click', function () {
-        show_logs_action.text('refresh')
-        that.send({
-            action: 'sparkconn-action-getlogs'
-        });
-        that.connecting_logs.show();
-    });
-    html.find('.success-logs-button').append(show_logs_action);
-
 }
 
 /**
  * Shows the specified state to the user
  * Clears the previous state and sets the buttons
  * @param new_state State to display
+ * @param config Config of state to use (depends on the state)
  * @param error Error message to display (depends on the state)
  */
-SparkConnector.prototype.switch_state = function (new_state, new_config, new_error) {
+SparkConnector.prototype.switch_state = function (new_state, config, error) {
     this.state = new_state;
-    this.state_config = new_config;
-    this.state_error = new_error;
+    this.state_config = config;
+    this.state_error = error;
 
     if (this.modal) {
+        Jupyter.keyboard_manager.disable()
         var header = this.modal.find('.modal-header');
         var body = this.modal.find('.modal-body');
         var footer = this.modal.find('.modal-footer');
@@ -1083,7 +1079,7 @@ SparkConnector.prototype.switch_state = function (new_state, new_config, new_err
         body.html('');
         footer.html('');
 
-        new_state.get_html(new_config, new_error);
+        new_state.get_html(config, error);
 
         $.each(new_state.buttons, function (name, options) {
             $('<button>')
