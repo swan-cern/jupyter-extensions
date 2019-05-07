@@ -37,10 +37,13 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
         checkpoint = self._get_checkpoint_info(path, checkpoint_id)
         self._copy(checkpoint['checkpoint_path'], checkpoint['src_path'])
 
-    # This function needs to be implemented, but its use is unclear
     def rename_checkpoint(self, checkpoint_id, old_path, new_path):
+        """ Moves all checkpoints when the notebook file is renamed """
         checkpoint_old_path = self._get_checkpoint_info(old_path, checkpoint_id)['checkpoint_path']
-        checkpoint_new_path = self._get_checkpoint_info(new_path, checkpoint_id)['checkpoint_path']
+        checkpoint_new = self._get_checkpoint_info(new_path, checkpoint_id)
+        checkpoint_new_path = checkpoint_new['checkpoint_path']
+
+        os.makedirs(checkpoint_new['base_path'], exist_ok=True)
 
         if os.path.isfile(checkpoint_old_path):
             self.log.debug("Renaming checkpoint %s -> %s", checkpoint_old_path, checkpoint_new_path)
