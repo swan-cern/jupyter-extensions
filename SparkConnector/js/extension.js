@@ -47,7 +47,7 @@ function SparkConnector() {
             buttons: {
                 'Cancel': {
                     class: 'btn-danger size-100',
-                    click: $.proxy(this.cancel, this)
+                    click: $.proxy(this.back_to_config, this)
                 }
             }
         },
@@ -266,6 +266,7 @@ SparkConnector.prototype.back_to_config = function () {
 
         // Failure of creating Spark Context needs to restart JVM due to Spark Context caching
         Jupyter.notebook.kernel.restart();
+        that.modal.modal('hide');
     }
 
     return false;
@@ -338,37 +339,6 @@ SparkConnector.prototype.connect = function () {
         action: 'sparkconn-action-connect',
         options: options
     });
-
-    return false;
-}
-
-/**
- * Action for the Cancel button
- * Ensures that the user knows that canceling means restarting the kernel, and then restarts it
- * @returns {boolean} Returns false to prevent the modal box from closing before confirmation
- */
-SparkConnector.prototype.cancel = function () {
-
-    var that = this;
-
-    dialog.modal({
-        notebook: Jupyter.notebook,
-        keyboard_manager: Jupyter.keyboard_manager,
-        title: 'Cancel connection',
-        body: 'Canceling the connection will restart your kernel. Do you wish to proceed?',
-        buttons: {
-            'No': {},
-            'Restart kernel': {
-                class: 'btn-danger size-100',
-                click: cancel_connection
-            }
-        }
-    });
-
-    function cancel_connection() {
-        Jupyter.notebook.kernel.restart();
-        that.modal.modal('hide');
-    }
 
     return false;
 }
