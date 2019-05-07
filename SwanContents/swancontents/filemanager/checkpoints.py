@@ -27,10 +27,13 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
             Copies the current file to make a version of it.
             Creates the versions folder if it doesn't exist.
         """
-        checkpoint = self._new_checkpoint(path)
-        os.makedirs(checkpoint['base_path'], exist_ok=True)
-        self._copy(checkpoint['src_path'], checkpoint['checkpoint_path'])
-        return self._get_checkpoint_return(checkpoint)
+        try:
+            checkpoint = self._new_checkpoint(path)
+            os.makedirs(checkpoint['base_path'], exist_ok=True)
+            self._copy(checkpoint['src_path'], checkpoint['checkpoint_path'])
+            return self._get_checkpoint_return(checkpoint)
+        except:
+            return None
 
     def restore_checkpoint(self, contents_mgr, checkpoint_id, path):
         """ Replace the current file with a previous version"""
@@ -72,28 +75,31 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
         if not os.path.isdir(base['base_path']):
             return []
 
-        files = os.listdir(base['base_path'])
-        files.sort()
+        try:
+            files = os.listdir(base['base_path'])
+            files.sort()
 
-        # Clean old versions to prevent the list from growing indefinitely.
-        # It only gets cleaned here, and not when creating a new version for example,
-        # because otherwise the user would see versions that were deleted from the user interface
-        # (in the restore versions menu).
-        if len(files) > self.max_versions:
-            n_to_delete = len(files) - self.max_versions
-            for i, version in enumerate(files):
-                if i >= n_to_delete:
-                    break
-                os.unlink(os.path.join(base['base_path'], version))
-            files = files[n_to_delete:]
+            # Clean old versions to prevent the list from growing indefinitely.
+            # It only gets cleaned here, and not when creating a new version for example,
+            # because otherwise the user would see versions that were deleted from the user interface
+            # (in the restore versions menu).
+            if len(files) > self.max_versions:
+                n_to_delete = len(files) - self.max_versions
+                for i, version in enumerate(files):
+                    if i >= n_to_delete:
+                        break
+                    os.unlink(os.path.join(base['base_path'], version))
+                files = files[n_to_delete:]
 
-        checkpoints = []
-        for file in files:
-            # If the version was created outside of SWAN (i.e CERNBox), we might have
-            # extra things after the timestamp, separated by a .
-            name = file.split('.')[0]
-            checkpoints.append(self._get_checkpoint_return(name))
-        return checkpoints
+            checkpoints = []
+            for file in files:
+                # If the version was created outside of SWAN (i.e CERNBox), we might have
+                # extra things after the timestamp, separated by a .
+                name = file.split('.')[0]
+                checkpoints.append(self._get_checkpoint_return(name))
+            return checkpoints
+        except: # If folder not accessible (the case in old FUSE) we get permission denied
+            return []
 
 
     # Aux functions
