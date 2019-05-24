@@ -10,6 +10,7 @@ setup(name='sparkconnector',
       zip_safe=False,
       install_requires=[
           'notebook',
-          'pyspark'
+          'pyspark',
+          'kubernetes==9.0.0'
       ],
   )

@@ -1,8 +1,13 @@
-import os, subprocess, shutil, sys, uuid, time
+import os, subprocess, shutil, sys, uuid, time, base64
 
 from pyspark import SparkConf, SparkContext
 from string import Formatter
 
+try:
+    from kubernetes import config, client
+    from kubernetes.client.rest import ApiException
+except ImportError:
+    pass
 
 class SparkConfigurationFactory:
 
@@ -180,11 +185,53 @@ class SparkK8sConfiguration(SparkConfiguration):
 
     def _retrieve_k8s_master(self, kubeconfig_path):
         """ Extract k8s master ip from kubeconfig """
+
         with open(kubeconfig_path) as f:
             for line in f.readlines():
                 server = line.split("server:")
                 if len(server) == 2:
                     return "k8s://" + server[1].strip()
+
+    def _refresh_spark_tokens(self, name, namespace, data_dict):
+        """ Create or replace k8s secret <name> in the namespace <namespace """
+
+        config.load_kube_config()
+
+        api_instance = client.CoreV1Api()
+
+        try:
+            # Refresh tokens, so new executors will pick up new token
+            api_instance.read_namespaced_secret(name, namespace)
+            exists = True
+        except ApiException:
+            exists = False
+
+        secret_data = client.V1Secret()
+
+        secret_meta = client.V1ObjectMeta()
+        secret_meta.name = name
+        secret_meta.namespace = namespace
+        secret_data.metadata = secret_meta
+
+        secret_data.data = {}
+        for secret_key, file_path in data_dict.items():
+            try:
+                with open(file_path, "r") as file:
+                    data = file.read()
+            except UnicodeDecodeError:
+                with open(file_path, "rb") as file:
+                    data = file.read()
+
+            secret_data.data[secret_key] =  base64.standard_b64encode(data).decode('ascii')
+
+        try:
+            # Refresh tokens, so new executors will pick up new token
+            if exists:
+                api_instance.replace_namespaced_secret(name, namespace, secret_data)
+            else:
+                api_instance.create_namespaced_secret(namespace, secret_data)
+        except ApiException as e:
+            raise Exception("Could not create required secret: %s\n" % e)
 
     def configure(self, opts, ports):
         """ Initialize K8s configuration for Spark """
@@ -200,6 +247,26 @@ class SparkK8sConfiguration(SparkConfiguration):
         conf.set('spark.executorEnv.JAVA_HOME', os.environ.get('JAVA_HOME'))
         conf.set('spark.executorEnv.SPARK_HOME', os.environ.get('SPARK_HOME'))
         conf.set('spark.executorEnv.SPARK_EXTRA_CLASSPATH', os.environ.get('SPARK_DIST_CLASSPATH'))
+
+        # Authenticate EOS and HDFS also on spark executors by
+        # telling spark to mount spark-tokens secret to each executor and set env pointing to secret data
+        secret_data = {}
+        if "KRB5CCNAME" in os.environ and os.path.exists(os.environ.get('KRB5CCNAME')):
+            secret_data["krb5cc"] = os.environ.get('KRB5CCNAME')
+            conf.set('spark.kubernetes.executor.secrets.spark-tokens', '/tokens')
+            conf.set('spark.executorEnv.KRB5CCNAME', '/tokens/krb5cc')
+
+        if "HADOOP_TOKEN_FILE_LOCATION" in os.environ and os.path.exists(os.environ.get('HADOOP_TOKEN_FILE_LOCATION')):
+            secret_data["hadoop.toks"] = os.environ.get('HADOOP_TOKEN_FILE_LOCATION')
+            conf.set('spark.kubernetes.executor.secrets.spark-tokens', '/tokens')
+            conf.set('spark.executorEnv.HADOOP_TOKEN_FILE_LOCATION', '/tokens/hadoop.toks')
+
+        # Create/replace spark-tokens secret with HADOOP_TOKEN_FILE_LOCATION and KRB5CCNAME if set
+        self._refresh_spark_tokens(
+            "spark-tokens",
+            os.environ.get('SPARK_USER'),
+            secret_data
+        )
 
         # There is no resource staging server for files, download directly from storage to executors
         # Distribute files (for pyFiles add them also to files) and jars
