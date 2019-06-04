@@ -1011,6 +1011,8 @@ define([
 
         $.get(path, function (markdown) {
 
+            var folder_path = path.replace(/\/readme.md/ig, '/');
+
             // Use showdown to convert markdown into HTML and xss to remove not allowed HTML elements
             // (for security reasons).
             // Replace the links with safer versions
@@ -1032,8 +1034,6 @@ define([
                                 onTagAttr: function (tag, name, value, isWhiteAttr) {
                                     if (tag == 'a') {
                                         if (name == 'href') {
-
-                                            var folder_path = path.toLowerCase().replace('readme.md', '');
 
                                             var url_string;
                                             var blank = false;
