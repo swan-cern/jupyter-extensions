@@ -1,4 +1,4 @@
-import os, subprocess
+import os, subprocess, shutil, sys, uuid
 from pyspark import SparkConf, SparkContext
 from string import Formatter
 
@@ -249,6 +249,17 @@ class SparkYarnConfiguration(SparkConfiguration):
         conf.set('spark.authenticate', True)
         conf.set('spark.network.crypto.enabled', True)
         conf.set('spark.authenticate.enableSaslEncryption', True)
+
+        # Archive the local python packages and set spark.submit.pyFiles if the propagate python packages bundle is selected
+        if conf.get('spark.cern.user.pyModules') is not None:
+           dir_name=os.environ['HOME']+'/.local/lib/python'+sys.version[0:3]+'/site-packages'
+           filename = '/tmp/'+str(uuid.uuid4().hex)
+           user_archive=shutil.make_archive(filename, 'zip', dir_name)
+           if conf.get('spark.submit.pyFiles') is not None:
+               archive_filename=conf.get('spark.submit.pyFiles')+','+user_archive
+           else:
+               archive_filename=user_archive
+           conf.set('spark.submit.pyFiles', archive_filename)
 
         # Ensure that driver has extra classpath required for running on YARN
         base_extra_class_path = "/eos/project/s/swan/public/hadoop-mapreduce-client-core-2.6.0-cdh5.7.6.jar"
