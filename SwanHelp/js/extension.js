@@ -73,7 +73,7 @@ function load_ipython_extension() {
                         history_stack.splice(0);
                     });
                 })
-                .parent().removeClass('disabled');
+                .removeClass('disabled');
         });
     });
 }

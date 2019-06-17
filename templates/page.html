@@ -135,6 +135,9 @@ dir="ltr">
                       <div id="options-buttons" class="btn-group">
                           {% block extra_buttons %}
                           {% endblock %}
+                          <button id="help-button" role="presentation" class="btn btn-default btn-xs disabled" title="Help">
+                            <i class="fa fa-question" aria-hidden="true"></i>
+                          </button>
                           <button class="dropdown-toggle btn btn-default btn-xs" data-toggle="dropdown" title="Options">
                               <i class="icon-more" aria-hidden="true"></i>
                           </button>
@@ -143,10 +146,6 @@ dir="ltr">
                               {% endblock %}
                               <li role="presentation">
                                   <a id="change-config" href="javascript:">Change configuration</a>
-                              </li>
-                              <li class="divider"></li>
-                              <li role="presentation" class="disabled">
-                                  <a id="help-button" href="javascript:">Help</a>
                               </li>
                           </ul>
                       </div>
