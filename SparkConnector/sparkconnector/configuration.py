@@ -289,7 +289,11 @@ class SparkYarnConfiguration(SparkConfiguration):
             # determine the history server URL depending on the selected resource manager (yarn, k8s, local etc)
             history_url = sc._conf.get(
                 'spark.org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter.param.PROXY_URI_BASES'
-            ).split(',', 1)[0]
-            conn_config['sparkhistoryserver'] = history_url
+            )
+            if history_url:
+                conn_config['sparkhistoryserver'] = history_url.split(',', 1)[0]
+            else:
+                driver_url = 'http://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
+                conn_config['sparkhistoryserver'] = driver_url
 
         return conn_config
