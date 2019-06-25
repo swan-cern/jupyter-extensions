@@ -13,13 +13,12 @@
     "babel-loader": "^7.1.1",
     "babel-plugin-add-module-exports": "^0.2.1",
     "babel-preset-env": "^1.6.0",
-    "webpack": "^3.3.0",
     "css-loader": "^0.28.4",
-    "style-loader": "^0.18.2"
+    "style-loader": "^0.18.2",
+    "webpack": "^3.3.0"
   },
   "scripts": {
     "webpack": "webpack --config webpack.config.js"
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
