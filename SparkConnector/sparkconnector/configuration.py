@@ -1,4 +1,5 @@
-import os, subprocess, shutil, sys, uuid
+import os, subprocess, shutil, sys, uuid, time
+
 from pyspark import SparkConf, SparkContext
 from string import Formatter
 
@@ -239,6 +240,22 @@ class SparkK8sConfiguration(SparkConfiguration):
 
 class SparkYarnConfiguration(SparkConfiguration):
 
+    def _get_sc_config(self, key, wait=False):
+        """ It can happen that context will be returned by pyspark, but some yarn configs are late propagated """
+        sc = self.connector.ipython.user_ns.get('sc')
+
+        if wait:
+            # try to get config by key 10 times with wait of 1s
+            num_tries = 10
+            for i in range(num_tries):
+                conf_val = sc._conf.get(key, None)
+                if conf_val:
+                    return conf_val
+                time.sleep(1)
+
+        # return config by key if exists, or None
+        return sc._conf.get(key, None)
+
     def configure(self, opts, ports):
         """ Initialize YARN configuration for Spark """
 
@@ -278,22 +295,23 @@ class SparkYarnConfiguration(SparkConfiguration):
         if sc and isinstance(sc, SparkContext):
             # set the metrics URL if the config bundle is selected
             conn_config = {}
-            if sc._conf.get('spark.cern.grafana.url') is not None:
+
+            grafana_url = self._get_sc_config('spark.cern.grafana.url')
+            app_id = self._get_sc_config('spark.app.id')
+            if grafana_url and app_id:
                 # if spark.cern.grafana.url is set, use cern spark monitoring dashboard
-                conn_config['sparkmetrics'] = sc._conf.get('spark.cern.grafana.url') + \
+                conn_config['sparkmetrics'] = grafana_url + \
                                               '?orgId=1' + \
                                               '&var-ClusterName=' + self.get_cluster_name() + \
                                               '&var-UserName=' + self.get_spark_user() + \
-                                              '&var-ApplicationId=' + sc._conf.get('spark.app.id')
+                                              '&var-ApplicationId=' + app_id
 
             # determine the history server URL depending on the selected resource manager (yarn, k8s, local etc)
-            history_url = sc._conf.get(
-                'spark.org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter.param.PROXY_URI_BASES'
+            history_url = self._get_sc_config(
+                'spark.org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter.param.PROXY_URI_BASES',
+                wait=True
             )
             if history_url:
                 conn_config['sparkhistoryserver'] = history_url.split(',', 1)[0]
-            else:
-                driver_url = 'http://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
-                conn_config['sparkhistoryserver'] = driver_url
 
         return conn_config
