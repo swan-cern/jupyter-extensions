@@ -1,4 +1,3 @@
-
 stages:
   - build
   - release
@@ -29,7 +28,7 @@ release-version:
     name: $CI_COMMIT_TAG
     paths:
       - ./*
-    expire_in: 4 weeks
+    expire_in: 48 weeks
   only: 
       - /^v.*$/
 
