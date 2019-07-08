@@ -41,6 +41,9 @@ class HdfsBrowserHandler(IPythonHandler):
         # Determine the active namenode, this is required as the webHDFS implementation doesn't redirect to active namenode
 
         cluster = os.environ['SPARK_CLUSTER_NAME']
+        # default hadoop cluster for k8s is analytix
+        if cluster == 'k8s':
+            cluster = 'analytix'
         conf = '/cvmfs/sft.cern.ch/lcg/etc/hadoop-confext/conf/etc/' + cluster + '/hadoop.' \
             + cluster + '/hdfs-site.xml'
         if cluster == 'hadoop-qa':
