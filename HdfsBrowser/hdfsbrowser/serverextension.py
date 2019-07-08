@@ -47,6 +47,8 @@ class HdfsBrowserHandler(IPythonHandler):
             property = 'dfs.ha.namenodes.hdpqa'
         elif cluster == 'hadoop-nxcals':
             property = 'dfs.ha.namenodes.nxcals'
+        elif cluster == 'analytix':
+            property = 'dfs.ha.namenodes.analytix'
         else:
             property = 'dfs.ha.namenodes.' + cluster
         tree = ET.parse(conf)
