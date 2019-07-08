@@ -41,9 +41,14 @@ class HdfsBrowserHandler(IPythonHandler):
         # Determine the active namenode, this is required as the webHDFS implementation doesn't redirect to active namenode
 
         cluster = os.environ['SPARK_CLUSTER_NAME']
-        conf = '/cvmfs/sft.cern.ch/lcg/etc/hadoop-confext/etc/hadoop.' + \
-            cluster + '/conf/hdfs-site.xml'
-        property = 'dfs.ha.namenodes.' + cluster
+        conf = '/cvmfs/sft.cern.ch/lcg/etc/hadoop-confext/conf/etc/' + cluster + '/hadoop.' \
+            + cluster + '/hdfs-site.xml'
+        if cluster == 'hadoop-qa':
+            property = 'dfs.ha.namenodes.hdpqa'
+        elif cluster == 'hadoop-nxcals':
+            property = 'dfs.ha.namenodes.nxcals'
+        else:
+            property = 'dfs.ha.namenodes.' + cluster
         tree = ET.parse(conf)
         root = tree.getroot()
         for elem in root.iter('property'):
