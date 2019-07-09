@@ -102,12 +102,12 @@ class SparkConnector:
                 self.port_allocator.set_connected()
 
             except NoPortsException:
-                    self.send_error('sparkconn-config', 'You reached the maximum number of parallel Spark connections. '
+                    self.send_error('sparkconn-connect-error', 'You reached the maximum number of parallel Spark connections. '
                                                         'Please shutdown a notebook connected to Spark to open more. '
                                                         'If you already did, please wait a few seconds more.')
 
             except GeneralException:
-                    self.send_error('sparkconn-config', 'Unknown error obtaining the ports for Spark connection.')
+                    self.send_error('sparkconn-connect-error', 'Unknown error obtaining the ports for Spark connection.')
 
             except Exception as ex:
                 # Mark ports as available to get cleaned and given to other processes
