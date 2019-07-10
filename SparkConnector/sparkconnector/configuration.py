@@ -54,7 +54,7 @@ class SparkConfiguration(object):
 
     def get_spark_needs_auth(self):
         """ When NXCals no longer require kinit, remove the function """
-        return self.cluster_name == "nxcals" and subprocess.call(['klist', '-s']) != 0
+        return self.cluster_name == "hadoop-nxcals" and subprocess.call(['klist', '-s']) != 0
 
     def close_spark_session(self):
         sc = self.connector.ipython.user_ns.get('sc')
