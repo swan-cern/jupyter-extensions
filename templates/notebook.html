@@ -411,32 +411,39 @@ data-notebook-path="{{notebook_path | urlencode}}"
 
 <script type="text/javascript">
 
-    require(['jquery'], function($){
+    fix_header = function() {
+        setTimeout(function () {
+            require(['jquery'], function($){
 
-        $(window).on('load', function() {
+                var menu = $('#menubar-container');
+                var main_app = $('#ipython-main-app');
 
-            var menu = $('#menubar-container');
-            var main_app = $('#ipython-main-app');
+                var menu_pos = menu.offset().top;
+                var menu_height = menu.outerHeight();
 
-            var menu_pos = menu.offset().top;
-            var menu_height = menu.outerHeight();
+                $(window).on('scroll', function (event) {
 
-            $(window).scroll(function (event) {
+                    if ($(window).scrollTop() > menu_pos) {
+                        menu.addClass('stick');
+                        main_app.css('padding-top', menu_height);
+                    } else {
+                        menu.removeClass('stick');
+                        main_app.css('padding-top', 0);
+                    }
+                });
 
-                if ($(window).scrollTop() > menu_pos) {
-                    menu.addClass('stick');
-                    main_app.css('padding-top', menu_height);
-                } else {
-                    menu.removeClass('stick');
-                    main_app.css('padding-top', 0);
-                }
+                $('#toggle_width').on('click', function () {
+                    $('body').toggleClass('full-width');
+                });
             });
+        }, 300); //Wait for the ease in css transition to make sure 
+                 // menubar-container is visible and, therefore, with dimensions set.
+    };
 
-            $('#toggle_width').on('click', function () {
-                $('body').toggleClass('full-width');
-            });
-        });
-    });
+    // pageshow is fired when the document is made visible and 
+    // is sent after the load event. This event fires even if the
+    // page is cached, unlike load.
+    window.addEventListener("pageshow", fix_header, false);
 
 </script>
 {% endblock %}
