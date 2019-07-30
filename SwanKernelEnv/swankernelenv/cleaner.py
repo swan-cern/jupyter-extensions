@@ -26,5 +26,7 @@ def load_ipython_extension(ipython):
     # extra extensions to the user env (i.e the kernel extensions)
     # But, as soon as the environment starts, the user should not have those paths available, only
     # the ones that were expected (user local paths and  CVMFS).
-    sys.path = [path for path in sys.path if not path.startswith('/usr/local/lib')]
+    # Specify the paths to still allow the path that contains 'IPython/extensions'.
+    rejected_paths = ['/usr/local/lib/swan', '/usr/local/lib/swan/extensions']
+    sys.path = [path for path in sys.path if path not in rejected_paths]
     log.info("SwanKernelEnv Kernel Extension done")
