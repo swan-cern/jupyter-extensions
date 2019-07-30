@@ -1081,6 +1081,7 @@ define([
                     extensions: ['clear-xss']
                 });
                 converter.setOption('ghCompatibleHeaderId', true);
+                converter.setOption('tables', true);
                 var html = converter.makeHtml(markdown);
 
                 var panel = $('<div>')
