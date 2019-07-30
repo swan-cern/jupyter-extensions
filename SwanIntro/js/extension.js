@@ -7,7 +7,7 @@ import {lory} from 'lory.js';
 import welcome from './templates/welcome.html'
 import update from './templates/update.html'
 
-var current_iteration = 5;
+var current_iteration = 6;
 var temp_file = 'SWAN_projects/.intro';
 var base_url;
 
