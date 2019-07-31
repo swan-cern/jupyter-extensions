@@ -284,6 +284,10 @@ class SparkK8sConfiguration(SparkConfiguration):
                 conf.get('spark.yarn.dist.archives', None):
             raise Exception('Kubernetes does not support syntax for YARN, use spark.files or spark.jars')
 
+        if conf.get('spark.jars.packages', None):
+            raise Exception('Kubernetes currently does not support spark.jars.packages as of Spark 2.4. '
+                            'Please use spark.jars and http:// for downloading required jars.')
+
         return conf
 
     def get_spark_session_config(self):
