@@ -15,6 +15,17 @@ build-release:
   tags:
     - docker
 
+release-commit:
+  stage: release
+  script:
+    - echo "Building artifact for $CI_PIPELINE_ID"
+    - rm -rf ./*/js ./*/node_modules ./*/Makefile ./*/package.json ./*/webpack.config.js ./*/yarn.lock ./*/conf.json ./*/scalalistener .git*
+  artifacts:
+    name: $CI_PIPELINE_ID
+    paths:
+      - ./*
+    expire_in: 1 days
+
 release-version:
   stage: release
   script:
