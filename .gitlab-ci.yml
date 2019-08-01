@@ -20,11 +20,21 @@ release-commit:
   script:
     - echo "Building artifact for $CI_PIPELINE_ID"
     - rm -rf ./*/js ./*/node_modules ./*/Makefile ./*/package.json ./*/webpack.config.js ./*/yarn.lock ./*/conf.json ./*/scalalistener .git*
+  cache:
+    key: "$CI_PIPELINE_ID"
+    paths:
+      - ./
   artifacts:
     name: $CI_PIPELINE_ID
     paths:
       - ./*
     expire_in: 1 days
+  except:
+    - /^v.*$/
+    - master
+    - qa
+    - web
+    - schedules
 
 release-version:
   stage: release
