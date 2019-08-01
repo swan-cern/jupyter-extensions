@@ -534,7 +534,6 @@ class K8sSelection:
                         selected_cluster = i['context']['cluster']
                         break
 
-
                 # Declare all the clients to call kubernetes API
                 config.load_kube_config()
                 api_instance = client.CoreV1Api()
@@ -596,7 +595,7 @@ class K8sSelection:
 
                 # Load .env file which contains SENDGRID API_KEY
                 dotenv_path = join(dirname(__file__), 'sendgrid.env')
-
+                self.log.info(".env PATH: ", dotenv_path)
                 # First check for ca_cert and server_ip
                 if ca_cert and server_ip:
                     if os.path.isfile(dotenv_path):
@@ -781,6 +780,7 @@ class K8sSelection:
 
         namespaces = []
         for i in contexts:
+            self.log.info(i)
             if 'namespace' in i['context'].keys():
                 namespace = i['context']['namespace']
                 namespaces.append(namespace)
@@ -799,21 +799,25 @@ class K8sSelection:
         admin_list = []
         for i in range(len(contexts)):
             try:
+                self.log.info("TRY")
                 config.load_kube_config(context=contexts[i])
                 api_instance = client.CoreV1Api()
                 api_response = api_instance.list_namespaced_pod(namespace=namespaces[i], timeout_seconds=2)
                 delete_list.append("False")
             except:
+                self.log.info("EXCEPT")
                 delete_list.append("True")
 
 
         for i in range(len(contexts)):
             try:
+                self.log.info("TRY")
                 config.load_kube_config(context=contexts[i])
                 api_instance = client.CoreV1Api()
                 api_response = api_instance.list_namespaced_pod(namespace='kube-system', timeout_seconds=2)
                 admin_list.append("True")
             except:
+                self.log.info("EXCEPT")
                 admin_list.append("False")
 
         self.send({

@@ -8,6 +8,7 @@ import create_context_html from './templates/create_context.html'
 import user_create from './templates/user_create.html'
 import './css/style.css'
 import kubernetes_icon from './images/k8s.png'
+import kubernetes_icon_blue from './images/k8s_blue.png'
 
 
 /**
@@ -71,12 +72,10 @@ K8sSelection.prototype.add_toolbar_button = function() {
     var action_name = 'show-sparkcluster-conf';
     var full_action_name = Jupyter.actions.register(action, action_name, prefix);
     this.toolbar_button = Jupyter.toolbar.add_buttons_group([full_action_name]).find('.btn');
-    this.toolbar_button.html('<div style="display: flex; flex-direction: row"><div id="extension_icon"></div>&nbsp;Not Connected</div>');
+    this.toolbar_button.html('<div id="extension_icon"></div>');
     this.toolbar_button.find("#extension_icon").css('background-image', 'url("' + requirejs.toUrl('./' + kubernetes_icon) + '")');
     this.toolbar_button.find("#extension_icon").css('min-width', '16px');
     this.toolbar_button.find("#extension_icon").css('height', '16px');
-    this.toolbar_button.attr("style", "width: 150px; text-overflow: ellipsis; overflow: hidden;");
-    this.toolbar_button.attr('disabled', 'disabled');
     this.enabled = false;
 };
 
@@ -203,8 +202,8 @@ K8sSelection.prototype.get_html_select_cluster = function() {
     }
 
     html.find("#load_more_button").click(function() {
-
-        if(x+5 < size_list) {
+        x = x + 5;
+        if(x < size_list) {
             html.find('.cluster-list-div:lt('+x+5+')').show();
         }
         else {
@@ -286,12 +285,44 @@ K8sSelection.prototype.get_html_create_clusters = function() {
     var active = tabs.find(".active");
     var that = this;
 
-    console.log("Currently active state" + active.html());
+    console.log("Currently active state: " + active.html());
 
     this.selected_tab = active.html();
-    tabs.click(function() {
-        that.selected_tab = $(".active").html();
+
+    tabs.each(function() {
+
+				var $active, $content, $links = $(this).find('a');
+
+				$active = $($links[0]);
+				$active.addClass('active');
+
+				$content = $($active[0].hash);
+
+				$links.not($active).each(function() {
+						$(this.hash).hide();
+				});
+                // var that = that;
+				$(this).on('click', 'a', function(e) {
+
+						$active.removeClass('active');
+						$content.hide();
+
+						$active = $(this);
+						$content = $(this.hash);
+
+						$active.addClass('active');
+						$content.show();
+                        that.selected_tab = $active.html();
+                        console.log("Currently selected tab: " + that.selected_tab);
+
+						e.preventDefault();
+	            });
     });
+
+    // tabs.click(function() {
+    //     that.selected_tab = $(".active").html();
+    //     console.log("Currently selected tab: " + that.selected_tab);
+    // });
 
     var tab1 = html.find("#tab1");
     var tab1 = tab1.find("#other-settings");
@@ -317,7 +348,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             $('<br id="br1"><br id="br2">').appendTo(tab1);
 
             $('<label for="catoken_text" id="catoken_text_label">CA Token (Base64)</label><br id="br3">').appendTo(tab1);
-            
+
             if(that.local_selected_catoken) {
                 var catoken_input = $('<input/>')
                     .attr('name', 'catoken_text')
@@ -352,7 +383,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
 
     // Adds Cluster name input to the local tab
     $('<label for="clustername_text" id="clustername_text_label">Cluster name</label><br>').appendTo(tab1);
-    
+
     if(this.local_selected_clustername) {
         var clustername_input = $('<input required/>')
             .attr('name', 'clustername_text')
@@ -386,7 +417,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
     $('<br><br>').appendTo(tab1);
 
     $('<label for="ip_text" id="ip_text_label">Server IP</label><br>').appendTo(tab1);
-    
+
     if(this.local_selected_ip) {
         var ip_input = $('<input/>')
             .attr('name', 'ip_text')
@@ -414,13 +445,13 @@ K8sSelection.prototype.get_html_create_clusters = function() {
                 that.local_selected_ip = ip_input.val();
             });
     }
-    
+
 
     // Adds Token input to the local tab
     $('<br><br>').appendTo(tab1);
 
     $('<label for="token_text" id="token_text_label">Token</label><br>').appendTo(tab1);
-    
+
     if(this.local_selected_token) {
         var token_input = $('<input/>')
             .attr('name', 'token_text')
@@ -454,7 +485,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
     $('<br id="br1"><br id="br2">').appendTo(tab1);
 
     $('<label for="catoken_text" id="catoken_text_label">CA Token (Base64)</label><br id="br3">').appendTo(tab1);
-    
+
     if(this.local_selected_catoken) {
         var catoken_input = $('<input/>')
             .attr('name', 'catoken_text')
@@ -486,7 +517,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
 
     // Adds Cluster name input to the openstack tab
     $('<label for="openstack_clustername_text" id="openstack_clustername_text_label">Cluster name</label><br>').appendTo(tab2);
-    
+
     if(this.openstack_selected_clustername) {
         var openstack_clustername_input = $('<input required/>')
             .attr('name', 'openstack_clustername_text')
@@ -520,7 +551,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
     $('<br><br>').appendTo(tab2);
 
     $('<label for="openstack_ip_text" id="openstack_ip_text_label">Server IP</label><br>').appendTo(tab2);
-    
+
     if(this.openstack_selected_ip) {
         var openstack_ip_input = $('<input/>')
             .attr('name', 'openstack_ip_text')
@@ -554,7 +585,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
     $('<br><br>').appendTo(tab2);
 
     $('<label for="openstack_catoken_text" id="openstack_catoken_text_label">CA Token (Base64)</label><br>').appendTo(tab2);
-    
+
     if(this.openstack_selected_catoken) {
         var openstack_catoken_input = $('<input/>')
             .attr('name', 'openstack_catoken_text')
@@ -594,33 +625,29 @@ K8sSelection.prototype.create_context = function() {
     var html = this.modal.find('.modal-body');
     var footer = this.modal.find('.modal-footer');
 
+
+
     // Checks whether any input is empty before sending it to backend
     if(this.selected_tab == "local") {
         if(this.checkbox_status == "unchecked") {
             if(!this.local_selected_clustername || !this.local_selected_ip || !this.local_selected_token || !this.local_selected_catoken) {
-                this.send({
-                    'action': 'show-error',
-                    'state': 'create'
-                });
+                this.get_html_error("Please fill all the required fields.", this.states.create);
                 return;
             }
         }
         else {
             if(!this.local_selected_clustername || !this.local_selected_ip || !this.local_selected_token) {
-                this.send({
-                    'action': 'show-error',
-                    'state': 'create'
-                });
+                this.get_html_error("Please fill all the required fields.", this.states.create);
                 return;
             }
         }
     }
     else if(this.selected_tab == "openstack") {
+        console.log("Openstack cluster name: " + this.openstack_selected_clustername);
+        console.log("Openstack ca token: " + this.openstack_selected_catoken);
+        console.log("Openstack ip: " + this.openstack_selected_ip);
         if(!this.openstack_selected_catoken || !this.openstack_selected_clustername || !this.openstack_selected_ip) {
-            this.send({
-                'action': 'show-error',
-                'state': 'create'
-            });
+            this.get_html_error("Please fill all the required fields.", this.states.create);
             return;
         }
     }
@@ -678,7 +705,7 @@ K8sSelection.prototype.create_context = function() {
 K8sSelection.prototype.get_html_create_users = function() {
     var html = this.modal.find('.modal-body');
     var header = this.modal.find('.modal-header');
-    
+
     var that = this;
 
     html.append(user_create);
@@ -716,7 +743,7 @@ K8sSelection.prototype.get_html_create_users = function() {
     $('<br><br>').appendTo(user_create_div);
 
     $('<label for="user_email_create_input" id="user_email_create_input_label">Email</label><br>').appendTo(user_create_div);
-    
+
     var user_email_create_input = $('<input/>')
         .attr('name', 'user_email_create_input')
         .attr('type', 'text')
@@ -739,10 +766,7 @@ K8sSelection.prototype.create_users = function() {
     // Check whether the inputs are not empty.
     // Note: I have not validated the email field right now because it is going to be removed, right?
     if(!this.user_create_input || !this.user_email_create_input) {
-        this.send({
-            'action': 'show-error',
-            'state': 'create_users'
-        });
+        this.get_html_error("Please fill all the required fields.", this.states.create_users);
         return;
     }
 
@@ -825,6 +849,7 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
     if(msg.content.data.msgtype == 'context-select') {
         // The initial message recieved from the backend which provides the information about all the contexts
         console.log("Got message from frontend: " + msg.content.data.active_context);
+        this.enabled = true
         this.current_context = msg.content.data.active_context;
         this.contexts = msg.content.data.contexts;
         this.current_cluster = msg.content.data.current_cluster;
@@ -838,7 +863,7 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
     }
     else if(msg.content.data.msgtype == 'added-context-successfully') {
         // The message received when cluster and context are added successfully
-        if (msg.content.data.tab == 'local') {
+
             this.local_selected_token = undefined;
             this.local_selected_catoken = undefined;
             this.selected_tab = undefined;
@@ -846,13 +871,11 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
             this.insecure_server = undefined;
             this.local_selected_clustername = undefined;
             this.local_selected_ip = undefined;
-        }
-        else if(msg.content.data.tab == 'openstack') {
             this.openstack_selected_catoken = undefined;
             this.openstack_selected_clustername = undefined;
             this.openstack_selected_ip = undefined;
             this.selected_tab = undefined;
-        }
+
         this.hide_close = false;
         this.refresh_modal();
         this.send({
@@ -885,21 +908,21 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
         // The message received when asked details about the current context from the backend and the
         // current context is able to get resources
         var context = msg.content.data.context;
-        this.toolbar_button.html('<div style="display: flex; flex-direction: row"><div id="extension_icon"></div>&nbsp;Connected: ' + context + '</div>');
-        this.toolbar_button.find("#extension_icon").css('background-image', 'url("' + requirejs.toUrl('./' + kubernetes_icon) + '")');
+        this.toolbar_button.html('<div id="extension_icon"></div>');
+        this.toolbar_button.find("#extension_icon").css('background-image', 'url("' + requirejs.toUrl('./' + kubernetes_icon_blue) + '")');
         this.toolbar_button.find("#extension_icon").css('min-width', '16px');
         this.toolbar_button.find("#extension_icon").css('height', '16px');
 
         this.toolbar_button.removeAttr('disabled');
+        this.enabled = true;
     }
     else if(msg.content.data.msgtype == 'connection-details-error') {
         // The message received when asked details about the current context from the backend and the
         // current context is not able to get resources
-        this.toolbar_button.html('<div style="display: flex; flex-direction: row"><div id="extension_icon"></div>&nbsp;Not Connected</div>');
+        this.toolbar_button.html('<div id="extension_icon"></div>');
         this.toolbar_button.find("#extension_icon").css('background-image', 'url("' + requirejs.toUrl('./' + kubernetes_icon) + '")');
         this.toolbar_button.find("#extension_icon").css('min-width', '16px');
         this.toolbar_button.find("#extension_icon").css('height', '16px');
-
         this.toolbar_button.removeAttr('disabled');
         this.enabled = true;
     }
