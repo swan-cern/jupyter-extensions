@@ -9,9 +9,7 @@ import io, yaml
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 from os.path import join, dirname
-from dotenv import load_dotenv
-from sendgrid import SendGridAPIClient, SendGridException
-from sendgrid.helpers.mail import Mail, To, From
+
 
 class AlreadyExistError(Exception):
     """Raises when any element(context, cluster) already exists in KUBECONFIG file"""
@@ -442,7 +440,6 @@ class K8sSelection:
                 })
         elif action == "get-connection-detail":
             # This action checks whether the currently set context can request the resources from the cluster
-            self.log.info("INSIDE CONNECTION DETAIL")
             error = ''
             namespace = 'default'
 
@@ -457,8 +454,6 @@ class K8sSelection:
                             namespace = i['context']['namespace']
                             break
 
-                self.log.info("NAMESPACE: ", namespace)
-
                 # Calling kubernetes API to list pods
                 config.load_kube_config()
                 api_instance = client.CoreV1Api()
@@ -471,7 +466,6 @@ class K8sSelection:
 
             except ApiException as e:
                 # If it cannot list pods then send the error to user
-                self.log.info("CANNOT LIST PODS")
                 error = 'Cannot list pods in your namespace'
 
                 self.send({
@@ -535,14 +529,11 @@ class K8sSelection:
                 with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
                     load = yaml.safe_load(stream)
 
-                self.log.info("Yaml load: ", load)
-
                 for i in load['contexts']:
                     if i['name'] == selected_context:
                         selected_cluster = i['context']['cluster']
                         break
 
-                self.log.info("SELECTED CLUSTER: ", selected_cluster)
 
                 # Declare all the clients to call kubernetes API
                 config.load_kube_config()
@@ -560,7 +551,7 @@ class K8sSelection:
 
                 if flag == 1:
                     # If the namespace already exists then check whether the given rolebinding
-                    # already exists.
+                    # exists.
                     api_response = rbac_client.list_namespaced_role_binding(namespace=namespace)
                     for i in api_response.items:
                         if i.metadata.name == rolebinding_name:
@@ -568,7 +559,7 @@ class K8sSelection:
                             flag1 = 1
                             break
 
-                    # If the rolebinding does not exist then create it with clusterrole 'edit'
+                    # If the rolebinding does not exist then create it with clusterrole as 'edit'
                     if flag1 == 0:
                         rolebinding_obj = client.V1ObjectMeta(name=rolebinding_name, namespace=namespace,
                                                               cluster_name=selected_cluster)
@@ -604,31 +595,23 @@ class K8sSelection:
 
 
                 # Load .env file which contains SENDGRID API_KEY
-                dotenv_path = join(dirname(__file__), '.env')
-                load_dotenv(dotenv_path)
+                dotenv_path = join(dirname(__file__), 'sendgrid.env')
 
-                # Create a email message.
-                # The 'from_email' is currently hardcoded. It will have to be changed later.
-                message = Mail(
-                    from_email=From('sahil.jajodia@gmail.com'),
-                    to_emails=To(email),
-                    subject='Credentials for cluster: ' + selected_cluster,
-                    html_content='<strong>Cluster name: </strong>' + selected_cluster + '<br><br><strong>CA Cert: </strong>' + ca_cert + '<br><br><strong>Server IP: </strong>' + server_ip)
-
-                # Send the email from the user.
-                sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
-                response = sg.send(message)
+                # First check for ca_cert and server_ip
+                if ca_cert and server_ip:
+                    if os.path.isfile(dotenv_path):
+                        self.send_sendgrid_email(dotenv_path, email, selected_cluster, ca_cert, server_ip)
+                    else:
+                        self.send_email(email, selected_cluster, ca_cert, server_ip)
+                else:
+                    error = 'Cannot get CA-Cert or Server IP of the cluster'
+                    self.send({
+                        'msgtype': 'added-user-unsuccessfully',
+                        'error': error
+                    })
 
                 self.send({
                     'msgtype': 'added-user-successfully',
-                })
-            except SendGridException as e:
-                # Handle sendgrid exceptions
-                error = 'Cannot send email.'
-
-                self.send({
-                    'msgtype': 'added-user-unsuccessfully',
-                    'error': error
                 })
             except:
                 # Handle user creation exceptions
@@ -638,6 +621,91 @@ class K8sSelection:
                     'msgtype': 'added-user-unsuccessfully',
                     'error': error
                 })
+
+    def send_sendgrid_email(self, dotenv_path, email, selected_cluster, ca_cert, server_ip):
+        """
+        If the admin has sendgrid API credentials, then they can use this function to send email
+        :param dotenv_path: path of sendgrid.env file
+        :param email: email of the receiver
+        :param selected_cluster: the name of cluster that we want to send the info of
+        :param ca_cert: ca_cert of the cluster
+        :param server_ip: ip of the cluster
+        :return:
+        """
+        try:
+            from dotenv import load_dotenv
+            from sendgrid import SendGridAPIClient, SendGridException
+            from sendgrid.helpers.mail import Mail, To, From
+
+            # Load Sendgrid API key
+            load_dotenv(dotenv_path)
+
+            # Create an email message.
+            # The 'from_email' is currently hardcoded. It will have to be changed later.
+            message = Mail(
+                from_email=From('sahil.jajodia@gmail.com'),
+                to_emails=To(email),
+                subject='Credentials for cluster: ' + selected_cluster,
+                html_content='<strong>Cluster name: </strong>' + selected_cluster + '<br><br><strong>CA Cert: </strong>' + ca_cert + '<br><br><strong>Server IP: </strong>' + server_ip)
+
+            # Send the email to the user.
+            sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+            response = sg.send(message)
+        except ImportError:
+            # Handle import exceptions
+            error = 'Cannot send email.'
+
+            self.send({
+                'msgtype': 'added-user-unsuccessfully',
+                'error': error
+            })
+        except SendGridException as e:
+            # Handle sendgrid exceptions
+            error = 'Cannot send email.'
+
+            self.send({
+                'msgtype': 'added-user-unsuccessfully',
+                'error': error
+            })
+
+    def send_email(self, email, selected_cluster, ca_cert, server_ip):
+        """
+        This function can be used to send emails from an internal account at CERN
+        :param email: email of the receiver
+        :param selected_cluster: the name of cluster that we want to send the info of
+        :param ca_cert: ca_cert of the cluster
+        :param server_ip: ip of the cluster
+        :return:
+        """
+        try:
+            import smtplib
+
+            fromaddr = os.getenv("USER") + "@cern.ch"
+            toaddrs = [email]
+            msg = '''
+                From: {fromaddr}
+                To: {toaddr}
+                Subject: Credentials for cluster: {selected_cluster}
+                Cluster name: {selected_cluster}\n\nCA Cert: {ca_cert}\n\nServer IP: {server_ip} 
+            '''
+
+            msg = msg.format(fromaddr=fromaddr, toaddr=toaddrs[0], selected_cluster=selected_cluster, ca_cert=ca_cert, server_ip=server_ip)
+            # The actual mail send
+            server = smtplib.SMTP('smtp.cern.ch:587')
+            server.starttls()
+            server.ehlo('swan.cern.ch')
+            server.mail(fromaddr)
+            server.rcpt(toaddrs[0])
+            server.data(msg)
+            server.quit()
+        except:
+            # Handle smtplib exceptions
+            error = 'Cannot send email.'
+
+            self.send({
+                'msgtype': 'added-user-unsuccessfully',
+                'error': error
+            })
 
     def register_comm(self):
         """ Register a comm_target which will be used by frontend to start communication """
@@ -713,15 +781,12 @@ class K8sSelection:
 
         namespaces = []
         for i in contexts:
-            # self.log.info(i)
             if 'namespace' in i['context'].keys():
                 namespace = i['context']['namespace']
                 namespaces.append(namespace)
             else:
                 namespace = 'default'
                 namespaces.append(namespace)
-            # self.log.info("ACTIVE CONTEXT: ", active_context)
-
 
         contexts = [context['name'] for context in contexts]
         current_context = ''
