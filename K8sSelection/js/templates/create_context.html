@@ -1,0 +1,78 @@
+<!-- <div class="container-tabs"> -->
+    <header>
+            <div id="material-tabs">
+                    <a id="tab1-tab" href="#tab1" class="active" value="local">local</a>
+                    <a id="tab2-tab" href="#tab2" value="openstack">openstack</a>
+                    <a id="tab3-tab" href="#tab3" value="gcloud">gcloud</a>
+                    <a id="tab4-tab" href="#tab4" value="aws">aws</a>
+                    <span class="yellow-bar"></span>
+            </div>
+    </header>
+
+    <div class="tab-content">
+            <div id="tab1">
+                <!-- <form method="GET" action="" name="local-form" id="local-form"> -->
+                <div id="cluster-settings">
+                <label class="pure-material-checkbox">
+                        <input type="checkbox" id="cluster-mode">
+                        <span>Disable TLS support</span>
+                </label>
+                </div>
+                <br>
+                <hr>
+                <br>
+                <div id="other-settings">
+
+                </div>
+                <!-- </form> -->
+            </div>
+            <div id="tab2">
+            </div>
+            <div id="tab3">
+                    <p>Third tab content.</p>
+            </div>
+                        <div id="tab4">
+                    <p>Third tab content.</p>
+            </div>
+    </div>
+
+    <script
+  src="https://code.jquery.com/jquery-3.4.1.min.js"
+  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+  crossorigin="anonymous">
+  </script>
+  <script>
+    $(document).ready(function() {
+		$('#material-tabs').each(function() {
+
+				var $active, $content, $links = $(this).find('a');
+
+				$active = $($links[0]);
+				$active.addClass('active');
+
+				$content = $($active[0].hash);
+
+				$links.not($active).each(function() {
+						$(this.hash).hide();
+				});
+
+				$(this).on('click', 'a', function(e) {
+
+						$active.removeClass('active');
+						$content.hide();
+
+						$active = $(this);
+						$content = $(this.hash);
+
+						$active.addClass('active');
+						$content.show();
+
+						e.preventDefault();
+				});
+        });
+        
+        
+    });
+  </script>
+
+<!-- </div> -->

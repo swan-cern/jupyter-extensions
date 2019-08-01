@@ -1,0 +1,998 @@
+import $ from 'jquery';
+import dialog from 'base/js/dialog';
+import Jupyter from 'base/js/namespace';
+import events from 'base/js/events';
+import requirejs from 'require';
+import user_html from './templates/user.html'
+import create_context_html from './templates/create_context.html'
+import user_create from './templates/user_create.html'
+import './css/style.css'
+import kubernetes_icon from './images/k8s.png'
+
+
+/**
+ * @desc K8sSelection object constructor
+ * @constructor
+ */
+function K8sSelection() {
+
+    /**
+     * @desc States that are visible to the user
+     */
+    this.states = {
+        select: {
+            get_html: $.proxy(this.get_html_select_cluster, this),
+        },
+        create: {
+            get_html: $.proxy(this.get_html_create_clusters, this),
+            buttons: {
+                'Create Cluster': {
+                    class: 'btn-success size-100',
+                    click: $.proxy(this.create_context, this)
+                }
+            }
+        },
+        create_users: {
+            get_html: $.proxy(this.get_html_create_users, this),
+            buttons: {
+                'Create User': {
+                    class: 'btn-success size-100',
+                    click: $.proxy(this.create_users, this)
+                }
+            }
+        },
+        loading: {
+            get_html: $.proxy(this.get_html_loading, this),
+            hide_close: true,
+        },
+        error: {
+            get_html: $.proxy(this.get_html_error, this)
+        }
+    };
+
+    this.comm = null;
+
+    // Starts the communication with backend when the kernel is connected
+    events.on('kernel_connected.Kernel', $.proxy(this.start_comm, this));
+}
+
+
+/**
+ * @desc adds custom extension button to the Jupyter notebook.
+ */
+K8sSelection.prototype.add_toolbar_button = function() {
+    var action = {
+        help: 'Spark clusters settings',
+        help_index: 'zz', // Sorting Order in keyboard shortcut dialog
+        handler: $.proxy(this.open_modal, this)
+    };
+
+    var prefix = 'K8sSelection';
+    var action_name = 'show-sparkcluster-conf';
+    var full_action_name = Jupyter.actions.register(action, action_name, prefix);
+    this.toolbar_button = Jupyter.toolbar.add_buttons_group([full_action_name]).find('.btn');
+    this.toolbar_button.html('<div style="display: flex; flex-direction: row"><div id="extension_icon"></div>&nbsp;Not Connected</div>');
+    this.toolbar_button.find("#extension_icon").css('background-image', 'url("' + requirejs.toUrl('./' + kubernetes_icon) + '")');
+    this.toolbar_button.find("#extension_icon").css('min-width', '16px');
+    this.toolbar_button.find("#extension_icon").css('height', '16px');
+    this.toolbar_button.attr("style", "width: 150px; text-overflow: ellipsis; overflow: hidden;");
+    this.toolbar_button.attr('disabled', 'disabled');
+    this.enabled = false;
+};
+
+
+/**
+ * @desc function to handle dialog box modal of the extension
+ */
+K8sSelection.prototype.open_modal = function () {
+
+    if (this.enabled && !(this.modal && this.modal.data('bs.modal') && this.modal.data('bs.modal').isShown)) {
+        var that = this;
+
+        this.modal = dialog.modal({
+            show: false,
+            draggable: false,
+            notebook: Jupyter.notebook,
+            keyboard_manager: Jupyter.keyboard_manager,
+            title: 'Spark cluster setting',
+        });
+
+        this.modal.click(function(e) {
+            // Close modal on click outside of connector area when in not "hide_close" state
+            if ($(e.target).is("div") && !$(e.target).closest('.modal-dialog').length && !that.hide_close) {
+                that.modal.modal('hide');
+            }
+        });
+
+        // Call this function when the modal shows after clicking the extension button
+        this.modal.on('show.bs.modal', function () {
+            that.switch_state(that.states.loading);
+            that.refresh_modal();
+        }).modal('show');
+
+        // Prevents moving the dialog box when clicked on the header
+        this.modal.find(".modal-header").unbind("mousedown");
+
+        // Close the dialog box
+        this.modal.on('hide.bs.modal', function () {
+            return true;
+        });
+    }
+};
+
+/**
+ * @desc refreshes the context select state
+ */
+K8sSelection.prototype.refresh_modal = function() {
+    this.switch_state(this.states.loading);
+    this.send({'action': 'Refresh'});
+};
+
+
+/**
+ * @desc handler to send message to the frontend
+ * @param msg - The message that we have to send to the error
+ */
+K8sSelection.prototype.send = function (msg) {
+    this.comm.send(msg);
+};
+
+
+/**
+ * @desc display the frontend of the select state. This is the main state and the user will interact with
+ * this state the most.
+ */
+K8sSelection.prototype.get_html_select_cluster = function() {
+    var html = this.modal.find('.modal-body');
+    var footer = this.modal.find('.modal-footer');
+    var header = this.modal.find('.modal-header');
+
+    $('<h4 class="modal-title">Spark cluster setting</h4>').appendTo(header);
+    var contexts = this.contexts;
+    var current_context = this.current_context;
+    var template = user_html;
+    this.hide_close = true;
+    html.append(template);
+    var delete_list = this.delete_list;
+    var admin_list = this.admin_list;
+    var that = this;
+    var list_div = html.find("#user_html_inputs");
+
+
+    /**
+     * Loop to check and accordingly display on frontend whether a context can be used or not and also whether the user is admin of the context.
+     */
+    for(var i = 0; i < contexts.length; i++) {
+        if(delete_list[i] == "True") {
+            $('<div class="cluster-list-div"><div class="connect-symbol" style="visibility: hidden;"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text" style="color: #C0C0C0;">' + contexts[i] + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + contexts[i] + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + contexts[i] + '"><i class="fa fa-share-alt"></i></button><button disabled class="list-item-select pure-material-button-text" id="select.' + contexts[i] + '">Select</button><hr></div>').appendTo(list_div);
+        }
+        else {
+            if(admin_list[i] == "True") {
+                if(contexts[i] == current_context) {
+                    $('<div class="cluster-list-div"><div class="connect-symbol"><i class="fa fa-circle" aria-hidden="true"></i></div></icon><div class="list-item-text">' + contexts[i] + '</div><button disabled class="list-item-delete pure-material-button-text" id="delete.' + contexts[i] + '">X</button><button class="list-item-share pure-material-button-text" id="share.' + contexts[i] + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + contexts[i] + '">Select</button><hr></div>').appendTo(list_div);
+                }
+                else {
+                    $('<div class="cluster-list-div"><div class="connect-symbol" style="visibility: hidden;"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text">' + contexts[i] + '</div><button disabled class="list-item-delete pure-material-button-text" id="delete.' + contexts[i] + '">X</button><button class="list-item-share pure-material-button-text" id="share.' + contexts[i] + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + contexts[i] + '">Select</button><hr></div>').appendTo(list_div);
+                }
+            }
+            else {
+                if(contexts[i] == current_context) {
+                    $('<div class="cluster-list-div"><div class="connect-symbol"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text">' + contexts[i] + '</div><button disabled class="list-item-delete pure-material-button-text" id="delete.' + contexts[i] + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + contexts[i] + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + contexts[i] + '">Select</button><hr></div>').appendTo(list_div);
+                }
+                else {
+                    $('<div class="cluster-list-div"><div class="connect-symbol" style="visibility: hidden;"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text">' + contexts[i] + '</div><button disabled class="list-item-delete pure-material-button-text" id="delete.' + contexts[i] + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + contexts[i] + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + contexts[i] + '">Select</button><hr></div>').appendTo(list_div);
+                }
+            }
+        }
+    }
+
+
+    /**
+     * Load more button functionality
+     */
+    var size_list = list_div.find(".cluster-list-div").length;
+    var x = 5;
+    html.find('.cluster-list-div:lt(' + size_list + ')').hide();
+
+    if(size_list > 5) {
+        html.find('.cluster-list-div:lt('+x+')').show();
+        $("<div><button style=\"position: absolute; left: 45%;\" class=\"list-item-load pure-material-button-text\" id=\"load_more_button\">Load More</button></div>").appendTo(html);
+    }
+    else {
+        html.find('.cluster-list-div:lt(' + size_list + ')').show();
+    }
+
+    html.find("#load_more_button").click(function() {
+
+        if(x+5 < size_list) {
+            html.find('.cluster-list-div:lt('+x+5+')').show();
+        }
+        else {
+            html.find('.cluster-list-div:lt('+size_list+')').show();
+            html.find("#load_more_button").hide();
+        }
+
+
+    });
+
+    /**
+     * Handler to get the current context and send it to the backend to change the current context in KUBECONFIG
+     */
+    list_div.find(".list-item-select").on('click', function() {
+        var button_id = $(this).attr('id');
+        var current_context = button_id.split('.')[1];
+        console.log("Selected cluster: " + current_context);
+        that.switch_state(that.states.loading);
+        that.send({
+            'action': 'change-current-context',
+            'context': current_context,
+        });
+    });
+
+    /**
+     * Handler to delete cluster from the list and send to the backend to delete cluster and context from KUBECONFIG
+     */
+    list_div.find(".list-item-delete").on('click', function() {
+        var button_id = $(this).attr('id');
+        var current_context = button_id.split('.')[1];
+        console.log("ID: " + button_id);
+        console.log("Selected cluster: " + current_context);
+        that.switch_state(that.states.loading);
+        that.send({
+            'action': 'delete-current-context',
+            'context': current_context,
+        });
+    });
+
+    /**
+     * Handler to change the current state to "create_users"
+     */
+    list_div.find(".list-item-share").on('click', function() {
+        var button_id = $(this).attr('id');
+        var current_context = button_id.split('.')[1];
+        that.user_create_context_name = current_context;
+        that.switch_state(that.states.create_users);
+    });
+
+    $('<br>').appendTo(list_div);
+
+    // Adds + (Add cluster) state button
+    $('<div class="fab-button" id="select-button"><i class="fa fa-plus"></i></div><br><br><br>')
+        .appendTo(html)
+        .on('click', $.proxy(this.switch_state, this, this.states.create));
+
+};
+
+
+/**
+ * @desc display the create cluster and context frontend to the user
+ */
+K8sSelection.prototype.get_html_create_clusters = function() {
+    var html = this.modal.find('.modal-body');
+    var header = this.modal.find('.modal-header');
+
+    $("<button>")
+    .attr("type", "button")
+    .addClass("back-button")
+    .html("<i class='fa fa-arrow-left' aria-hidden='true'></i>")
+    .appendTo(header)
+    .on("click", $.proxy(this.refresh_modal, this));
+
+    $('<h4 class="modal-title">&nbsp;&nbsp;<span>Add new cluster & context</span></h4>').appendTo(header);
+
+    html.append(create_context_html);
+
+    var tabs = html.find("#material-tabs");
+    var active = tabs.find(".active");
+    var that = this;
+
+    console.log("Currently active state" + active.html());
+
+    this.selected_tab = active.html();
+    tabs.click(function() {
+        that.selected_tab = $(".active").html();
+    });
+
+    var tab1 = html.find("#tab1");
+    var tab1 = tab1.find("#other-settings");
+
+    var tab2 = html.find("#tab2");
+
+
+    // "Insecure cluster" checkbox logic for the local tab.
+    var checkbox = html.find("#cluster-mode");
+    this.checkbox_status = "unchecked";
+    checkbox.change(function() {
+        if($(this).is(":checked")) {
+            that.checkbox_status = "checked";
+            tab1.find("#br1").remove();
+            tab1.find("#br2").remove();
+            tab1.find("#br3").remove();
+            tab1.find("#catoken_text_label").remove();
+            tab1.find("#catoken_text").remove();
+
+        }
+        else {
+            that.checkbox_status = "unchecked";
+            $('<br id="br1"><br id="br2">').appendTo(tab1);
+
+            $('<label for="catoken_text" id="catoken_text_label">CA Token (Base64)</label><br id="br3">').appendTo(tab1);
+            
+            if(that.local_selected_catoken) {
+                var catoken_input = $('<input/>')
+                    .attr('name', 'catoken_text')
+                    .attr('type', 'text')
+                    .attr("required", "required")
+                    .attr('id', 'catoken_text')
+                    .attr('value', that.local_selected_catoken)
+                    .attr('placeholder', 'CA Token (Base64)')
+                    .addClass('form__field')
+                    .appendTo(tab1)
+                    .change(function() {
+                        that.local_selected_catoken = catoken_input.val();
+                    });
+            }
+            else {
+                var catoken_input = $('<input/>')
+                    .attr('name', 'catoken_text')
+                    .attr('type', 'text')
+                    .attr("required", "required")
+                    .attr('id', 'catoken_text')
+                    .attr('placeholder', 'CA Token (Base64)')
+                    .addClass('form__field')
+                    .appendTo(tab1)
+                    .change(function() {
+                        that.local_selected_catoken = catoken_input.val();
+                    });
+            }
+        }
+    });
+
+
+
+    // Adds Cluster name input to the local tab
+    $('<label for="clustername_text" id="clustername_text_label">Cluster name</label><br>').appendTo(tab1);
+    
+    if(this.local_selected_clustername) {
+        var clustername_input = $('<input required/>')
+            .attr('name', 'clustername_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'clustername_text')
+            .attr('value', this.local_selected_clustername)
+            .attr('placeholder', 'Cluster name')
+            .addClass('form__field')
+            .appendTo(tab1)
+            .change(function() {
+                that.local_selected_clustername = clustername_input.val();
+            });
+    }
+    else {
+        var clustername_input = $('<input required/>')
+            .attr('name', 'clustername_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'clustername_text')
+            .attr('placeholder', 'Cluster name')
+            .addClass('form__field')
+            .appendTo(tab1)
+            .change(function() {
+                that.local_selected_clustername = clustername_input.val();
+            });
+    }
+
+
+    // Adds Server IP input to the local tab
+    $('<br><br>').appendTo(tab1);
+
+    $('<label for="ip_text" id="ip_text_label">Server IP</label><br>').appendTo(tab1);
+    
+    if(this.local_selected_ip) {
+        var ip_input = $('<input/>')
+            .attr('name', 'ip_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'ip_text')
+            .attr('value', this.local_selected_ip)
+            .attr('placeholder', 'Server IP')
+            .addClass('form__field')
+            .appendTo(tab1)
+            .change(function() {
+                that.local_selected_ip = ip_input.val();
+            });
+    }
+    else {
+        var ip_input = $('<input/>')
+            .attr('name', 'ip_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'ip_text')
+            .attr('placeholder', 'Server IP')
+            .addClass('form__field')
+            .appendTo(tab1)
+            .change(function() {
+                that.local_selected_ip = ip_input.val();
+            });
+    }
+    
+
+    // Adds Token input to the local tab
+    $('<br><br>').appendTo(tab1);
+
+    $('<label for="token_text" id="token_text_label">Token</label><br>').appendTo(tab1);
+    
+    if(this.local_selected_token) {
+        var token_input = $('<input/>')
+            .attr('name', 'token_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'token_text')
+            .attr('value', this.local_selected_token)
+            .attr('placeholder', 'Token')
+            .addClass('form__field')
+            .appendTo(tab1)
+            .change(function() {
+                that.local_selected_token = token_input.val();
+            });
+    }
+    else {
+        var token_input = $('<input/>')
+            .attr('name', 'token_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'token_text')
+            .attr('placeholder', 'Token')
+            .addClass('form__field')
+            .appendTo(tab1)
+            .change(function() {
+                that.local_selected_token = token_input.val();
+            });
+    }
+
+
+    // Adds CA Token input to the local tab is insecure checkbox is unchecked
+    $('<br id="br1"><br id="br2">').appendTo(tab1);
+
+    $('<label for="catoken_text" id="catoken_text_label">CA Token (Base64)</label><br id="br3">').appendTo(tab1);
+    
+    if(this.local_selected_catoken) {
+        var catoken_input = $('<input/>')
+            .attr('name', 'catoken_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'catoken_text')
+            .attr('value', this.local_selected_catoken)
+            .attr('placeholder', 'CA Token (Base64)')
+            .addClass('form__field')
+            .appendTo(tab1)
+            .change(function() {
+                that.local_selected_catoken = catoken_input.val();
+            });
+    }
+    else {
+        var catoken_input = $('<input/>')
+            .attr('name', 'catoken_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'catoken_text')
+            .attr('placeholder', 'CA Token (Base64)')
+            .addClass('form__field')
+            .appendTo(tab1)
+            .change(function() {
+                that.local_selected_catoken = catoken_input.val();
+            });
+    }
+
+
+    // Adds Cluster name input to the openstack tab
+    $('<label for="openstack_clustername_text" id="openstack_clustername_text_label">Cluster name</label><br>').appendTo(tab2);
+    
+    if(this.openstack_selected_clustername) {
+        var openstack_clustername_input = $('<input required/>')
+            .attr('name', 'openstack_clustername_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'openstack_clustername_text')
+            .attr('value', this.openstack_selected_clustername)
+            .attr('placeholder', 'Cluster name')
+            .addClass('form__field')
+            .appendTo(tab2)
+            .change(function() {
+                that.openstack_selected_clustername = openstack_clustername_input.val();
+            });
+    }
+    else {
+        var openstack_clustername_input = $('<input required/>')
+            .attr('name', 'openstack_clustername_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'openstack_clustername_text')
+            .attr('placeholder', 'Cluster name')
+            .addClass('form__field')
+            .appendTo(tab2)
+            .change(function() {
+                that.openstack_selected_clustername = openstack_clustername_input.val();
+            });
+    }
+
+
+    // Adds Server IP input to the openstack tab
+    $('<br><br>').appendTo(tab2);
+
+    $('<label for="openstack_ip_text" id="openstack_ip_text_label">Server IP</label><br>').appendTo(tab2);
+    
+    if(this.openstack_selected_ip) {
+        var openstack_ip_input = $('<input/>')
+            .attr('name', 'openstack_ip_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'openstack_ip_text')
+            .attr('value', this.openstack_selected_ip)
+            .attr('placeholder', 'Server IP')
+            .addClass('form__field')
+            .appendTo(tab2)
+            .change(function() {
+                that.openstack_selected_ip = openstack_ip_input.val();
+            });
+    }
+    else {
+        var openstack_ip_input = $('<input/>')
+            .attr('name', 'openstack_ip_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'openstack_ip_text')
+            .attr('placeholder', 'Server IP')
+            .addClass('form__field')
+            .appendTo(tab2)
+            .change(function() {
+                that.openstack_selected_ip = openstack_ip_input.val();
+            });
+    }
+
+
+    // Adds CA Token input to the openstack tab
+    $('<br><br>').appendTo(tab2);
+
+    $('<label for="openstack_catoken_text" id="openstack_catoken_text_label">CA Token (Base64)</label><br>').appendTo(tab2);
+    
+    if(this.openstack_selected_catoken) {
+        var openstack_catoken_input = $('<input/>')
+            .attr('name', 'openstack_catoken_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'openstack_catoken_text')
+            .attr('value', this.openstack_selected_catoken)
+            .attr('placeholder', 'CA Token (Base64)')
+            .addClass('form__field')
+            .appendTo(tab2)
+            .change(function() {
+                that.openstack_selected_catoken = openstack_catoken_input.val();
+            });
+    }
+    else {
+        var openstack_catoken_input = $('<input/>')
+            .attr('name', 'openstack_catoken_text')
+            .attr('type', 'text')
+            .attr("required", "required")
+            .attr('id', 'openstack_catoken_text')
+            .attr('placeholder', 'CA Token (Base64)')
+            .addClass('form__field')
+            .appendTo(tab2)
+            .change(function() {
+                that.openstack_selected_catoken = openstack_catoken_input.val();
+            });
+    }
+};
+
+
+/**
+ * @desc Handler for getting all the inputs from the frontend and sending it to the backend for creating context
+ * and cluster
+ */
+K8sSelection.prototype.create_context = function() {
+    var header = this.modal.find('.modal-header');
+    var html = this.modal.find('.modal-body');
+    var footer = this.modal.find('.modal-footer');
+
+    // Checks whether any input is empty before sending it to backend
+    if(this.selected_tab == "local") {
+        if(this.checkbox_status == "unchecked") {
+            if(!this.local_selected_clustername || !this.local_selected_ip || !this.local_selected_token || !this.local_selected_catoken) {
+                this.send({
+                    'action': 'show-error',
+                    'state': 'create'
+                });
+                return;
+            }
+        }
+        else {
+            if(!this.local_selected_clustername || !this.local_selected_ip || !this.local_selected_token) {
+                this.send({
+                    'action': 'show-error',
+                    'state': 'create'
+                });
+                return;
+            }
+        }
+    }
+    else if(this.selected_tab == "openstack") {
+        if(!this.openstack_selected_catoken || !this.openstack_selected_clustername || !this.openstack_selected_ip) {
+            this.send({
+                'action': 'show-error',
+                'state': 'create'
+            });
+            return;
+        }
+    }
+
+    footer.find('#select-button').attr('disabled', true);
+    header.find('.close').hide();
+
+    // Logging all the input from frontend just for debugging purposes.
+    console.log("Selected token: " + this.local_selected_token);
+    console.log("Selected catoken: " + this.local_selected_catoken);
+    console.log("Selected tab: " + this.selected_tab);
+    console.log("Insecure server: ", this.checkbox_status);
+    console.log("Selected openstack cluster: ", this.openstack_selected_clustername);
+    console.log("Selected openstack server ip: ", this.openstack_selected_ip);
+    console.log("Selected openstack ca token: ", this.openstack_selected_catoken);
+
+    // Sending the data to the backend according to the tab selected currently
+    if(this.selected_tab == "local") {
+        if(this.checkbox_status == "unchecked") {
+            this.send({
+                'action': 'add-context-cluster',
+                'token': this.local_selected_token,
+                'tab': this.selected_tab,
+                'catoken': this.local_selected_catoken,
+                'cluster_name': this.local_selected_clustername,
+                'ip': this.local_selected_ip,
+                'insecure_server': "false"
+            });
+        }
+        else {
+            this.send({
+                'action': 'add-context-cluster',
+                'token': this.local_selected_token,
+                'tab': this.selected_tab,
+                'cluster_name': this.local_selected_clustername,
+                'ip': this.local_selected_ip,
+                'insecure_server': "true"
+            });
+        }
+    }
+    else if(this.selected_tab == "openstack") {
+        this.send({
+            'action': 'add-context-cluster',
+            'tab': this.selected_tab,
+            'catoken': this.openstack_selected_catoken,
+            'cluster_name': this.openstack_selected_clustername,
+            'ip': this.openstack_selected_ip
+        });
+    }
+};
+
+/**
+ * @desc shows the create_user state to the user
+ */
+K8sSelection.prototype.get_html_create_users = function() {
+    var html = this.modal.find('.modal-body');
+    var header = this.modal.find('.modal-header');
+    
+    var that = this;
+
+    html.append(user_create);
+
+    $("<button>")
+    .attr("type", "button")
+    .addClass("back-button")
+    .html("<i class='fa fa-arrow-left' aria-hidden='true'></i>")
+    .appendTo(header)
+    .on("click", $.proxy(this.refresh_modal, this));
+
+    $('<h4 class="modal-title">&nbsp;&nbsp;<span>Grant access</span></h4>').appendTo(header);
+
+    var user_create_div = html.find("#user_create_div");
+
+
+    // Adds username field to create_user state frontend
+    $('<br><label for="user_create_input" id="user_create_input_label">Username</label><br>').appendTo(user_create_div);
+
+    var user_create_input = $('<input/>')
+        .attr('name', 'user_create_input')
+        .attr('type', 'text')
+        .attr("required", "required")
+        .attr('id', 'user_create_input')
+        .attr('placeholder', 'Username')
+        .addClass('form__field')
+        .appendTo(user_create_div)
+        .change(function() {
+            that.user_create_input = user_create_input.val();
+        });
+
+
+    // Adds user email field to create_user state frontend. Currently I have kept this input for testing. We can delete
+    // it however when deployed to production.
+    $('<br><br>').appendTo(user_create_div);
+
+    $('<label for="user_email_create_input" id="user_email_create_input_label">Email</label><br>').appendTo(user_create_div);
+    
+    var user_email_create_input = $('<input/>')
+        .attr('name', 'user_email_create_input')
+        .attr('type', 'text')
+        .attr("required", "required")
+        .attr('id', 'user_email_create_input')
+        .attr('placeholder', 'Email')
+        .addClass('form__field')
+        .appendTo(user_create_div)
+        .change(function() {
+            that.user_email_create_input = user_email_create_input.val();
+        });
+};
+
+
+/**
+ * Handler to get user inputs from the create_user state and send it to the backend to create a user
+ */
+K8sSelection.prototype.create_users = function() {
+
+    // Check whether the inputs are not empty.
+    // Note: I have not validated the email field right now because it is going to be removed, right?
+    if(!this.user_create_input || !this.user_email_create_input) {
+        this.send({
+            'action': 'show-error',
+            'state': 'create_users'
+        });
+        return;
+    }
+
+    // Logging the inputs just for testing purposes
+    console.log("Username: " + this.user_create_input);
+    console.log("Email: " + this.user_email_create_input);
+    console.log("Selected context: " + this.user_create_context_name);
+
+
+    // Send the inputs to the backend to add users to a cluster
+    this.switch_state(this.states.loading);
+    this.send({
+        'action': 'create-user',
+        'username': this.user_create_input,
+        'email': this.user_email_create_input,
+        'context': this.user_create_context_name
+    });
+};
+
+
+/**
+ * @desc displays the frontend for loading state
+ */
+K8sSelection.prototype.get_html_loading = function() {
+    var html = this.modal.find('.modal-body');
+
+    var flexbox = $('<div>')
+        .addClass('loading-flexbox')
+        .appendTo(html);
+
+    var loading = $('<div>')
+        .addClass('loading-div')
+        .appendTo(flexbox);
+
+    $('<div>')
+        .addClass('nb-spinner')
+        .appendTo(loading);
+};
+
+
+/**
+ * @desc frontend for the error state.
+ * @param error
+ * @param prev_state
+ */
+K8sSelection.prototype.get_html_error = function (error, prev_state) {
+    if (this.modal) {
+        Jupyter.keyboard_manager.disable();
+        var header = this.modal.find('.modal-header');
+        var body = this.modal.find('.modal-body');
+        var footer = this.modal.find('.modal-footer');
+
+        header.html('');
+        body.html('');
+        footer.html('');
+
+        $('<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>').appendTo(header);
+
+
+        // Here the back button allows to go back to the previous state
+        $("<button>")
+            .attr("type", "button")
+            .addClass("back-button")
+            .html("<i class='fa fa-arrow-left' aria-hidden='true'></i>")
+            .appendTo(header)
+            .on("click", $.proxy(this.switch_state, this, prev_state));
+
+        $('<h4 class="modal-title">&nbsp;&nbsp;<span>Error</span></h4>').appendTo(header);
+
+        $('<div id="setting-error"><br><h4 style="color: red;">' + error + '</h4></div>').appendTo(body);
+    }
+};
+
+
+/**
+ * @desc Handler to process messages recieved from the backend
+ * @param msg
+ */
+K8sSelection.prototype.on_comm_msg = function (msg) {
+    if(msg.content.data.msgtype == 'context-select') {
+        // The initial message recieved from the backend which provides the information about all the contexts
+        console.log("Got message from frontend: " + msg.content.data.active_context);
+        this.current_context = msg.content.data.active_context;
+        this.contexts = msg.content.data.contexts;
+        this.current_cluster = msg.content.data.current_cluster;
+        this.clusters = msg.content.data.clusters;
+        this.delete_list = msg.content.data.delete_list;
+        this.admin_list = msg.content.data.admin_list;
+        this.switch_state(this.states.select);
+        this.send({
+            'action': 'get-connection-detail',
+        });
+    }
+    else if(msg.content.data.msgtype == 'added-context-successfully') {
+        // The message received when cluster and context are added successfully
+        if (msg.content.data.tab == 'local') {
+            this.local_selected_token = undefined;
+            this.local_selected_catoken = undefined;
+            this.selected_tab = undefined;
+            this.checkbox_status = undefined;
+            this.insecure_server = undefined;
+            this.local_selected_clustername = undefined;
+            this.local_selected_ip = undefined;
+        }
+        else if(msg.content.data.tab == 'openstack') {
+            this.openstack_selected_catoken = undefined;
+            this.openstack_selected_clustername = undefined;
+            this.openstack_selected_ip = undefined;
+            this.selected_tab = undefined;
+        }
+        this.hide_close = false;
+        this.refresh_modal();
+        this.send({
+            'action': 'get-connection-detail',
+        });
+    }
+    else if(msg.content.data.msgtype == 'added-context-unsuccessfully') {
+        // The message received when cluster and context are not added successfully
+        console.log("Added context unsuccessfull");
+        this.hide_close = false;
+        var footer = this.modal.find('.modal-footer');
+        var header = this.modal.find('.modal-header');
+
+        footer.find('#select-button').attr('disabled', false);
+        header.find('.close').show();
+
+        this.get_html_error(msg.content.data.error, this.states.create);
+
+        console.log("Added context unsuccessfull");
+    }
+    else if(msg.content.data.msgtype == 'changed-current-context') {
+        // The message received when successfully changed current context in the backend
+        this.hide_close = false;
+        this.modal.modal('hide');
+        this.send({
+            'action': 'get-connection-detail',
+        });
+    }
+    else if(msg.content.data.msgtype == 'connection-details') {
+        // The message received when asked details about the current context from the backend and the
+        // current context is able to get resources
+        var context = msg.content.data.context;
+        this.toolbar_button.html('<div style="display: flex; flex-direction: row"><div id="extension_icon"></div>&nbsp;Connected: ' + context + '</div>');
+        this.toolbar_button.find("#extension_icon").css('background-image', 'url("' + requirejs.toUrl('./' + kubernetes_icon) + '")');
+        this.toolbar_button.find("#extension_icon").css('min-width', '16px');
+        this.toolbar_button.find("#extension_icon").css('height', '16px');
+
+        this.toolbar_button.removeAttr('disabled');
+    }
+    else if(msg.content.data.msgtype == 'connection-details-error') {
+        // The message received when asked details about the current context from the backend and the
+        // current context is not able to get resources
+        this.toolbar_button.html('<div style="display: flex; flex-direction: row"><div id="extension_icon"></div>&nbsp;Not Connected</div>');
+        this.toolbar_button.find("#extension_icon").css('background-image', 'url("' + requirejs.toUrl('./' + kubernetes_icon) + '")');
+        this.toolbar_button.find("#extension_icon").css('min-width', '16px');
+        this.toolbar_button.find("#extension_icon").css('height', '16px');
+
+        this.toolbar_button.removeAttr('disabled');
+        this.enabled = true;
+    }
+    else if(msg.content.data.msgtype == 'deleted-context-successfully') {
+        // Message received from backend when the context and cluster are deleted successfully from backend
+        this.modal.modal('hide');
+        this.switch_state(this.states.create);
+        this.send({
+            'action': 'get-connection-detail',
+        });
+    }
+    else if(msg.content.data.msgtype == 'added-user-unsuccessfully') {
+        // Message recieved when the user is not added to a cluster successfully
+        var html = this.modal.find('.modal-body');
+        var footer = this.modal.find('.modal-footer');
+        var header = this.modal.find('.modal-header');
+        var that = this;
+
+        this.get_html_error(msg.content.data.error, this.states.create_users);
+    }
+    else if(msg.content.data.msgtype == 'added-user-successfully') {
+        // Message recieved when the user is added to a cluster successfully
+        this.user_create_input = undefined;
+        this.user_email_create_input = undefined;
+        this.switch_state(this.states.create_users);
+    }
+};
+
+
+/**
+ * @desc A Helper function to switch from one state to another
+ * @param new_state
+ */
+K8sSelection.prototype.switch_state = function (new_state) {
+    this.state = new_state;
+
+    if (this.modal) {
+        Jupyter.keyboard_manager.disable();
+        var header = this.modal.find('.modal-header');
+        var body = this.modal.find('.modal-body');
+        var footer = this.modal.find('.modal-footer');
+
+        header.html('');
+        body.html('');
+        footer.html('');
+
+        $('<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>').appendTo(header);
+
+        new_state.get_html();
+
+        // Looping for each button that a state has and adding it to the footer
+        $.each(new_state.buttons, function (name, options) {
+            $('<button>')
+                .addClass('btn-blue')
+                .attr('id', 'select-button')
+                .on('click', options.click)
+                .text(name)
+                .appendTo(footer);
+        });
+    }
+};
+
+
+/**
+ * @desc Function to start communication with the backend
+ */
+K8sSelection.prototype.start_comm = function () {
+
+    // Check whether it is already instantiated and close it.
+    if (this.comm) {
+        this.comm.close()
+    }
+
+    console.log('K8sSelection: Starting Comm with kernel');
+
+    var that = this;
+
+    // Create a new communication with the backend and send a message to the backend when communication starts
+    if (Jupyter.notebook.kernel) {
+        console.log("Inside if statement!!");
+        this.comm = Jupyter.notebook.kernel.comm_manager.new_comm('K8sSelection',
+            {'msgtype': 'K8sSelection-conn-open'});
+        this.comm.on_msg($.proxy(that.on_comm_msg, that));
+        this.comm.on_close($.proxy(that.on_comm_close, that));
+    } else {
+        console.log("K8sSelection: No communication established, kernel null");
+    }
+};
+
+function load_ipython_extension() {
+
+    var conn = new K8sSelection();
+    conn.add_toolbar_button();
+}
+
+export {load_ipython_extension}
