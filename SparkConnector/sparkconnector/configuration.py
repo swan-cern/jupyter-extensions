@@ -149,8 +149,8 @@ class SparkLocalConfiguration(SparkConfiguration):
 
         sc = self.connector.ipython.user_ns.get('sc')
         if sc and isinstance(sc, SparkContext):
-            history_url = 'http://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
-            conn_config['sparkhistoryserver'] = history_url
+            webui_url = 'http://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
+            conn_config['sparkwebui'] = webui_url
         return conn_config
 
 
@@ -297,14 +297,14 @@ class SparkK8sConfiguration(SparkConfiguration):
             # set the metrics URL if the config bundle is selected
             if sc._conf.get('spark.cern.grafana.url') is not None:
                 # if spark.cern.grafana.url is set, use cern spark monitoring dashboard
-                conn_config['sparkmetrics'] = sc._conf.get('spark.cern.grafana.url') + \
+                conn_config['sparkmonit'] = sc._conf.get('spark.cern.grafana.url') + \
                                               '?orgId=1' + \
                                               '&var-ClusterName=' + self.get_cluster_name() + \
                                               '&var-UserName=' + self.get_spark_user() + \
                                               '&var-ApplicationId=' + sc._conf.get('spark.app.id')
 
-            history_url = 'http://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
-            conn_config['sparkhistoryserver'] = history_url
+            webui_url = 'http://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
+            conn_config['sparkwebui'] = webui_url
 
         return conn_config
 
@@ -371,18 +371,18 @@ class SparkYarnConfiguration(SparkConfiguration):
             app_id = self._get_sc_config('spark.app.id')
             if grafana_url and app_id:
                 # if spark.cern.grafana.url is set, use cern spark monitoring dashboard
-                conn_config['sparkmetrics'] = grafana_url + \
+                conn_config['sparkmonit'] = grafana_url + \
                                               '?orgId=1' + \
                                               '&var-ClusterName=' + self.get_cluster_name() + \
                                               '&var-UserName=' + self.get_spark_user() + \
                                               '&var-ApplicationId=' + app_id
 
-            # determine the history server URL depending on the selected resource manager (yarn, k8s, local etc)
-            history_url = self._get_sc_config(
+            # determine the webui URL depending on the selected resource manager (yarn, k8s, local etc)
+            webui_url = self._get_sc_config(
                 'spark.org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter.param.PROXY_URI_BASES',
                 wait=True
             )
-            if history_url:
-                conn_config['sparkhistoryserver'] = history_url.split(',', 1)[0]
+            if webui_url:
+                conn_config['sparkwebui'] = webui_url.split(',', 1)[0]
 
         return conn_config

@@ -1000,18 +1000,18 @@ SparkConnector.prototype.get_html_connected = function (config, error) {
         .replace('{cluster_name}', that.cluster);
     html.html(template);
 
-    if (config && config.sparkmetrics) {
-        var metricsURL = $('<a>').attr('href', config.sparkmetrics).attr('target','_blank').text('here')
-        html.find('.success-metrics-text')
-            .text('Spark Metrics are available ')
-            .append(metricsURL)
+    if (config && config.sparkmonit) {
+        var monitURL = $('<a>').attr('href', config.sparkmonit).attr('target','_blank').text('here')
+        html.find('.success-monit-text')
+            .text('Spark Application Monitoring is available ')
+            .append(monitURL)
     }
 
-    if (config && config.sparkhistoryserver) {
-        var historyserverURL = $('<a>').attr('href', config.sparkhistoryserver).attr('target','_blank').text('here')
-        html.find('.success-history-text')
-            .text('Spark History Server is available ')
-            .append(historyserverURL)
+    if (config && config.sparkwebui) {
+        var sparkwebuiURL = $('<a>').attr('href', config.sparkwebui).attr('target','_blank').text('here')
+        html.find('.success-webui-text')
+            .text('Spark Web UI is available ')
+            .append(sparkwebuiURL)
     }
 
     html.find('.success-show-logs-action')
