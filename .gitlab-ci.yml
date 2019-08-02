@@ -29,6 +29,12 @@ release-commit:
     paths:
       - ./*
     expire_in: 1 days
+  except:
+    - /^v.*$/
+    - master
+    - qa
+    - web
+    - schedules
 
 release-version:
   stage: release
