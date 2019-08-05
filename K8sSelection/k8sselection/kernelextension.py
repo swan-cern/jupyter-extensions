@@ -595,7 +595,7 @@ class K8sSelection:
 
                 # Load .env file which contains SENDGRID API_KEY
                 dotenv_path = join(dirname(__file__), 'sendgrid.env')
-
+                self.log.info(".env PATH: ", dotenv_path)
                 # First check for ca_cert and server_ip
                 if ca_cert and server_ip:
                     if os.path.isfile(dotenv_path):
