@@ -3,12 +3,12 @@ import dialog from 'base/js/dialog';
 import Jupyter from 'base/js/namespace';
 import events from 'base/js/events';
 import requirejs from 'require';
-import user_html from './templates/user.html'
-import create_context_html from './templates/create_context.html'
-import user_create from './templates/user_create.html'
-import './css/style.css'
-import kubernetes_icon from './images/k8s.png'
-import kubernetes_icon_blue from './images/k8s_blue.png'
+import user_html from './templates/user.html';
+import create_context_html from './templates/create_context.html';
+import user_create from './templates/user_create.html';
+import './css/style.css';
+import kubernetes_icon from './images/k8s.png';
+import kubernetes_icon_blue from './images/k8s_blue.png';
 
 
 /**
@@ -23,6 +23,15 @@ function K8sSelection() {
     this.states = {
         select: {
             get_html: $.proxy(this.get_html_select_cluster, this),
+        },
+        auth: {
+            get_html: $.proxy(this.get_html_auth, this),
+            buttons: {
+                'Authenticate': {
+                    class: 'btn-success size-100 auth-button',
+                    click: $.proxy(this.authenticate, this)
+                }
+            }
         },
         create: {
             get_html: $.proxy(this.get_html_create_clusters, this),
@@ -52,6 +61,7 @@ function K8sSelection() {
     };
 
     this.comm = null;
+    this.get_auth = false;
 
     // Starts the communication with backend when the kernel is connected
     events.on('kernel_connected.Kernel', $.proxy(this.start_comm, this));
@@ -74,8 +84,9 @@ K8sSelection.prototype.add_toolbar_button = function() {
     this.toolbar_button = Jupyter.toolbar.add_buttons_group([full_action_name]).find('.btn');
     this.toolbar_button.html('<div id="extension_icon"></div>');
     this.toolbar_button.find("#extension_icon").css('background-image', 'url("' + requirejs.toUrl('./' + kubernetes_icon) + '")');
-    this.toolbar_button.find("#extension_icon").css('min-width', '16px');
+    this.toolbar_button.find("#extension_icon").css('width', '16px');
     this.toolbar_button.find("#extension_icon").css('height', '16px');
+    this.toolbar_button.find("#extension_icon").css('margin-left', '5px');
     this.enabled = false;
 };
 
@@ -106,7 +117,15 @@ K8sSelection.prototype.open_modal = function () {
         // Call this function when the modal shows after clicking the extension button
         this.modal.on('show.bs.modal', function () {
             that.switch_state(that.states.loading);
-            that.refresh_modal();
+            console.log("Get auth: " + that.get_auth);
+            if(that.get_auth) {
+                console.log("Auth required!");
+                that.switch_state(that.states.auth);
+            }
+            else{
+                console.log("Auth not required!");
+                that.refresh_modal();
+            }
         }).modal('show');
 
         // Prevents moving the dialog box when clicked on the header
@@ -787,6 +806,47 @@ K8sSelection.prototype.create_users = function() {
 };
 
 
+K8sSelection.prototype.get_html_auth = function() {
+
+    console.log("Inside html auth");
+    var html = this.modal.find('.modal-body');
+    var header = this.modal.find('.modal-header');
+
+    var that = this;
+
+    $('<h4 class="modal-title">&nbsp;&nbsp;<span>Authentication</span></h4>').appendTo(header);
+
+    // Adds username field to create_user state frontend
+    $('<br><label for="user_auth_pass" id="user_auth_pass_label">Password</label><br>').appendTo(html);
+
+    var user_create_input = $('<input/>')
+        .attr('name', 'user_auth_pass')
+        .attr('type', 'password')
+        .attr("required", "required")
+        .attr('id', 'user_auth_pass')
+        .attr('placeholder', 'Password')
+        .addClass('form__field')
+        .appendTo(html)
+
+};
+
+
+K8sSelection.prototype.authenticate = function() {
+    console.log("Authenticating");
+
+    var password_field = this.modal.find('.auth-button');
+    password_field.attr('disabled', '');
+
+    var password_field = this.modal.find('input[name="user_auth_pass"]');
+    password_field.attr('disabled', '');
+
+    this.switch_state(this.states.loading);
+    this.send({
+        action: 'kerberos-auth',
+        password: password_field.val()
+    });
+}
+
 /**
  * @desc displays the frontend for loading state
  */
@@ -910,9 +970,9 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
         var context = msg.content.data.context;
         this.toolbar_button.html('<div id="extension_icon"></div>');
         this.toolbar_button.find("#extension_icon").css('background-image', 'url("' + requirejs.toUrl('./' + kubernetes_icon_blue) + '")');
-        this.toolbar_button.find("#extension_icon").css('min-width', '16px');
+        this.toolbar_button.find("#extension_icon").css('width', '16px');
         this.toolbar_button.find("#extension_icon").css('height', '16px');
-
+        this.toolbar_button.find("#extension_icon").css('margin-left', '5px');
         this.toolbar_button.removeAttr('disabled');
         this.enabled = true;
     }
@@ -921,8 +981,9 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
         // current context is not able to get resources
         this.toolbar_button.html('<div id="extension_icon"></div>');
         this.toolbar_button.find("#extension_icon").css('background-image', 'url("' + requirejs.toUrl('./' + kubernetes_icon) + '")');
-        this.toolbar_button.find("#extension_icon").css('min-width', '16px');
+        this.toolbar_button.find("#extension_icon").css('width', '16px');
         this.toolbar_button.find("#extension_icon").css('height', '16px');
+        this.toolbar_button.find("#extension_icon").css('margin-left', '5px');
         this.toolbar_button.removeAttr('disabled');
         this.enabled = true;
     }
@@ -948,6 +1009,19 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
         this.user_create_input = undefined;
         this.user_email_create_input = undefined;
         this.switch_state(this.states.create_users);
+    }
+    else if(msg.content.data.msgtype == 'kerberos-auth') {
+        console.log("Inside kerberos auth communication condition!")
+        this.enabled = true;
+        this.get_auth = true;
+    }
+    else if(msg.content.data.msgtype == 'auth-successfull') {
+        this.get_auth = false;
+        this.switch_state(this.states.loading);
+        this.refresh_modal();
+    }
+    else if(msg.content.data.msgtype == 'auth-unsuccessfull') {
+        this.get_html_error(msg.content.data.error, this.states.auth);
     }
 };
 
