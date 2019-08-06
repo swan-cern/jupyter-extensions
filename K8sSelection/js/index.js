@@ -1023,6 +1023,9 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
     else if(msg.content.data.msgtype == 'auth-unsuccessfull') {
         this.get_html_error(msg.content.data.error, this.states.auth);
     }
+    else if(msg.content.data.msgtype == 'get-clusters-unsuccessfull') {
+        this.get_html_error(msg.content.data.error, this.states.select);
+    }
 };
 
 

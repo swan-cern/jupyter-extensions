@@ -639,11 +639,18 @@ class K8sSelection:
                                      universal_newlines=True)
                 p.communicate(input=auth_kinit)
 
-                output = subprocess.check_output(['openstack token issue -c id -f value'], shell=True)
-                output = output.decode('utf-8').rstrip('\n')
-                os.environ["OS_TOKEN"] = output
+                # Currently unsetting the OS_TOKEN initially everytime while executing the token issue command because
+                # otherwise the command does not work
+                os.environ['OS_TOKEN'] = ''
+                my_env = os.environ.copy()
+                my_env["PYTHONPATH"] = "/usr/local/lib/python3.6/site-packages:" + my_env["PYTHONPATH"]
+                p = subprocess.Popen(['openstack token issue -c id -f value'], stdout=subprocess.PIPE, env=my_env, shell=True)
+                out, err = p.communicate()
+                out = out.decode('utf-8').rstrip('\n')
+                self.log.info(out)
+                os.environ['OS_TOKEN'] = out
 
-                if p.wait() == 0 and output != '':
+                if p.wait() == 0 and out != '':
                     self.send({
                         'msgtype': 'auth-successfull',
                     })
@@ -654,7 +661,12 @@ class K8sSelection:
                         'error': error
                     })
             except Exception as e:
+                error = 'Error executing the commands'
                 self.log.info(str(e))
+                self.send({
+                    'msgtype': 'auth-unsuccessfull',
+                    'error': error
+                })
 
     def send_sendgrid_email(self, dotenv_path, email, selected_cluster, ca_cert, server_ip):
         """
@@ -783,9 +795,16 @@ class K8sSelection:
         """
 
         try:
-            output = subprocess.check_output(['openstack token issue -c id -f value'], shell=True)
-            output = output.decode('utf-8').rstrip('\n')
-            os.environ["OS_TOKEN"] = output
+            # Currently unsetting the OS_TOKEN initially everytime while executing the token issue command because
+            # otherwise the command does not work
+            os.environ['OS_TOKEN'] = ''
+            my_env = os.environ.copy()
+            my_env["PYTHONPATH"] = "/usr/local/lib/python3.6/site-packages:" + my_env["PYTHONPATH"]
+            p = subprocess.Popen(['openstack token issue -c id -f value'], stdout=subprocess.PIPE, env=my_env, shell=True)
+            out, err = p.communicate()
+            out = out.decode('utf-8').rstrip('\n')
+            self.log.info(out)
+            os.environ['OS_TOKEN'] = out
 
             if os.path.isdir(os.getenv('HOME') + '/.kube'):
                 if not os.path.isfile(os.getenv('HOME') + '/.kube/config'):
@@ -885,7 +904,12 @@ class K8sSelection:
                 'admin_list': admin_list,
             })
         except Exception as e:
+            error = 'Error getting cluster list. Please try again later'
             self.log.info(str(e))
+            self.send({
+                'msgtype': 'get-clusters-unsuccessfull',
+                'error': error
+            })
 
 
 def load_ipython_extension(ipython):
