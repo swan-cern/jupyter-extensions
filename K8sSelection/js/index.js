@@ -36,7 +36,7 @@ function K8sSelection() {
         create: {
             get_html: $.proxy(this.get_html_create_clusters, this),
             buttons: {
-                'Create Cluster': {
+                'Add Cluster': {
                     class: 'btn-success size-100',
                     click: $.proxy(this.create_context, this)
                 }
@@ -65,7 +65,6 @@ function K8sSelection() {
     this.is_reachable = false;
     this.is_admin = false;
     this.initial_select = true;
-    this.selected_tab_id = "tab1";
 
     // Starts the communication with backend when the kernel is connected
     events.on('kernel_connected.Kernel', $.proxy(this.start_comm, this));
@@ -839,6 +838,11 @@ K8sSelection.prototype.get_html_auth = function() {
         .attr('placeholder', 'Password')
         .addClass('form__field')
         .appendTo(html)
+        .keypress(function (e) {
+            if (e.which == keyboard.keycodes.enter) {
+                that.states.auth.buttons.Authenticate.click();
+            }
+        });
 
 };
 
@@ -921,7 +925,7 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
     if(msg.content.data.msgtype == 'context-select') {
         // The initial message recieved from the backend which provides the information about all the contexts
         console.log("Got message from frontend: " + msg.content.data.active_context);
-        this.enabled = true
+        this.enabled = true;
         this.current_context = msg.content.data.active_context;
         this.contexts = msg.content.data.contexts;
         this.current_cluster = msg.content.data.current_cluster;
@@ -974,6 +978,7 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
         // The message received when successfully changed current context in the backend
         this.is_reachable = msg.content.data.is_reachable;
         this.is_admin = msg.content.data.is_admin;
+        this.current_context = msg.content.data.context;
         this.hide_close = false;
         this.switch_state(this.states.select);
         this.send({
@@ -981,7 +986,7 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
         });
     }
     else if(msg.content.data.msgtype == 'changed-current-context-unsuccessfully') {
-        // The message received when successfully changed current context in the backend
+        // The message received when not successfully changed current context in the backend
         this.is_reachable = msg.content.data.is_reachable;
         this.is_admin = msg.content.data.is_admin;
         this.current_context = msg.content.data.context;
@@ -1038,7 +1043,7 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
         this.switch_state(this.states.create_users);
     }
     else if(msg.content.data.msgtype == 'kerberos-auth') {
-        console.log("Inside kerberos auth communication condition!")
+        console.log("Inside kerberos auth condition!");
         this.enabled = true;
         this.get_auth = true;
     }

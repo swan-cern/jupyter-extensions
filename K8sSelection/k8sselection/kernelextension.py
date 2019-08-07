@@ -107,6 +107,20 @@ class K8sSelection:
                 # Setting the current context
                 load['current-context'] = context
 
+
+                # Extracting server IP of the currently selected cluster
+                for i in load['contexts']:
+                    if i['name'] == load['current-context']:
+                        cluster_name = i['context']['cluster']
+
+                for i in load['clusters']:
+                    if i['name'] == cluster_name:
+                        server_ip = i['cluster']['server']
+
+                # Setting server ip as environment variable
+                self.log.info("The current server ip is: ", server_ip)
+                os.environ["k8s_master_ip"] = server_ip
+
                 # Writing to the file
                 with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
                     yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
@@ -116,7 +130,8 @@ class K8sSelection:
                     self.send({
                         'msgtype': 'changed-current-context',
                         'is_reachable': is_reachable,
-                        'is_admin': is_admin
+                        'is_admin': is_admin,
+                        'context': context
                     })
                 else:
                     self.log.info("Failed to kinit or generate os_token")
@@ -140,7 +155,7 @@ class K8sSelection:
             # Here the tab is mode i.e. local, openstack, etc
             tab = msg['content']['data']['tab']
 
-            self.log.info("Adding cluster and context to KUBECONFIG!")
+            self.log.info("Adding cluster and context!")
 
             # We can handle different modes using conditions
             if tab == 'local':
@@ -275,7 +290,7 @@ class K8sSelection:
                     # Check whether the newly added cluster is responding. If not then the error is handled below.
                     api_instance2 = client.CoreV1Api(api_client=config.new_client_from_config(context=context_name))
                     api_response = api_instance2.list_namespaced_pod(namespace=namespace)
-                    self.log.info("Add successfully!")
+                    self.log.info("Successfully added cluster and context!")
                     self.send({
                         'msgtype': 'added-context-successfully',
                         'tab': 'local'
@@ -439,7 +454,7 @@ class K8sSelection:
                     api_instance2 = client.CoreV1Api(api_client=config.new_client_from_config(context=context_name))
                     api_instance2.list_namespaced_pod(namespace=namespace, timeout_seconds=2)
 
-                    self.log.info("Add successfully!")
+                    self.log.info("Successfully added cluster and context!")
                     self.send({
                         'msgtype': 'added-context-successfully',
                         'tab': 'openstack'
@@ -572,7 +587,7 @@ class K8sSelection:
                 with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
                     yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
 
-                self.log.info("Deleted Successfully!")
+                    self.log.info("Successfully deleted context")
                 self.send({
                     'msgtype': 'deleted-context-successfully',
                 })
@@ -681,7 +696,7 @@ class K8sSelection:
                         'error': error
                     })
 
-                self.log.info("Created Succesfully!")
+                    self.log.info("Successfully created user")
                 self.send({
                     'msgtype': 'added-user-successfully',
                 })
@@ -715,7 +730,7 @@ class K8sSelection:
                 os.environ['OS_TOKEN'] = out
 
                 if p.wait() == 0 and out != '':
-                    self.log.info("Performed successfully!")
+                    self.log.info("Got kerberos ticket and os_token successfully!")
                     self.send({
                         'msgtype': 'auth-successfull',
                     })
@@ -764,6 +779,7 @@ class K8sSelection:
             # Send the email to the user.
             sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
             response = sg.send(message)
+            self.log.info("Successfully sent email using sendgrid!")
         except ImportError as e:
             # Handle import exceptions
             error = 'Cannot send email.'
@@ -821,6 +837,7 @@ class K8sSelection:
             server.rcpt(toaddrs[0])
             server.data(msg)
             server.quit()
+            self.log.info("Successfully sent email using sendgrid!")
         except Exception as e:
             # Handle smtplib exceptions
             error = 'Cannot send email.'
