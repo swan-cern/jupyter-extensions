@@ -64,9 +64,46 @@ class K8sSelection:
             self.log.info("Context from frontend: ", context)
 
             try:
+                # Currently unsetting the OS_TOKEN initially everytime while executing the token issue command because
+                # otherwise the command does not work
+                os.environ['OS_TOKEN'] = ''
+                my_env = os.environ.copy()
+                # my_env["PYTHONPATH"] = "/usr/local/lib/python3.6/site-packages:" + my_env["PYTHONPATH"]
+                p = subprocess.Popen(['openstack token issue -c id -f value'], stdout=subprocess.PIPE, env=my_env,
+                                     shell=True)
+                out, err = p.communicate()
+                out = out.decode('utf-8').rstrip('\n')
+                self.log.info(out)
+                os.environ['OS_TOKEN'] = out
+
                 # Opening the YAML file using the yaml library
                 with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
                     load = yaml.safe_load(stream)
+
+                namespace = 'default'
+                for i in load['contexts']:
+                    self.log.info(i)
+                    if i['name'] == context:
+                        if 'namespace' in i['context'].keys():
+                            namespace = i['context']['namespace']
+
+                # Creating two empty lists and looping over the contexts and checking whether the clusters are
+                # reachable and if the user is admin of the cluster.
+                try:
+                    config.load_kube_config(context=context)
+                    api_instance = client.CoreV1Api()
+                    api_response = api_instance.list_namespaced_pod(namespace=namespace, timeout_seconds=2)
+                    is_reachable = True
+                except:
+                    is_reachable = False
+
+                try:
+                    config.load_kube_config(context=context)
+                    api_instance = client.CoreV1Api()
+                    api_response = api_instance.list_namespaced_pod(namespace='kube-system', timeout_seconds=2)
+                    is_admin = True
+                except:
+                    is_admin = False
 
                 # Setting the current context
                 load['current-context'] = context
@@ -75,12 +112,27 @@ class K8sSelection:
                 with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
                     yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
 
-                # Sending the message back to frontend
-                self.send({
-                    'msgtype': 'changed-current-context'
-                })
+                if is_reachable == True:
+                    # Sending the message back to frontend
+                    self.send({
+                        'msgtype': 'changed-current-context',
+                        'is_reachable': is_reachable,
+                        'is_admin': is_admin
+                    })
+                else:
+                    self.send({
+                        'msgtype': 'changed-current-context-unsuccessfully',
+                        'is_reachable': is_reachable,
+                        'is_admin': is_admin,
+                        'context': context
+                    })
             except Exception as e:
                 self.log.info(str(e))
+                error = 'Cannot reach cluster. Please try again after some time.'
+                self.send({
+                    'msgtype': 'changed-current-context-error',
+                    'error': error
+                })
         elif action == 'add-context-cluster':
             # This action adds the cluster and context information in the KUBECONFIG file received from the user
 
@@ -643,8 +695,9 @@ class K8sSelection:
                 # otherwise the command does not work
                 os.environ['OS_TOKEN'] = ''
                 my_env = os.environ.copy()
-                my_env["PYTHONPATH"] = "/usr/local/lib/python3.6/site-packages:" + my_env["PYTHONPATH"]
-                p = subprocess.Popen(['openstack token issue -c id -f value'], stdout=subprocess.PIPE, env=my_env, shell=True)
+                # my_env["PYTHONPATH"] = "/usr/local/lib/python3.6/site-packages:" + my_env["PYTHONPATH"]
+                p = subprocess.Popen(['openstack token issue -c id -f value'], stdout=subprocess.PIPE, env=my_env,
+                                     shell=True)
                 out, err = p.communicate()
                 out = out.decode('utf-8').rstrip('\n')
                 self.log.info(out)
@@ -776,36 +829,22 @@ class K8sSelection:
         def _recv(msg):
             self.handle_comm_message(msg)
 
-        self.log.info("KERBEROS AUTH: ", self.get_kerberos_auth())
+        # self.log.info("KERBEROS AUTH: ", self.get_kerberos_auth())
 
         # self.cluster_list()
 
-        if self.get_kerberos_auth():
-            self.log.info("Calling kerberos authentication")
-            self.send({
-                'msgtype': 'kerberos-auth',
-            })
-        else:
-            self.cluster_list()
+        # if self.get_kerberos_auth():
+        #     self.log.info("Calling kerberos authentication")
+        #     self.send({
+        #         'msgtype': 'kerberos-auth',
+        #     })
+        # else:
+        #     self.cluster_list()
+
+        self.cluster_list()
 
     def cluster_list(self):
-        """
-        Get the list of contexts and clusters from the KUBECONFIG file and check whether a cluster is reachable and
-        the user is an admin of the cluster
-        """
-
         try:
-            # Currently unsetting the OS_TOKEN initially everytime while executing the token issue command because
-            # otherwise the command does not work
-            os.environ['OS_TOKEN'] = ''
-            my_env = os.environ.copy()
-            my_env["PYTHONPATH"] = "/usr/local/lib/python3.6/site-packages:" + my_env["PYTHONPATH"]
-            p = subprocess.Popen(['openstack token issue -c id -f value'], stdout=subprocess.PIPE, env=my_env, shell=True)
-            out, err = p.communicate()
-            out = out.decode('utf-8').rstrip('\n')
-            self.log.info(out)
-            os.environ['OS_TOKEN'] = out
-
             if os.path.isdir(os.getenv('HOME') + '/.kube'):
                 if not os.path.isfile(os.getenv('HOME') + '/.kube/config'):
                     load = {}
@@ -843,65 +882,31 @@ class K8sSelection:
                 if contexts[i]['name'] == load['current-context']:
                     active_context = contexts[i]
                     break
+            contexts = [context['name'] for context in contexts]
+            clusters = [cluster['name'] for cluster in load['clusters']]
 
-            clusters = []
-            for i in load['clusters']:
-                clusters.append(i['name'])
+            current_context = ''
+            if active_context is not '':
+                current_context = active_context['name']
 
             current_cluster = ''
             for i in load['contexts']:
                 if i['name'] == load['current-context']:
                     current_cluster = i['context']['cluster']
 
-            namespaces = []
-            for i in contexts:
-                self.log.info(i)
-                if 'namespace' in i['context'].keys():
-                    namespace = i['context']['namespace']
-                    namespaces.append(namespace)
-                else:
-                    namespace = 'default'
-                    namespaces.append(namespace)
+            kerberos_auth = False
+            if self.get_kerberos_auth():
+                self.log.info("Calling kerberos authentication")
+                kerberos_auth = True
 
-            contexts = [context['name'] for context in contexts]
-            current_context = ''
-            if active_context is not '':
-                current_context = active_context['name']
-
-            # Creating two empty lists and looping over the contexts and checking whether the clusters are
-            # reachable and if the user is admin of the cluster.
-            delete_list = []
-            admin_list = []
-            for i in range(len(contexts)):
-                try:
-                    self.log.info("TRY")
-                    config.load_kube_config(context=contexts[i])
-                    api_instance = client.CoreV1Api()
-                    api_response = api_instance.list_namespaced_pod(namespace=namespaces[i], timeout_seconds=2)
-                    delete_list.append("False")
-                except:
-                    self.log.info("EXCEPT")
-                    delete_list.append("True")
-
-            for i in range(len(contexts)):
-                try:
-                    self.log.info("TRY")
-                    config.load_kube_config(context=contexts[i])
-                    api_instance = client.CoreV1Api()
-                    api_response = api_instance.list_namespaced_pod(namespace='kube-system', timeout_seconds=2)
-                    admin_list.append("True")
-                except:
-                    self.log.info("EXCEPT")
-                    admin_list.append("False")
-
+            self.log.info("Kerberos auth required: ", kerberos_auth)
             self.send({
                 'msgtype': 'context-select',
                 'contexts': contexts,
                 'active_context': current_context,
                 'clusters': clusters,
                 'current_cluster': current_cluster,
-                'delete_list': delete_list,
-                'admin_list': admin_list,
+                'kerberos_auth': kerberos_auth
             })
         except Exception as e:
             error = 'Error getting cluster list. Please try again later'
@@ -910,6 +915,129 @@ class K8sSelection:
                 'msgtype': 'get-clusters-unsuccessfull',
                 'error': error
             })
+
+    # def cluster_list(self):
+    #     """
+    #     Get the list of contexts and clusters from the KUBECONFIG file and check whether a cluster is reachable and
+    #     the user is an admin of the cluster
+    #     """
+
+    #     try:
+    #         # Currently unsetting the OS_TOKEN initially everytime while executing the token issue command because
+    #         # otherwise the command does not work
+    #         # os.environ['OS_TOKEN'] = ''
+    #         # my_env = os.environ.copy()
+    #         # my_env["PYTHONPATH"] = "/usr/local/lib/python3.6/site-packages:" + my_env["PYTHONPATH"]
+    #         # p = subprocess.Popen(['openstack token issue -c id -f value'], stdout=subprocess.PIPE, env=my_env, shell=True)
+    #         # out, err = p.communicate()
+    #         # out = out.decode('utf-8').rstrip('\n')
+    #         # self.log.info(out)
+    #         # os.environ['OS_TOKEN'] = out
+
+    #         if os.path.isdir(os.getenv('HOME') + '/.kube'):
+    #             if not os.path.isfile(os.getenv('HOME') + '/.kube/config'):
+    #                 load = {}
+    #                 load['apiVersion'] = 'v1'
+    #                 load['clusters'] = []
+    #                 load['contexts'] = []
+    #                 load['current-context'] = ''
+    #                 load['kind'] = 'Config'
+    #                 load['preferences'] = {}
+    #                 load['users'] = []
+
+    #                 with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
+    #                     yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
+    #         else:
+    #             os.makedirs(os.getenv('HOME') + '/.kube')
+
+    #             load = {}
+    #             load['apiVersion'] = 'v1'
+    #             load['clusters'] = []
+    #             load['contexts'] = []
+    #             load['current-context'] = ''
+    #             load['kind'] = 'Config'
+    #             load['preferences'] = {}
+    #             load['users'] = []
+
+    #             with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
+    #                 yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
+
+    #         with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+    #             load = yaml.safe_load(stream)
+
+    #         contexts = load['contexts']
+    #         active_context = ''
+    #         for i in range(len(contexts)):
+    #             if contexts[i]['name'] == load['current-context']:
+    #                 active_context = contexts[i]
+    #                 break
+
+    #         clusters = []
+    #         for i in load['clusters']:
+    #             clusters.append(i['name'])
+
+    #         current_cluster = ''
+    #         for i in load['contexts']:
+    #             if i['name'] == load['current-context']:
+    #                 current_cluster = i['context']['cluster']
+
+    #         namespaces = []
+    #         for i in contexts:
+    #             self.log.info(i)
+    #             if 'namespace' in i['context'].keys():
+    #                 namespace = i['context']['namespace']
+    #                 namespaces.append(namespace)
+    #             else:
+    #                 namespace = 'default'
+    #                 namespaces.append(namespace)
+
+    #         contexts = [context['name'] for context in contexts]
+    #         current_context = ''
+    #         if active_context is not '':
+    #             current_context = active_context['name']
+
+    #         # Creating two empty lists and looping over the contexts and checking whether the clusters are
+    #         # reachable and if the user is admin of the cluster.
+    #         delete_list = []
+    #         admin_list = []
+    #         for i in range(len(contexts)):
+    #             try:
+    #                 self.log.info("TRY")
+    #                 config.load_kube_config(context=contexts[i])
+    #                 api_instance = client.CoreV1Api()
+    #                 api_response = api_instance.list_namespaced_pod(namespace=namespaces[i], timeout_seconds=2)
+    #                 delete_list.append("False")
+    #             except:
+    #                 self.log.info("EXCEPT")
+    #                 delete_list.append("True")
+
+    #         for i in range(len(contexts)):
+    #             try:
+    #                 self.log.info("TRY")
+    #                 config.load_kube_config(context=contexts[i])
+    #                 api_instance = client.CoreV1Api()
+    #                 api_response = api_instance.list_namespaced_pod(namespace='kube-system', timeout_seconds=2)
+    #                 admin_list.append("True")
+    #             except:
+    #                 self.log.info("EXCEPT")
+    #                 admin_list.append("False")
+
+    #         self.send({
+    #             'msgtype': 'context-select',
+    #             'contexts': contexts,
+    #             'active_context': current_context,
+    #             'clusters': clusters,
+    #             'current_cluster': current_cluster,
+    #             'delete_list': delete_list,
+    #             'admin_list': admin_list,
+    #         })
+    #     except Exception as e:
+    #         error = 'Error getting cluster list. Please try again later'
+    #         self.log.info(str(e))
+    #         self.send({
+    #             'msgtype': 'get-clusters-unsuccessfull',
+    #             'error': error
+    #         })
 
 
 def load_ipython_extension(ipython):

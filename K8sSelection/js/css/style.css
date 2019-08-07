@@ -1,26 +1,29 @@
-/* Custom button css */
 .btn-blue {
     position: relative;
+
     display: block;
     margin: auto;
     padding: 10px;
+
     overflow: hidden;
+
     border-width: 0;
     outline: none;
     border-radius: 2px;
     box-shadow: 0 1px 4px rgba(0, 0, 0, .6);
+
     background-color: #03A9F4;
     color: #ecf0f1;
+
     transition: background-color .3s;
 }
-
-
 
 .modal-title {
     margin: 0;
     line-height: 1.42857143;
     font-size: 20px;
 }
+
 
 .wrap {
     position: absolute;
@@ -31,9 +34,8 @@
     margin: 25px auto;
   }
 
-
-/*Select input and text CSS*/
-.select {
+  /* select starting stylings ------------------------------*/
+  .select {
     font-family:
       'Roboto','Helvetica','Arial',sans-serif;
       position: relative;
@@ -41,9 +43,9 @@
       margin-top: 15px;
       margin: auto;
   }
-  
-.select-text {
-      display: flex;
+
+  .select-text {
+      position: flex;
       font-family: inherit;
       background-color: transparent;
       width: 350px;
@@ -53,98 +55,98 @@
       border: none;
       border-bottom: 1px solid rgba(0,0,0, 0.12);
   }
-  
-/* Remove focus */
-.select-text:focus {
-  outline: none;
-  border-bottom: 1px solid rgba(0,0,0, 0);
-}
-  
-/* Use custom arrow */
-.select .select-text {
-  appearance: none;
-  -webkit-appearance:none
-}
-  
-.select:after {
-  position: absolute;
-  top: 45px;
-  right: 75px;
-  width: 0;
-  height: 0;
-  padding: 0;
-  content: '';
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-top: 6px solid rgba(0, 0, 0, 0.12);
-  pointer-events: none;
-}
-  
-  
-/* Select label */
-.select-label {
-  color: rgba(0,0,0, 0.26);
-  font-size: 18px;
-  font-weight: normal;
-  position: absolute;
-  pointer-events: none;
-  left: 0;
-  top: 10px;
-  transition: 0.2s ease all;
-}
-  
-/* active state */
-.select-text:focus ~ .select-label, .select-text:valid ~ .select-label {
-  color: rgb(0, 0, 0);
-  top: -20px;
-  transition: 0.2s ease all;
-  font-size: 14px;
-}
-  
-/* Select bottom bar */
-.select-bar {
-  position: relative;
-  display: block;
-  width: 350px;
-}
 
-.select-bar:before, .select-bar:after {
-  content: '';
-  height: 2px;
-  width: 0;
-  bottom: 1px;
-  position: absolute;
-  background: #2F80ED;
-  transition: 0.2s ease all;
-}
+  /* Remove focus */
+  .select-text:focus {
+      outline: none;
+      border-bottom: 1px solid rgba(0,0,0, 0);
+  }
 
-.select-bar:before {
-  left: 50%;
-}
+      /* Use custom arrow */
+  .select .select-text {
+      appearance: none;
+      -webkit-appearance:none
+  }
 
-.select-bar:after {
-  right: 50%;
-}
-
-/* active state */
-.select-text:focus ~ .select-bar:before, .select-text:focus ~ .select-bar:after {
-  width: 50%;
-}
-  
-/* select highlighter */
-.select-highlight {
-  position: absolute;
-  height: 60%;
-  width: 100px;
-  top: 25%;
-  left: 0;
-  pointer-events: none;
-  opacity: 0.5;
-}
+  .select:after {
+      position: absolute;
+      top: 45px;
+      right: 75px;
+      /* Styling the down arrow */
+      width: 0;
+      height: 0;
+      padding: 0;
+      content: '';
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 6px solid rgba(0, 0, 0, 0.12);
+      pointer-events: none;
+  }
 
 
+  /* LABEL ======================================= */
+  .select-label {
+      color: rgba(0,0,0, 0.26);
+      font-size: 18px;
+      font-weight: normal;
+      position: absolute;
+      pointer-events: none;
+      left: 0;
+      top: 10px;
+      transition: 0.2s ease all;
+  }
 
-/*Form text input and placeholder CSS styles*/
+  /* active state */
+  .select-text:focus ~ .select-label, .select-text:valid ~ .select-label {
+      color: rgb(0, 0, 0);
+      top: -20px;
+      transition: 0.2s ease all;
+      font-size: 14px;
+  }
+
+  /* BOTTOM BARS ================================= */
+  .select-bar {
+      position: relative;
+      display: block;
+      width: 350px;
+  }
+
+  .select-bar:before, .select-bar:after {
+      content: '';
+      height: 2px;
+      width: 0;
+      bottom: 1px;
+      position: absolute;
+      background: #2F80ED;
+      transition: 0.2s ease all;
+  }
+
+  .select-bar:before {
+      left: 50%;
+  }
+
+  .select-bar:after {
+      right: 50%;
+  }
+
+  /* active state */
+  .select-text:focus ~ .select-bar:before, .select-text:focus ~ .select-bar:after {
+      width: 50%;
+  }
+
+  /* HIGHLIGHTER ================================== */
+  .select-highlight {
+      position: absolute;
+      height: 60%;
+      width: 100px;
+      top: 25%;
+      left: 0;
+      pointer-events: none;
+      opacity: 0.5;
+  }
+
+
+
 .form__field {
     font-family: inherit;
     width: 50%;
@@ -157,10 +159,30 @@
     background: transparent;
     transition: border-color 0.2s;
 }
-  
+
 .form__field::placeholder {
     color: transparent;
 }
+
+/* label,
+.form__field:placeholder-shown ~ .form__label {
+    font-size: 16px;
+    cursor: text;
+    top: 20px;
+}
+
+.form__field:focus ~ .form__label {
+  position: absolute;
+  top: 0;
+  display: block;
+  transition: 0.2s;
+  font-size: 12px;
+  color: #9b9b9b;
+}
+
+.form__field:focus ~ .form__label {
+  color: #212121;
+} */
 
 .form__field:focus {
   padding-bottom: 6px;
@@ -169,7 +191,6 @@
 
 
 
-/*Tab layout styles*/
 .container-tabs{
 	height:500px;
 	width:100%;
@@ -177,7 +198,7 @@
 	margin:10px;
 	border-radius:5px;
 	box-shadow: 0 2px 3px rgba(0,0,0,.3)
-	
+
 }
 
 header {
@@ -264,8 +285,6 @@ header {
 		width: 80px;
 }
 
-
-/*Custom back button style*/
 .back-button {
     float: left;
     font-size: 16px;
@@ -289,7 +308,7 @@ button.back-button {
 
 
 
-/*Material checkbox input style*/
+
 .pure-material-checkbox {
     z-index: 0;
     position: relative;
@@ -300,6 +319,7 @@ button.back-button {
     line-height: 1.5;
 }
 
+/* Input */
 .pure-material-checkbox > input {
     appearance: none;
     -moz-appearance: none;
@@ -322,12 +342,14 @@ button.back-button {
     transition: opacity 0.3s, transform 0.2s;
 }
 
+/* Span */
 .pure-material-checkbox > span {
     display: inline-block;
     width: 100%;
     cursor: pointer;
 }
 
+/* Box */
 .pure-material-checkbox > span::before {
     content: "";
     display: inline-block;
@@ -342,6 +364,7 @@ button.back-button {
     transition: border-color 0.2s, background-color 0.2s;
 }
 
+/* Checkmark */
 .pure-material-checkbox > span::after {
     content: "";
     display: block;
@@ -356,6 +379,7 @@ button.back-button {
     transform: translate(3px, 4px) rotate(-45deg);
 }
 
+/* Checked, Indeterminate */
 .pure-material-checkbox > input:checked,
 .pure-material-checkbox > input:indeterminate {
     background-color: rgb(var(--pure-material-primary-rgb, 33, 150, 243));
@@ -377,6 +401,7 @@ button.back-button {
     transform: translate(4px, 3px);
 }
 
+/* Hover, Focus */
 .pure-material-checkbox:hover > input {
     opacity: 0.04;
 }
@@ -389,6 +414,7 @@ button.back-button {
     opacity: 0.16;
 }
 
+/* Active */
 .pure-material-checkbox > input:active {
     opacity: 1;
     transform: scale(0);
@@ -404,6 +430,7 @@ button.back-button {
     background-color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.6);
 }
 
+/* Disabled */
 .pure-material-checkbox > input:disabled {
     opacity: 0;
 }
@@ -424,7 +451,7 @@ button.back-button {
 }
 
 
-/*Floating Action button styles*/
+
 .fab-button {
     position: relative;
     float: right;
@@ -436,20 +463,19 @@ button.back-button {
     box-shadow:0px 3px 3px #BDBDBD;
   }
 
-/*Extension icon style*/
 .kubernetes-icon {
     background-image: url('../images/k8s.png');
     width: 16px;
     height: 16px;
 }
 
-/*Context list style*/
 .cluster-list-div {
     display: flex;
     flex-direction: row;
     border-bottom: 0.3px solid rgba(85, 87, 86, 0.62);
     margin-bottom:10px;
     margin-top: 10px;
+    /* border: 1px solid black; */
 
 }
 
@@ -479,13 +505,19 @@ button.back-button {
     color: #008017;
 }
 
+.cluster-list-div > .not-connected-symbol {
+    margin-top: 10px;
+    width: 3rem;
+    color: #FF0000;
+}
+
 .cluster-list-div > .list-item-load {
     align-items: center;
     text-align: center;
 }
 
 
-/*Material button text style*/
+
 .pure-material-button-text {
     position: relative;
     display: inline-block;
@@ -514,6 +546,7 @@ button.back-button {
     border: none;
 }
 
+/* Overlay */
 .pure-material-button-text::before {
     content: "";
     position: absolute;
@@ -526,6 +559,7 @@ button.back-button {
     transition: opacity 0.2s;
 }
 
+/* Ripple */
 .pure-material-button-text::after {
     content: "";
     position: absolute;
@@ -554,12 +588,14 @@ button.back-button {
     opacity: 0.16;
 }
 
+/* Active */
 .pure-material-button-text:active::after {
     opacity: 0.16;
     transform: translate(-50%, -50%) scale(0);
     transition: transform 0s;
 }
 
+/* Disabled */
 .pure-material-button-text:disabled {
     color: rgba(var(--pure-material-onsurface-rgb, 0, 0, 0), 0.38);
     background-color: transparent;
@@ -575,13 +611,12 @@ button.back-button {
 }
 
 
-/*context list overflow style*/
 #user_html_inputs {
     max-height: 280px;
     overflow-y: auto;
 }
 
-/*Loading spinner styles*/
+
 .nb-spinner {
     width: 75px;
     height: 75px;
@@ -592,6 +627,7 @@ button.back-button {
     -webkit-animation: 1s spin linear infinite;
     animation: 1s spin linear infinite;
 }
+
 
 .loading-flexbox {
     display: -webkit-box;
