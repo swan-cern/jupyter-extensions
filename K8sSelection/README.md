@@ -104,7 +104,7 @@ from pyspark.sql import SparkSession
 ports = os.getenv("SPARK_PORTS").split(",")
 
 # change to SPARK_MASTER_IP
-swan_spark_conf.set("spark.master", "k8s://https://137.138.32.216:6443")
+swan_spark_conf.set("spark.master", "k8s://" + os.getenv("K8S_MASTER_IP"))
 swan_spark_conf.set("spark.kubernetes.container.image", "gitlab-registry.cern.ch/db/spark-service/docker-registry/swan:v1")
 swan_spark_conf.set("spark.kubernetes.namespace", "swan-"+os.getenv("USER"))
 swan_spark_conf.set("spark.driver.host", os.getenv("SERVER_HOSTNAME"))
