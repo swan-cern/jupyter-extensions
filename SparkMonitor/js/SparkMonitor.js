@@ -390,6 +390,7 @@ SparkMonitor.prototype.handleMessage = function (msg) {
         this.openSparkUIFrame(msg.content.data);
     } else if (msg.content.data.msgtype == "fromscala") {
 		var data = JSON.parse(msg.content.data.msg);
+		console.log("SparkMonitor: " + data.msgtype);
 		switch (data.msgtype) {
 			case 'sparkJobStart':
 				this.onSparkJobStart(data);
