@@ -3,6 +3,7 @@ import dialog from 'base/js/dialog';
 import Jupyter from 'base/js/namespace';
 import events from 'base/js/events';
 import requirejs from 'require';
+import keyboard from 'base/js/keyboard';
 import user_html from './templates/user.html';
 import create_context_html from './templates/create_context.html';
 import user_create from './templates/user_create.html';
@@ -36,7 +37,7 @@ function K8sSelection() {
         create: {
             get_html: $.proxy(this.get_html_create_clusters, this),
             buttons: {
-                'Add Cluster': {
+                'AddCluster': {
                     class: 'btn-success size-100',
                     click: $.proxy(this.create_context, this)
                 }
@@ -45,7 +46,7 @@ function K8sSelection() {
         create_users: {
             get_html: $.proxy(this.get_html_create_users, this),
             buttons: {
-                'Create User': {
+                'CreateUser': {
                     class: 'btn-success size-100',
                     click: $.proxy(this.create_users, this)
                 }
@@ -391,6 +392,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
                     .appendTo(tab1)
                     .change(function() {
                         that.local_selected_catoken = catoken_input.val();
+                    })
+                    .keypress(function (e) {
+                        var keycode = (e.keyCode ? e.keyCode : e.which);
+                        if (keycode == keyboard.keycodes.enter) {
+                            that.states.create.buttons.AddCluster.click();
+                        }
                     });
             }
             else {
@@ -404,6 +411,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
                     .appendTo(tab1)
                     .change(function() {
                         that.local_selected_catoken = catoken_input.val();
+                    })
+                    .keypress(function (e) {
+                        var keycode = (e.keyCode ? e.keyCode : e.which);
+                        if (keycode == keyboard.keycodes.enter) {
+                            that.states.create.buttons.AddCluster.click();
+                        }
                     });
             }
         }
@@ -426,6 +439,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab1)
             .change(function() {
                 that.local_selected_clustername = clustername_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
     else {
@@ -439,6 +458,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab1)
             .change(function() {
                 that.local_selected_clustername = clustername_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
 
@@ -460,6 +485,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab1)
             .change(function() {
                 that.local_selected_ip = ip_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
     else {
@@ -473,6 +504,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab1)
             .change(function() {
                 that.local_selected_ip = ip_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
 
@@ -494,6 +531,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab1)
             .change(function() {
                 that.local_selected_token = token_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
     else {
@@ -507,6 +550,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab1)
             .change(function() {
                 that.local_selected_token = token_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
 
@@ -528,6 +577,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab1)
             .change(function() {
                 that.local_selected_catoken = catoken_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
     else {
@@ -541,6 +596,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab1)
             .change(function() {
                 that.local_selected_catoken = catoken_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
 
@@ -560,6 +621,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab2)
             .change(function() {
                 that.openstack_selected_clustername = openstack_clustername_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
     else {
@@ -573,6 +640,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab2)
             .change(function() {
                 that.openstack_selected_clustername = openstack_clustername_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
 
@@ -594,6 +667,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab2)
             .change(function() {
                 that.openstack_selected_ip = openstack_ip_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
     else {
@@ -607,6 +686,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab2)
             .change(function() {
                 that.openstack_selected_ip = openstack_ip_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
 
@@ -628,6 +713,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab2)
             .change(function() {
                 that.openstack_selected_catoken = openstack_catoken_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
     else {
@@ -641,6 +732,12 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .appendTo(tab2)
             .change(function() {
                 that.openstack_selected_catoken = openstack_catoken_input.val();
+            })
+            .keypress(function (e) {
+                var keycode = (e.keyCode ? e.keyCode : e.which);
+                if (keycode == keyboard.keycodes.enter) {
+                    that.states.create.buttons.AddCluster.click();
+                }
             });
     }
 };
@@ -765,6 +862,13 @@ K8sSelection.prototype.get_html_create_users = function() {
         .appendTo(user_create_div)
         .change(function() {
             that.user_create_input = user_create_input.val();
+            user_email_create_input.val(user_create_input.val() + "@cern.ch");
+        })
+        .keypress(function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if (keycode == keyboard.keycodes.enter) {
+                that.states.create_users.buttons.CreateUser.click();
+            }
         });
 
 
@@ -784,6 +888,12 @@ K8sSelection.prototype.get_html_create_users = function() {
         .appendTo(user_create_div)
         .change(function() {
             that.user_email_create_input = user_email_create_input.val();
+        })
+        .keypress(function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if (keycode == keyboard.keycodes.enter) {
+                that.states.create_users.buttons.CreateUser.click();
+            }
         });
 };
 
@@ -839,7 +949,8 @@ K8sSelection.prototype.get_html_auth = function() {
         .addClass('form__field')
         .appendTo(html)
         .keypress(function (e) {
-            if (e.which == keyboard.keycodes.enter) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if (keycode == keyboard.keycodes.enter) {
                 that.states.auth.buttons.Authenticate.click();
             }
         });
@@ -861,7 +972,7 @@ K8sSelection.prototype.authenticate = function() {
         action: 'kerberos-auth',
         password: password_field.val()
     });
-}
+};
 
 /**
  * @desc displays the frontend for loading state

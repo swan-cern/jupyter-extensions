@@ -119,7 +119,7 @@ class K8sSelection:
 
                 # Setting server ip as environment variable
                 self.log.info("The current server ip is: ", server_ip)
-                os.environ["k8s_master_ip"] = server_ip
+                os.environ["K8S_MASTER_IP"] = server_ip
 
                 # Writing to the file
                 with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
@@ -816,30 +816,23 @@ class K8sSelection:
 
         self.log.info("Sending email!")
         try:
-            import smtplib
+            from email.mime.text import MIMEText
 
-            fromaddr = os.getenv("USER") + "@cern.ch"
-            toaddrs = [email]
-            msg = '''
-                From: {fromaddr}
-                To: {toaddr}
-                Subject: Credentials for cluster: {selected_cluster}
+            body = '''
                 Cluster name: {selected_cluster}\n\nCA Cert: {ca_cert}\n\nServer IP: {server_ip} 
             '''
 
-            msg = msg.format(fromaddr=fromaddr, toaddr=toaddrs[0], selected_cluster=selected_cluster, ca_cert=ca_cert,
-                             server_ip=server_ip)
-            # The actual mail send
-            server = smtplib.SMTP('smtp.cern.ch:587')
-            server.starttls()
-            server.ehlo('swan.cern.ch')
-            server.mail(fromaddr)
-            server.rcpt(toaddrs[0])
-            server.data(msg)
-            server.quit()
+            # Sending the mail
+            body = body.format(selected_cluster=selected_cluster, ca_cert=ca_cert, server_ip=server_ip)
+            msg = MIMEText(body)
+            msg["From"] = os.environ["USER"] + "@cern.ch"
+            msg["To"] = email
+            msg["Subject"] = "Credentials for cluster: " + selected_cluster
+            p = subprocess.Popen(["/usr/sbin/sendmail", "-t", "-oi"], stdin=subprocess.PIPE)
+            p.communicate(msg.as_string())
             self.log.info("Successfully sent email using sendgrid!")
         except Exception as e:
-            # Handle smtplib exceptions
+            # Handle email exceptions
             error = 'Cannot send email.'
             self.log.info(str(e))
             self.send({
