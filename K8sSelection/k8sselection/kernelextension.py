@@ -287,43 +287,9 @@ class K8sSelection:
                     with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
                         yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
 
-                    # Check whether the newly added cluster is responding. If not then the error is handled below.
-                    api_instance2 = client.CoreV1Api(api_client=config.new_client_from_config(context=context_name))
-                    api_response = api_instance2.list_namespaced_pod(namespace=namespace)
                     self.log.info("Successfully added cluster and context!")
                     self.send({
                         'msgtype': 'added-context-successfully',
-                        'tab': 'local'
-                    })
-                except ApiException as e:
-                    # If the newly added cluster is not responding then delete all the things added above
-                    # and send an error to the user.
-                    error = 'You cannot request resources using these settings. Please contact your admin'
-                    self.log.info(str(e))
-                    with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
-                        load = yaml.safe_load(stream)
-
-                    for i in range(len(load['contexts'])):
-                        if load['contexts'][i]['name'] == context_name:
-                            load['contexts'].pop(i)
-                            break
-
-                    for i in range(len(load['clusters'])):
-                        if load['clusters'][i]['name'] == cluster_name:
-                            load['clusters'].pop(i)
-                            break
-
-                    for i in range(len(load['users'])):
-                        if load['users'][i]['name'] == svcaccount:
-                            load['users'].pop(i)
-                            break
-
-                    with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
-                        yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
-
-                    self.send({
-                        'msgtype': 'added-context-unsuccessfully',
-                        'error': error,
                         'tab': 'local'
                     })
                 except AlreadyExistError as e:
@@ -449,45 +415,9 @@ class K8sSelection:
                     with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
                         yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
 
-                    # Check if we can request the newly added cluster.
-                    # If not then it is handled below
-                    api_instance2 = client.CoreV1Api(api_client=config.new_client_from_config(context=context_name))
-                    api_instance2.list_namespaced_pod(namespace=namespace, timeout_seconds=2)
-
                     self.log.info("Successfully added cluster and context!")
                     self.send({
                         'msgtype': 'added-context-successfully',
-                        'tab': 'openstack'
-                    })
-                except ApiException as e:
-                    # If you cannot request the newly added cluster then remove everything added above and
-                    # send an error to the user.
-                    error = 'You cannot request resources using these settings. Please contact your admin'
-                    self.log.info(str(e))
-                    with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
-                        load = yaml.safe_load(stream)
-
-                    for i in range(len(load['contexts'])):
-                        if load['contexts'][i]['name'] == context_name:
-                            load['contexts'].pop(i)
-                            break
-
-                    for i in range(len(load['clusters'])):
-                        if load['clusters'][i]['name'] == cluster_name:
-                            load['clusters'].pop(i)
-                            break
-
-                    for i in range(len(load['users'])):
-                        if load['users'][i]['name'] == svcaccount:
-                            load['users'].pop(i)
-                            break
-
-                    with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
-                        yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
-
-                    self.send({
-                        'msgtype': 'added-context-unsuccessfully',
-                        'error': error,
                         'tab': 'openstack'
                     })
                 except AlreadyExistError as e:
@@ -941,7 +871,7 @@ class K8sSelection:
                 'kerberos_auth': kerberos_auth
             })
         except Exception as e:
-            error = 'Error getting cluster list. Please try again later'
+            error = "Error getting cluster list. The Kubeconfig file is probably corrupted. You can delete it using 'rm $HOME/.kube/config' on the terminal."
             self.log.info(str(e))
             self.send({
                 'msgtype': 'get-clusters-unsuccessfull',

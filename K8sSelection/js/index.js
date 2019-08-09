@@ -60,7 +60,7 @@ function K8sSelection() {
             get_html: $.proxy(this.get_html_error, this)
         },
         cluster_details: {
-            get_html: $.proxy(this.get_cluster_detials_view_html, this),
+            get_html: $.proxy(this.get_cluster_detials_view_html, this)
         }
     };
 
@@ -971,20 +971,19 @@ K8sSelection.prototype.get_html_create_users = function() {
  */
 K8sSelection.prototype.create_users = function() {
 
+    // Logging the inputs just for testing purposes
     console.log("Username: " + this.user_create_input);
     console.log("Email: " + this.user_email_create_input);
     console.log("Selected context: " + this.user_create_context_name);
-    this.user_email_id = this.user_email_create_input;
+
+
     // Check whether the inputs are not empty.
     // Note: I have not validated the email field right now because it is going to be removed, right?
+    this.user_email_id = this.user_email_create_input;
     if(!this.user_create_input || !this.user_email_create_input) {
         this.get_html_error("Please fill all the required fields.", this.states.create_users);
         return;
     }
-
-    // Logging the inputs just for testing purposes
-
-
 
     // Send the inputs to the backend to add users to a cluster
     this.switch_state(this.states.loading);
@@ -1002,8 +1001,6 @@ K8sSelection.prototype.get_cluster_detials_view_html = function() {
 
     var that = this;
 
-    html.append(user_create);
-
     $("<button>")
     .attr("type", "button")
     .addClass("back-button")
@@ -1014,16 +1011,16 @@ K8sSelection.prototype.get_cluster_detials_view_html = function() {
     $('<h4 class="modal-title">&nbsp;&nbsp;<span>Credentials for cluster: ' + this.user_create_context_name + '</span></h4>').appendTo(header);
 
 
-    html.append('<div id="view_context"></div>');
-    var div = html.find("#view_context")
-    $('<h4 id="detail_div">Please send the credentials via email to: ' + this.user_email_id + '</h4><br>').appendTo(div);
+    // html.append('<div id="view_context"></div>');
+    // var div = html.find("#view_context");
+    $('<h4 id="detail_div">Please send the credentials via email to: ' + this.user_email_id + '</h4><br>').appendTo(html);
 
-    $('<h4 id="cluster_name">Cluster name: ' + this.cluster_name_view + '</h4><br>').appendTo(div);
+    $('<h4 id="cluster_name">Cluster name: ' + this.cluster_name_view + '</h4><br>').appendTo(html);
 
-    $('<h4 id="server_ip">Server IP: ' + this.server_ip_view + '</h4><br>').appendTo(div);
+    $('<h4 id="server_ip">Server IP: ' + this.server_ip_view + '</h4><br>').appendTo(html);
 
-    $('<div class="content"><h4 id="ca_token" style="word-wrap: break-word;">Ca Token: ' + this.ca_cert_view + '</h4><br>').appendTo(div);
-}
+    $('<div class="content"><h4 id="ca_token" style="word-wrap: break-word;">Ca Token: ' + this.ca_cert_view + '</h4><br>').appendTo(html);
+};
 
 
 K8sSelection.prototype.get_html_auth = function() {
