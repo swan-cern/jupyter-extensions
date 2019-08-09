@@ -29,7 +29,7 @@ function K8sSelection() {
             get_html: $.proxy(this.get_html_auth, this),
             buttons: {
                 'Authenticate': {
-                    class: 'btn-success size-100 auth-button',
+                    class: 'btn-blue size-100 auth-button',
                     click: $.proxy(this.authenticate, this)
                 }
             }
@@ -38,7 +38,7 @@ function K8sSelection() {
             get_html: $.proxy(this.get_html_create_clusters, this),
             buttons: {
                 'AddCluster': {
-                    class: 'btn-success size-100',
+                    class: 'btn-blue size-100',
                     click: $.proxy(this.create_context, this)
                 }
             }
@@ -47,7 +47,7 @@ function K8sSelection() {
             get_html: $.proxy(this.get_html_create_users, this),
             buttons: {
                 'CreateUser': {
-                    class: 'btn-success size-100',
+                    class: 'btn-blue size-100',
                     click: $.proxy(this.create_users, this)
                 }
             }
@@ -58,6 +58,9 @@ function K8sSelection() {
         },
         error: {
             get_html: $.proxy(this.get_html_error, this)
+        },
+        cluster_details: {
+            get_html: $.proxy(this.get_cluster_detials_view_html, this),
         }
     };
 
@@ -182,11 +185,9 @@ K8sSelection.prototype.get_html_select_cluster = function() {
     var list_div = html.find("#user_html_inputs");
 
 
-
     if(current_context != '') {
         if(this.initial_select == true) {
-            $('<div class="cluster-list-div"><div class="connect-symbol" style="visibility: hidden;"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text" style="color: #C0C0C0;">' + current_context + '</div><button disabled class="list-item-delete pure-material-button-text" id="delete.' + current_context + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + current_context + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + current_context + '">Select</button><hr></div>').appendTo(list_div);
-            this.initial_select = false;
+            $('<div class="cluster-list-div"><div class="connect-symbol" style="visibility: hidden;"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text" style="color: #C0C0C0;">' + current_context + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + current_context + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + current_context + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + current_context + '">Select</button><hr></div>').appendTo(list_div);
         }
         else {
             if(this.is_reachable == false) {
@@ -194,10 +195,10 @@ K8sSelection.prototype.get_html_select_cluster = function() {
             }
             else {
                 if(this.is_admin == true) {
-                    $('<div class="cluster-list-div"><div class="connect-symbol"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text">' + current_context + '</div><button disabled class="list-item-delete pure-material-button-text" id="delete.' + current_context + '">X</button><button class="list-item-share pure-material-button-text" id="share.' + current_context + '"><i class="fa fa-share-alt"></i></button><button disabled class="list-item-select pure-material-button-text" id="select.' + current_context + '">Select</button><hr></div>').appendTo(list_div);
+                    $('<div class="cluster-list-div"><div class="connect-symbol"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text">' + current_context + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + current_context + '">X</button><button class="list-item-share pure-material-button-text" id="share.' + current_context + '"><i class="fa fa-share-alt"></i></button><button disabled class="list-item-select pure-material-button-text" id="select.' + current_context + '">Select</button><hr></div>').appendTo(list_div);
                 }
                 else {
-                    $('<div class="cluster-list-div"><div class="connect-symbol"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text">' + current_context + '</div><button disabled class="list-item-delete pure-material-button-text" id="delete.' + current_context + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + current_context + '"><i class="fa fa-share-alt"></i></button><button disabled class="list-item-select pure-material-button-text" id="select.' + current_context + '">Select</button><hr></div>').appendTo(list_div);
+                    $('<div class="cluster-list-div"><div class="connect-symbol"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text">' + current_context + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + current_context + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + current_context + '"><i class="fa fa-share-alt"></i></button><button disabled class="list-item-select pure-material-button-text" id="select.' + current_context + '">Select</button><hr></div>').appendTo(list_div);
                 }
             }
         }
@@ -206,7 +207,7 @@ K8sSelection.prototype.get_html_select_cluster = function() {
 
     for(var i = 0; i < contexts.length; i++) {
         if(contexts[i] != current_context) {
-            $('<div class="cluster-list-div"><div class="connect-symbol" style="visibility: hidden;"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text" style="color: #C0C0C0;">' + contexts[i] + '</div><button disabled class="list-item-delete pure-material-button-text" id="delete.' + contexts[i] + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + contexts[i] + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + contexts[i] + '">Select</button><hr></div>').appendTo(list_div);
+            $('<div class="cluster-list-div"><div class="connect-symbol" style="visibility: hidden;"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text" style="color: #C0C0C0;">' + contexts[i] + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + contexts[i] + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + contexts[i] + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + contexts[i] + '">Select</button><hr></div>').appendTo(list_div);
         }
     }
 
@@ -241,6 +242,7 @@ K8sSelection.prototype.get_html_select_cluster = function() {
      * Handler to get the current context and send it to the backend to change the current context in KUBECONFIG
      */
     list_div.find(".list-item-select").on('click', function() {
+        that.initial_select = false;
         var button_id = $(this).attr('id');
         var current_context = button_id.split('.')[1];
         that.currently_selected_context = current_context;
@@ -267,11 +269,7 @@ K8sSelection.prototype.get_html_select_cluster = function() {
         var current_context = button_id.split('.')[1];
         console.log("ID: " + button_id);
         console.log("Selected cluster: " + current_context);
-        that.switch_state(that.states.loading);
-        that.send({
-            'action': 'delete-current-context',
-            'context': current_context,
-        });
+        that.close();
     });
 
     /**
@@ -291,6 +289,31 @@ K8sSelection.prototype.get_html_select_cluster = function() {
         .appendTo(html)
         .on('click', $.proxy(this.switch_state, this, this.states.create));
 
+};
+
+K8sSelection.prototype.close = function () {
+    console.log("Inside close function");
+    dialog.modal({
+            notebook: Jupyter.notebook,
+            keyboard_manager: Jupyter.keyboard_manager,
+            title: 'Delete Cluster',
+            body: 'Are you sure you want to delete this cluster from the KUBECONFIG file?',
+            buttons: {
+                'Yes': {
+                    class: 'btn-blue size-100',
+                    click: $.proxy(this.delete_cluster, this)
+                }
+            }
+        });
+
+};
+
+K8sSelection.prototype.delete_cluster = function () {
+    this.switch_state(this.states.loading);
+    this.send({
+        'action': 'delete-current-context',
+        'context': this.current_context
+    });
 };
 
 
@@ -350,10 +373,6 @@ K8sSelection.prototype.get_html_create_clusters = function() {
 	            });
     });
 
-    // tabs.click(function() {
-    //     that.selected_tab = $(".active").html();
-    //     console.log("Currently selected tab: " + that.selected_tab);
-    // });
 
     var tab1 = html.find("#tab1");
     var tab1 = tab1.find("#other-settings");
@@ -390,6 +409,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
                     .attr('placeholder', 'CA Token (Base64)')
                     .addClass('form__field')
                     .appendTo(tab1)
+                    .focus(function() {
+                        that.local_selected_catoken = catoken_input.val();
+                    })
                     .change(function() {
                         that.local_selected_catoken = catoken_input.val();
                     })
@@ -409,6 +431,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
                     .attr('placeholder', 'CA Token (Base64)')
                     .addClass('form__field')
                     .appendTo(tab1)
+                    .focus(function() {
+                        that.local_selected_catoken = catoken_input.val();
+                    })
                     .change(function() {
                         that.local_selected_catoken = catoken_input.val();
                     })
@@ -437,6 +462,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'Cluster name')
             .addClass('form__field')
             .appendTo(tab1)
+            .focus(function() {
+                that.local_selected_clustername = clustername_input.val();
+            })
             .change(function() {
                 that.local_selected_clustername = clustername_input.val();
             })
@@ -456,6 +484,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'Cluster name')
             .addClass('form__field')
             .appendTo(tab1)
+            .focus(function() {
+                that.local_selected_clustername = clustername_input.val();
+            })
             .change(function() {
                 that.local_selected_clustername = clustername_input.val();
             })
@@ -483,6 +514,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'Server IP')
             .addClass('form__field')
             .appendTo(tab1)
+            .focus(function() {
+                that.local_selected_ip = ip_input.val();
+            })
             .change(function() {
                 that.local_selected_ip = ip_input.val();
             })
@@ -502,6 +536,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'Server IP')
             .addClass('form__field')
             .appendTo(tab1)
+            .focus(function() {
+                that.local_selected_ip = ip_input.val();
+            })
             .change(function() {
                 that.local_selected_ip = ip_input.val();
             })
@@ -529,6 +566,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'Token')
             .addClass('form__field')
             .appendTo(tab1)
+            .focus(function() {
+                that.local_selected_token = token_input.val();
+            })
             .change(function() {
                 that.local_selected_token = token_input.val();
             })
@@ -548,6 +588,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'Token')
             .addClass('form__field')
             .appendTo(tab1)
+            .focus(function() {
+                that.local_selected_token = token_input.val();
+            })
             .change(function() {
                 that.local_selected_token = token_input.val();
             })
@@ -575,6 +618,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'CA Token (Base64)')
             .addClass('form__field')
             .appendTo(tab1)
+            .focus(function() {
+                that.local_selected_catoken = catoken_input.val();
+            })
             .change(function() {
                 that.local_selected_catoken = catoken_input.val();
             })
@@ -594,6 +640,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'CA Token (Base64)')
             .addClass('form__field')
             .appendTo(tab1)
+            .focus(function() {
+                that.local_selected_catoken = catoken_input.val();
+            })
             .change(function() {
                 that.local_selected_catoken = catoken_input.val();
             })
@@ -619,6 +668,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'Cluster name')
             .addClass('form__field')
             .appendTo(tab2)
+            .focus(function() {
+                that.openstack_selected_clustername = openstack_clustername_input.val();
+            })
             .change(function() {
                 that.openstack_selected_clustername = openstack_clustername_input.val();
             })
@@ -638,6 +690,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'Cluster name')
             .addClass('form__field')
             .appendTo(tab2)
+            .focus(function() {
+                that.openstack_selected_clustername = openstack_clustername_input.val();
+            })
             .change(function() {
                 that.openstack_selected_clustername = openstack_clustername_input.val();
             })
@@ -665,6 +720,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'Server IP')
             .addClass('form__field')
             .appendTo(tab2)
+            .focus(function() {
+                that.openstack_selected_ip = openstack_ip_input.val();
+            })
             .change(function() {
                 that.openstack_selected_ip = openstack_ip_input.val();
             })
@@ -684,6 +742,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'Server IP')
             .addClass('form__field')
             .appendTo(tab2)
+            .focus(function() {
+                that.openstack_selected_ip = openstack_ip_input.val();
+            })
             .change(function() {
                 that.openstack_selected_ip = openstack_ip_input.val();
             })
@@ -711,8 +772,11 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'CA Token (Base64)')
             .addClass('form__field')
             .appendTo(tab2)
+            .focus(function() {
+                that.openstack_selected_catoken = openstack_selected_ip.val();
+            })
             .change(function() {
-                that.openstack_selected_catoken = openstack_catoken_input.val();
+                that.openstack_selected_catoken = openstack_selected_ip.val();
             })
             .keypress(function (e) {
                 var keycode = (e.keyCode ? e.keyCode : e.which);
@@ -730,6 +794,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
             .attr('placeholder', 'CA Token (Base64)')
             .addClass('form__field')
             .appendTo(tab2)
+            .focus(function() {
+                that.openstack_selected_catoken = openstack_catoken_input.val();
+            })
             .change(function() {
                 that.openstack_selected_catoken = openstack_catoken_input.val();
             })
@@ -863,6 +930,7 @@ K8sSelection.prototype.get_html_create_users = function() {
         .change(function() {
             that.user_create_input = user_create_input.val();
             user_email_create_input.val(user_create_input.val() + "@cern.ch");
+            that.user_email_create_input = user_email_create_input.val();
         })
         .keypress(function (e) {
             var keycode = (e.keyCode ? e.keyCode : e.which);
@@ -903,6 +971,10 @@ K8sSelection.prototype.get_html_create_users = function() {
  */
 K8sSelection.prototype.create_users = function() {
 
+    console.log("Username: " + this.user_create_input);
+    console.log("Email: " + this.user_email_create_input);
+    console.log("Selected context: " + this.user_create_context_name);
+    this.user_email_id = this.user_email_create_input;
     // Check whether the inputs are not empty.
     // Note: I have not validated the email field right now because it is going to be removed, right?
     if(!this.user_create_input || !this.user_email_create_input) {
@@ -911,9 +983,7 @@ K8sSelection.prototype.create_users = function() {
     }
 
     // Logging the inputs just for testing purposes
-    console.log("Username: " + this.user_create_input);
-    console.log("Email: " + this.user_email_create_input);
-    console.log("Selected context: " + this.user_create_context_name);
+
 
 
     // Send the inputs to the backend to add users to a cluster
@@ -925,6 +995,35 @@ K8sSelection.prototype.create_users = function() {
         'context': this.user_create_context_name
     });
 };
+
+K8sSelection.prototype.get_cluster_detials_view_html = function() {
+    var html = this.modal.find('.modal-body');
+    var header = this.modal.find('.modal-header');
+
+    var that = this;
+
+    html.append(user_create);
+
+    $("<button>")
+    .attr("type", "button")
+    .addClass("back-button")
+    .html("<i class='fa fa-arrow-left' aria-hidden='true'></i>")
+    .appendTo(header)
+    .on("click", this.switch_state(this.states.create_users));
+
+    $('<h4 class="modal-title">&nbsp;&nbsp;<span>Credentials for cluster: ' + this.user_create_context_name + '</span></h4>').appendTo(header);
+
+
+    html.append('<div id="view_context"></div>');
+    var div = html.find("#view_context")
+    $('<h4 id="detail_div">Please send the credentials via email to: ' + this.user_email_id + '</h4><br>').appendTo(div);
+
+    $('<h4 id="cluster_name">Cluster name: ' + this.cluster_name_view + '</h4><br>').appendTo(div);
+
+    $('<h4 id="server_ip">Server IP: ' + this.server_ip_view + '</h4><br>').appendTo(div);
+
+    $('<div class="content"><h4 id="ca_token" style="word-wrap: break-word;">Ca Token: ' + this.ca_cert_view + '</h4><br>').appendTo(div);
+}
 
 
 K8sSelection.prototype.get_html_auth = function() {
@@ -1046,9 +1145,6 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
         // this.delete_list = msg.content.data.delete_list;
         // this.admin_list = msg.content.data.admin_list;
         this.switch_state(this.states.select);
-        this.send({
-            'action': 'get-connection-detail',
-        });
     }
     else if(msg.content.data.msgtype == 'added-context-successfully') {
         // The message received when cluster and context are added successfully
@@ -1132,8 +1228,9 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
     }
     else if(msg.content.data.msgtype == 'deleted-context-successfully') {
         // Message received from backend when the context and cluster are deleted successfully from backend
-        this.modal.modal('hide');
-        this.switch_state(this.states.create);
+        // this.modal.modal('hide');
+        this.current_context = msg.content.data.current_context;
+        this.refresh_modal();
         this.send({
             'action': 'get-connection-detail',
         });
@@ -1151,7 +1248,10 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
         // Message recieved when the user is added to a cluster successfully
         this.user_create_input = undefined;
         this.user_email_create_input = undefined;
-        this.switch_state(this.states.create_users);
+        this.cluster_name_view = msg.content.data.cluster_name;
+        this.server_ip_view = msg.content.data.server_ip;
+        this.ca_cert_view = msg.content.data.ca_cert;
+        this.switch_state(this.states.cluster_details);
     }
     else if(msg.content.data.msgtype == 'kerberos-auth') {
         console.log("Inside kerberos auth condition!");
