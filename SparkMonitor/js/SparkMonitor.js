@@ -280,6 +280,21 @@ SparkMonitor.prototype.onSparkStageCompleted = function (data) {
 }
 
 /**
+ * Called when a Spark stage is in an active state with task updates.
+ * @param {Object} data - The data from the spark listener event.
+ */
+SparkMonitor.prototype.onSparkStageActive = function (data) {
+	console.log('SparkMonitor:Stage Active', data);
+	var cell_id = this.data['app' + this.app + 'stage' + data.stageId]['cell_id'];
+	if (cell_id) {
+		var cellmonitor = this.getCellMonitor(cell_id);
+		if (cellmonitor) cellmonitor.onSparkStageActive(data);
+
+	}
+	else console.error('SparkMonitor:ERROR no cellID for active stage');
+}
+
+/**
  * Called when a Spark task is started.
  * @param {Object} data - The data from the spark listener event.
  */
@@ -390,7 +405,6 @@ SparkMonitor.prototype.handleMessage = function (msg) {
         this.openSparkUIFrame(msg.content.data);
     } else if (msg.content.data.msgtype == "fromscala") {
 		var data = JSON.parse(msg.content.data.msg);
-		console.log("SparkMonitor: " + data.msgtype);
 		switch (data.msgtype) {
 			case 'sparkJobStart':
 				this.onSparkJobStart(data);
@@ -403,6 +417,9 @@ SparkMonitor.prototype.handleMessage = function (msg) {
 				break;
 			case 'sparkStageCompleted':
 				this.onSparkStageCompleted(data);
+				break;
+			case 'sparkStageActive':
+				this.onSparkStageActive(data);
 				break;
 			case 'sparkTaskStart':
 				this.onSparkTaskStart(data);
