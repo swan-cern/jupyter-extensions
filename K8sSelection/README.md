@@ -10,7 +10,7 @@
         --node-count 4 \
         --flavor m2.small \
         --keypair pkothuri_new \
-        --labels "keystone_auth_enabled=true" \
+        --labels keystone_auth_enabled="true" \
         --labels influx_grafana_dashboard_enabled="false" \
         --labels manila_enabled="true" \
         --labels kube_tag="v1.13.3-12" \
