@@ -1006,20 +1006,17 @@ K8sSelection.prototype.get_cluster_detials_view_html = function() {
     .addClass("back-button")
     .html("<i class='fa fa-arrow-left' aria-hidden='true'></i>")
     .appendTo(header)
-    .on("click", this.switch_state(this.states.create_users));
+    .on("click", $.proxy(this.switch_state, this, this.states.create_users));
 
-    $('<h4 class="modal-title">&nbsp;&nbsp;<span>Credentials for cluster: ' + this.user_create_context_name + '</span></h4>').appendTo(header);
+    $('<h4 class="modal-title">&nbsp;&nbsp;<span>Connection details for cluster: ' + this.user_create_context_name + '</span></h4>').appendTo(header);
 
+    $('<h4 id="detail_div">Please send the connection details via email to: ' + this.user_email_id + '</h4><br>').appendTo(html);
 
-    // html.append('<div id="view_context"></div>');
-    // var div = html.find("#view_context");
-    $('<h4 id="detail_div">Please send the credentials via email to: ' + this.user_email_id + '</h4><br>').appendTo(html);
+    $('<div style="display: flex;"><h4 id="cluster_name">K8s Cluster Name:</h4>&nbsp;<p style="font-size: 15px; margin-top: 5px;">' + this.cluster_name_view + '</p><br></div>').appendTo(html);
 
-    $('<h4 id="cluster_name">Cluster name: ' + this.cluster_name_view + '</h4><br>').appendTo(html);
+    $('<div style="display: flex;"><h4 id="server_ip">K8s master:</h4>&nbsp;<p style="font-size: 15px; margin-top: 5px;">' + this.server_ip_view + '</p><br></div>').appendTo(html);
 
-    $('<h4 id="server_ip">Server IP: ' + this.server_ip_view + '</h4><br>').appendTo(html);
-
-    $('<div class="content"><h4 id="ca_token" style="word-wrap: break-word;">Ca Token: ' + this.ca_cert_view + '</h4><br>').appendTo(html);
+    $('<div style="display: flex;"><div class="content"><h4 id="ca_token" style="word-wrap: break-word;">CA Token:</h4>&nbsp;<p style="font-size: 15px; margin-top: 5px;">' + this.ca_cert_view + '</p><br></div>').appendTo(html);
 };
 
 
