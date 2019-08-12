@@ -165,7 +165,7 @@ class K8sSelection:
                 cluster_name = msg['content']['data']['cluster_name']
                 insecure_server = msg['content']['data']['insecure_server']
                 ip = msg['content']['data']['ip']
-                namespace = "swan-" + str(os.getenv('USER'))
+                namespace = "spark-" + str(os.getenv('USER'))
                 svcaccount = str(os.getenv('USER')) + "-" + cluster_name
                 context_name = cluster_name
 
@@ -317,7 +317,7 @@ class K8sSelection:
                 cluster_name = msg['content']['data']['cluster_name']
                 ip = msg['content']['data']['ip']
                 catoken = msg['content']['data']['catoken']
-                namespace = "swan-" + str(os.getenv('USER'))
+                namespace = "spark-" + str(os.getenv('USER'))
                 svcaccount = str(os.getenv('USER'))
                 context_name = cluster_name
 
@@ -548,7 +548,7 @@ class K8sSelection:
             selected_context = msg['content']['data']['context']
 
             # Declaring the naming conventions of the resources to be created or checked
-            namespace = 'swan-' + username
+            namespace = 'spark-' + username
             username = username
             rolebinding_name = 'edit-cluster-' + namespace
 

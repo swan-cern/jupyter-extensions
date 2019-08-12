@@ -58,19 +58,19 @@
         --set cvmfs.enable=true https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/master/cern-spark-services-1.0.0.tgz
     ```
 
-* Deploy User. Namespace should be of the form `swan-$USER`
+* Deploy User. Namespace should be of the form `spark-$USER`
     ```bash
     helm install \
         --wait \
         --kubeconfig "${KUBECONFIG}" \
-        --set namespace=swan-$USER \
+        --set namespace=spark-$USER \
         --set cvmfs.enable=true \
-        --name "spark-user-pkothuri" https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/master/cern-spark-user-1.0.0.tgz
+        --name "spark-user-USER" https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/master/cern-spark-user-1.0.0.tgz
     ```
 
-* Create clusterolebinding. Clusterolebinding should be of the form `admin-cluster-swan-$USER`
+* Create clusterolebinding. Clusterolebinding should be of the form `admin-cluster-spark-$USER`
     ```bash
-    kubectl create rolebinding  <name> --clusterrole=edit --user $USER --namespace=swan-$USER
+    kubectl create clusterrolebinding cluster-admin-$USER --clusterrole=cluster-admin --user=$USER
     ```
 
 * Config to add to k8sselection (name, server, certificate-authority-data)
