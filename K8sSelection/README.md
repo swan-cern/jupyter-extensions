@@ -3,7 +3,7 @@
 ## Instructions to create and intialize an Openstack K8s cluster to use it with K8sSelection extension
 
 * Create cluster
-    ``` bash
+    ```bash
     openstack coe cluster create \
         --cluster-template kubernetes-1.13.3-3 \
         --master-flavor m2.small \
@@ -34,7 +34,7 @@
     **Note**: `--labels "keystone_auth_enabled=true"` is important for token authentication
 
 * Obtain Configuration
-    ``` bash
+    ```bash
     mkdir -p $HOME/<cluster-name>
     cd $HOME/<cluster-name>
     openstack coe cluster config k8s-pkothuri > env.sh
@@ -42,7 +42,7 @@
     ```
 
 * Install tiller
-    ``` bash
+    ```bash
     kubectl --namespace kube-system create serviceaccount tiller
     kubectl create clusterrolebinding tiller-kube-system --clusterrole cluster-admin --serviceaccount=kube-system:tiller
     helm init --service-account tiller --wait
@@ -50,7 +50,7 @@
     ```
 
 * Deploy Spark Services
-    ``` bash
+    ```bash
     helm install \
         --wait \
         --name spark \
@@ -59,7 +59,7 @@
     ```
 
 * Deploy User. Namespace should be of the form `swan-$USER`
-    ``` bash
+    ```bash
     helm install \
         --wait \
         --kubeconfig "${KUBECONFIG}" \
@@ -69,12 +69,12 @@
     ```
 
 * Create clusterolebinding. Clusterolebinding should be of the form `admin-cluster-swan-$USER`
-    ``` bash
+    ```bash
     kubectl create rolebinding  <name> --clusterrole=edit --user $USER --namespace=swan-$USER
     ```
 
 * Config to add to k8sselection (name, server, certificate-authority-data)
-    ``` bash
+    ```bash
     kubectl config view --flatten
     ```
 
@@ -87,7 +87,7 @@ You will receive the credentials of the cluster from the admin on your CERN emai
 
 First clone this repository and then run the following commands in the terminal
 
-``` bash
+```bash
 docker build -t custom_extension .
 docker-compose -f docker-compose.yml up
 ```
@@ -96,7 +96,7 @@ docker-compose -f docker-compose.yml up
 
 ## Testing - running spark pi with selected cluster
 
-```bash
+```python
 import os
 from pyspark import SparkContext, SparkConf
 from pyspark.sql import SparkSession
