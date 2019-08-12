@@ -63,7 +63,7 @@
     helm install \
         --wait \
         --kubeconfig "${KUBECONFIG}" \
-        --set namespace=spark-$USER \
+        --set namespace=spark-user-$USER \
         --set cvmfs.enable=true \
         --name "spark-user-USER" https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/master/cern-spark-user-1.0.0.tgz
     ```
