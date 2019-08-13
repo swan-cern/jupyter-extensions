@@ -39,8 +39,10 @@ class K8sSelection:
     def get_auth_type(selfself, username):
         if username.split('-')[0] == 'openstack':
             return 'openstack'
-        else:
+        elif username.split('-')[0] == 'local':
             return 'local'
+        else:
+            return 'none'
 
     def handle_comm_message(self, msg):
         """
@@ -108,7 +110,6 @@ class K8sSelection:
                 # Setting the current context
                 load['current-context'] = context
 
-
                 # Extracting server IP of the currently selected cluster
                 for i in load['contexts']:
                     if i['name'] == load['current-context']:
@@ -159,7 +160,7 @@ class K8sSelection:
             self.log.info("Adding cluster and context!")
 
             # We can handle different modes using conditions
-            if tab == 'local':
+            if tab == 'sa-token':
                 # Getting all the input data.
                 # Note that here we assume that the context name is same as cluster name.
                 token = msg['content']['data']['token']
@@ -291,7 +292,7 @@ class K8sSelection:
                     self.log.info("Successfully added cluster and context!")
                     self.send({
                         'msgtype': 'added-context-successfully',
-                        'tab': 'local'
+                        'tab': 'sa-token'
                     })
                 except AlreadyExistError as e:
                     # If the context or the cluster already exists then send an error to the user
@@ -300,7 +301,7 @@ class K8sSelection:
                     self.send({
                         'msgtype': 'added-context-unsuccessfully',
                         'error': error,
-                        'tab': 'local'
+                        'tab': 'sa-token'
                     })
                 except Exception as e:
                     # Handle general purpose exceptions
@@ -331,7 +332,7 @@ class K8sSelection:
                     self.send({
                         'msgtype': 'added-context-unsuccessfully',
                         'error': error,
-                        'tab': 'local'
+                        'tab': 'sa-token'
                     })
 
             elif tab == 'openstack':
@@ -559,13 +560,9 @@ class K8sSelection:
 
                 # If the current context is deleted, also change the current-context in the kubeconfig file
                 if context == load['current-context']:
-                    if len(load['contexts']) > 0:
-                        load['current-context'] = load['contexts'][0]['name']
-                    else:
-                        load['current-context'] = ''
+                    load['current-context'] = ''
 
                 current_context = load['current-context']
-
 
                 # Save the file
                 with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
@@ -593,7 +590,7 @@ class K8sSelection:
             selected_context = msg['content']['data']['context']
 
             # Declaring the naming conventions of the resources to be created or checked
-            namespace = 'swan-' + username
+            namespace = 'spark-' + username
             username = username
             rolebinding_name = 'edit-cluster-' + namespace
 
@@ -681,7 +678,6 @@ class K8sSelection:
                 #         'error': error
                 #     })
 
-
                 self.log.info("Successfully created user")
                 self.send({
                     'msgtype': 'added-user-successfully',
@@ -748,7 +744,6 @@ class K8sSelection:
                     if i['name'] == context:
                         if 'namespace' in i['context'].keys():
                             namespace = i['context']['namespace']
-
 
                 config.load_kube_config(context=context)
                 api_instance = client.CoreV1Api()
@@ -875,7 +870,7 @@ class K8sSelection:
                 load = yaml.safe_load(stream)
 
             if load['current-context'] != '':
-                laod['current-context'] = ''
+                load['current-context'] = ''
 
             with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
                 yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
@@ -934,9 +929,10 @@ class K8sSelection:
             cluster_auth_type = []
             current_cluster_auth_type = ''
             for i in range(len(contexts)):
+                auth_type = self.get_auth_type(contexts[i]['context']['user'])
                 if load['current-context'] != '' and contexts[i]['name'] == load['current-context']:
-                    current_cluster_auth_type = self.get_auth_type(contexts[i]['context']['user'])
-                cluster_auth_type.append(self.get_auth_type(contexts[i]['context']['user']))
+                    current_cluster_auth_type = auth_type
+                cluster_auth_type.append(auth_type)
 
             contexts = [context['name'] for context in contexts]
             clusters = [cluster['name'] for cluster in load['clusters']]
@@ -949,7 +945,6 @@ class K8sSelection:
             for i in load['contexts']:
                 if i['name'] == load['current-context']:
                     current_cluster = i['context']['cluster']
-
 
             self.send({
                 'msgtype': 'context-select',
@@ -967,6 +962,7 @@ class K8sSelection:
                 'msgtype': 'get-clusters-unsuccessfull',
                 'error': error
             })
+
 
 def load_ipython_extension(ipython):
     """ Load Jupyter kernel extension """

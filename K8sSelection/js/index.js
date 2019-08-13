@@ -69,6 +69,7 @@ function K8sSelection() {
     this.is_reachable = false;
     this.is_admin = false;
     this.initial_select = true;
+    this.stateConfigMap = {};
 
     // Starts the communication with backend when the kernel is connected
     events.on('kernel_connected.Kernel', $.proxy(this.start_comm, this));
@@ -199,7 +200,13 @@ K8sSelection.prototype.get_html_select_cluster = function() {
 
     for(var i = 0; i < contexts.length; i++) {
         if(contexts[i] != current_context) {
-            $('<div class="cluster-list-div"><div class="connect-symbol" style="visibility: hidden;"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text" style="color: #C0C0C0;">' + contexts[i] + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + contexts[i] + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + contexts[i] + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + contexts[i] + '">Select</button><hr></div>').appendTo(list_div);
+            if(this.cluster_auth_type[i] == 'none') {
+                $('<div class="cluster-list-div"><div class="connect-symbol" style="visibility: hidden;"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text" style="color: #C0C0C0;">' + contexts[i] + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + contexts[i] + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + contexts[i] + '"><i class="fa fa-share-alt"></i></button><button disabled class="list-item-select pure-material-button-text" id="select.' + contexts[i] + '">Select</button><hr></div>').appendTo(list_div);
+            }
+            else {
+                $('<div class="cluster-list-div"><div class="connect-symbol" style="visibility: hidden;"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text" style="color: #C0C0C0;">' + contexts[i] + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + contexts[i] + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + contexts[i] + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + contexts[i] + '">Select</button><hr></div>').appendTo(list_div);
+            }
+
         }
     }
 
@@ -283,7 +290,7 @@ K8sSelection.prototype.get_html_select_cluster = function() {
     list_div.find(".list-item-share").on('click', function() {
         var button_id = $(this).attr('id');
         var current_context = button_id.split('.')[1];
-        that.user_create_context_name = current_context;
+        that.stateConfigMap['user_create_context_name'] = current_context;
         that.switch_state(that.states.create_users);
     });
 
@@ -345,9 +352,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
     var active = tabs.find(".active");
     var that = this;
 
-    console.log("Currently active state: " + active.html());
+    console.log("Currently active state: " + active.attr('id'));
 
-    this.selected_tab = active.html();
+    this.selected_tab = active.attr('id');
 
     tabs.each(function() {
 
@@ -372,7 +379,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
 
 						$active.addClass('active');
 						$content.show();
-                        that.selected_tab = $active.html();
+                        that.selected_tab = $active.attr('id');
                         console.log("Currently selected tab: " + that.selected_tab);
 
 						e.preventDefault();
@@ -405,51 +412,21 @@ K8sSelection.prototype.get_html_create_clusters = function() {
 
             $('<label for="catoken_text" id="catoken_text_label">CA Token (Base64)</label><br id="br3">').appendTo(tab1);
 
-            if(that.local_selected_catoken) {
-                var catoken_input = $('<input/>')
-                    .attr('name', 'catoken_text')
-                    .attr('type', 'text')
-                    .attr("required", "required")
-                    .attr('id', 'catoken_text')
-                    .attr('value', that.local_selected_catoken)
-                    .attr('placeholder', 'CA Token (Base64)')
-                    .addClass('form__field')
-                    .appendTo(tab1)
-                    .focus(function() {
-                        that.local_selected_catoken = catoken_input.val();
-                    })
-                    .change(function() {
-                        that.local_selected_catoken = catoken_input.val();
-                    })
-                    .keypress(function (e) {
-                        var keycode = (e.keyCode ? e.keyCode : e.which);
-                        if (keycode == keyboard.keycodes.enter) {
-                            that.states.create.buttons.AddCluster.click();
-                        }
-                    });
-            }
-            else {
-                var catoken_input = $('<input/>')
-                    .attr('name', 'catoken_text')
-                    .attr('type', 'text')
-                    .attr("required", "required")
-                    .attr('id', 'catoken_text')
-                    .attr('placeholder', 'CA Token (Base64)')
-                    .addClass('form__field')
-                    .appendTo(tab1)
-                    .focus(function() {
-                        that.local_selected_catoken = catoken_input.val();
-                    })
-                    .change(function() {
-                        that.local_selected_catoken = catoken_input.val();
-                    })
-                    .keypress(function (e) {
-                        var keycode = (e.keyCode ? e.keyCode : e.which);
-                        if (keycode == keyboard.keycodes.enter) {
-                            that.states.create.buttons.AddCluster.click();
-                        }
-                    });
-            }
+            var catoken_input = $('<input/>')
+                .attr('name', 'catoken_text')
+                .attr('type', 'text')
+                .attr("required", "required")
+                .attr('id', 'catoken_text')
+                .attr('value', that.stateConfigMap['local_selected_catoken'])
+                .attr('placeholder', 'CA Token (Base64)')
+                .addClass('form__field')
+                .appendTo(tab1)
+                .keypress(function (e) {
+                    var keycode = (e.keyCode ? e.keyCode : e.which);
+                    if (keycode == keyboard.keycodes.enter) {
+                        that.states.create.buttons.AddCluster.click();
+                    }
+                });
         }
     });
 
@@ -458,51 +435,21 @@ K8sSelection.prototype.get_html_create_clusters = function() {
     // Adds Cluster name input to the local tab
     $('<label for="clustername_text" id="clustername_text_label">Cluster name</label><br>').appendTo(tab1);
 
-    if(this.local_selected_clustername) {
-        var clustername_input = $('<input required/>')
-            .attr('name', 'clustername_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'clustername_text')
-            .attr('value', this.local_selected_clustername)
-            .attr('placeholder', 'Cluster name')
-            .addClass('form__field')
-            .appendTo(tab1)
-            .focus(function() {
-                that.local_selected_clustername = clustername_input.val();
-            })
-            .change(function() {
-                that.local_selected_clustername = clustername_input.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
-    else {
-        var clustername_input = $('<input required/>')
-            .attr('name', 'clustername_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'clustername_text')
-            .attr('placeholder', 'Cluster name')
-            .addClass('form__field')
-            .appendTo(tab1)
-            .focus(function() {
-                that.local_selected_clustername = clustername_input.val();
-            })
-            .change(function() {
-                that.local_selected_clustername = clustername_input.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
+    var clustername_input = $('<input required/>')
+        .attr('name', 'clustername_text')
+        .attr('type', 'text')
+        .attr("required", "required")
+        .attr('id', 'clustername_text')
+        .attr('value', this.stateConfigMap['local_selected_clustername'])
+        .attr('placeholder', 'Cluster name')
+        .addClass('form__field')
+        .appendTo(tab1)
+        .keypress(function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if (keycode == keyboard.keycodes.enter) {
+                that.states.create.buttons.AddCluster.click();
+            }
+        });
 
 
     // Adds Server IP input to the local tab
@@ -510,103 +457,43 @@ K8sSelection.prototype.get_html_create_clusters = function() {
 
     $('<label for="ip_text" id="ip_text_label">Server IP</label><br>').appendTo(tab1);
 
-    if(this.local_selected_ip) {
-        var ip_input = $('<input/>')
-            .attr('name', 'ip_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'ip_text')
-            .attr('value', this.local_selected_ip)
-            .attr('placeholder', 'Server IP')
-            .addClass('form__field')
-            .appendTo(tab1)
-            .focus(function() {
-                that.local_selected_ip = ip_input.val();
-            })
-            .change(function() {
-                that.local_selected_ip = ip_input.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
-    else {
-        var ip_input = $('<input/>')
-            .attr('name', 'ip_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'ip_text')
-            .attr('placeholder', 'Server IP')
-            .addClass('form__field')
-            .appendTo(tab1)
-            .focus(function() {
-                that.local_selected_ip = ip_input.val();
-            })
-            .change(function() {
-                that.local_selected_ip = ip_input.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
+    var ip_input = $('<input/>')
+        .attr('name', 'ip_text')
+        .attr('type', 'text')
+        .attr("required", "required")
+        .attr('id', 'ip_text')
+        .attr('value', this.stateConfigMap['local_selected_ip'])
+        .attr('placeholder', 'Server IP')
+        .addClass('form__field')
+        .appendTo(tab1)
+        .keypress(function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if (keycode == keyboard.keycodes.enter) {
+                that.states.create.buttons.AddCluster.click();
+            }
+        });
 
 
-    // Adds Token input to the local tab
+    // Adds Service Account Token input to the local tab
     $('<br><br>').appendTo(tab1);
 
-    $('<label for="token_text" id="token_text_label">Token</label><br>').appendTo(tab1);
+    $('<label for="token_text" id="token_text_label">Service Account Token</label><br>').appendTo(tab1);
 
-    if(this.local_selected_token) {
-        var token_input = $('<input/>')
-            .attr('name', 'token_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'token_text')
-            .attr('value', this.local_selected_token)
-            .attr('placeholder', 'Token')
-            .addClass('form__field')
-            .appendTo(tab1)
-            .focus(function() {
-                that.local_selected_token = token_input.val();
-            })
-            .change(function() {
-                that.local_selected_token = token_input.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
-    else {
-        var token_input = $('<input/>')
-            .attr('name', 'token_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'token_text')
-            .attr('placeholder', 'Token')
-            .addClass('form__field')
-            .appendTo(tab1)
-            .focus(function() {
-                that.local_selected_token = token_input.val();
-            })
-            .change(function() {
-                that.local_selected_token = token_input.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
+    var token_input = $('<input/>')
+        .attr('name', 'token_text')
+        .attr('type', 'text')
+        .attr("required", "required")
+        .attr('id', 'token_text')
+        .attr('value', this.stateConfigMap['local_selected_token'])
+        .attr('placeholder', 'Service Account Token')
+        .addClass('form__field')
+        .appendTo(tab1)
+        .keypress(function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if (keycode == keyboard.keycodes.enter) {
+                that.states.create.buttons.AddCluster.click();
+            }
+        });
 
 
     // Adds CA Token input to the local tab is insecure checkbox is unchecked
@@ -614,153 +501,63 @@ K8sSelection.prototype.get_html_create_clusters = function() {
 
     $('<label for="catoken_text" id="catoken_text_label">CA Token (Base64)</label><br id="br3">').appendTo(tab1);
 
-    if(this.local_selected_catoken) {
-        var catoken_input = $('<input/>')
-            .attr('name', 'catoken_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'catoken_text')
-            .attr('value', this.local_selected_catoken)
-            .attr('placeholder', 'CA Token (Base64)')
-            .addClass('form__field')
-            .appendTo(tab1)
-            .focus(function() {
-                that.local_selected_catoken = catoken_input.val();
-            })
-            .change(function() {
-                that.local_selected_catoken = catoken_input.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
-    else {
-        var catoken_input = $('<input/>')
-            .attr('name', 'catoken_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'catoken_text')
-            .attr('placeholder', 'CA Token (Base64)')
-            .addClass('form__field')
-            .appendTo(tab1)
-            .focus(function() {
-                that.local_selected_catoken = catoken_input.val();
-            })
-            .change(function() {
-                that.local_selected_catoken = catoken_input.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
+
+    var catoken_input = $('<input/>')
+        .attr('name', 'catoken_text')
+        .attr('type', 'text')
+        .attr("required", "required")
+        .attr('id', 'catoken_text')
+        .attr('value', this.stateConfigMap['local_selected_catoken'])
+        .attr('placeholder', 'CA Token (Base64)')
+        .addClass('form__field')
+        .appendTo(tab1)
+        .keypress(function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if (keycode == keyboard.keycodes.enter) {
+                that.states.create.buttons.AddCluster.click();
+            }
+        });
 
 
     // Adds Cluster name input to the openstack tab
     $('<label for="openstack_clustername_text" id="openstack_clustername_text_label">Cluster name</label><br>').appendTo(tab2);
 
-    if(this.openstack_selected_clustername) {
-        var openstack_clustername_input = $('<input required/>')
-            .attr('name', 'openstack_clustername_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'openstack_clustername_text')
-            .attr('value', this.openstack_selected_clustername)
-            .attr('placeholder', 'Cluster name')
-            .addClass('form__field')
-            .appendTo(tab2)
-            .focus(function() {
-                that.openstack_selected_clustername = openstack_clustername_input.val();
-            })
-            .change(function() {
-                that.openstack_selected_clustername = openstack_clustername_input.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
-    else {
-        var openstack_clustername_input = $('<input required/>')
-            .attr('name', 'openstack_clustername_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'openstack_clustername_text')
-            .attr('placeholder', 'Cluster name')
-            .addClass('form__field')
-            .appendTo(tab2)
-            .focus(function() {
-                that.openstack_selected_clustername = openstack_clustername_input.val();
-            })
-            .change(function() {
-                that.openstack_selected_clustername = openstack_clustername_input.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
-
+    var openstack_clustername_input = $('<input required/>')
+        .attr('name', 'openstack_clustername_text')
+        .attr('type', 'text')
+        .attr("required", "required")
+        .attr('id', 'openstack_clustername_text')
+        .attr('value', this.stateConfigMap['openstack_selected_clustername'])
+        .attr('placeholder', 'Cluster name')
+        .addClass('form__field')
+        .appendTo(tab2)
+        .keypress(function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if (keycode == keyboard.keycodes.enter) {
+                that.states.create.buttons.AddCluster.click();
+            }
+        });
 
     // Adds Server IP input to the openstack tab
     $('<br><br>').appendTo(tab2);
 
     $('<label for="openstack_ip_text" id="openstack_ip_text_label">Server IP</label><br>').appendTo(tab2);
 
-    if(this.openstack_selected_ip) {
-        var openstack_ip_input = $('<input/>')
-            .attr('name', 'openstack_ip_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'openstack_ip_text')
-            .attr('value', this.openstack_selected_ip)
-            .attr('placeholder', 'Server IP')
-            .addClass('form__field')
-            .appendTo(tab2)
-            .focus(function() {
-                that.openstack_selected_ip = openstack_ip_input.val();
-            })
-            .change(function() {
-                that.openstack_selected_ip = openstack_ip_input.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
-    else {
-        var openstack_ip_input = $('<input/>')
-            .attr('name', 'openstack_ip_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'openstack_ip_text')
-            .attr('placeholder', 'Server IP')
-            .addClass('form__field')
-            .appendTo(tab2)
-            .focus(function() {
-                that.openstack_selected_ip = openstack_ip_input.val();
-            })
-            .change(function() {
-                that.openstack_selected_ip = openstack_ip_input.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
+    var openstack_ip_input = $('<input/>')
+        .attr('name', 'openstack_ip_text')
+        .attr('type', 'text')
+        .attr("required", "required")
+        .attr('id', 'openstack_ip_text')
+        .attr('value', this.stateConfigMap['openstack_selected_ip'])
+        .attr('placeholder', 'Server IP')
+        .addClass('form__field')
+        .appendTo(tab2)
+        .keypress(function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if (keycode == keyboard.keycodes.enter) {
+                that.states.create.buttons.AddCluster.click();
+            }
+        });
 
 
     // Adds CA Token input to the openstack tab
@@ -768,51 +565,22 @@ K8sSelection.prototype.get_html_create_clusters = function() {
 
     $('<label for="openstack_catoken_text" id="openstack_catoken_text_label">CA Token (Base64)</label><br>').appendTo(tab2);
 
-    if(this.openstack_selected_catoken) {
-        var openstack_catoken_input = $('<input/>')
-            .attr('name', 'openstack_catoken_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'openstack_catoken_text')
-            .attr('value', this.openstack_selected_catoken)
-            .attr('placeholder', 'CA Token (Base64)')
-            .addClass('form__field')
-            .appendTo(tab2)
-            .focus(function() {
-                that.openstack_selected_catoken = openstack_selected_ip.val();
-            })
-            .change(function() {
-                that.openstack_selected_catoken = openstack_selected_ip.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
-    else {
-        var openstack_catoken_input = $('<input/>')
-            .attr('name', 'openstack_catoken_text')
-            .attr('type', 'text')
-            .attr("required", "required")
-            .attr('id', 'openstack_catoken_text')
-            .attr('placeholder', 'CA Token (Base64)')
-            .addClass('form__field')
-            .appendTo(tab2)
-            .focus(function() {
-                that.openstack_selected_catoken = openstack_catoken_input.val();
-            })
-            .change(function() {
-                that.openstack_selected_catoken = openstack_catoken_input.val();
-            })
-            .keypress(function (e) {
-                var keycode = (e.keyCode ? e.keyCode : e.which);
-                if (keycode == keyboard.keycodes.enter) {
-                    that.states.create.buttons.AddCluster.click();
-                }
-            });
-    }
+
+    var openstack_catoken_input = $('<input/>')
+        .attr('name', 'openstack_catoken_text')
+        .attr('type', 'text')
+        .attr("required", "required")
+        .attr('id', 'openstack_catoken_text')
+        .attr('value', this.stateConfigMap['openstack_selected_catoken'])
+        .attr('placeholder', 'CA Token (Base64)')
+        .addClass('form__field')
+        .appendTo(tab2)
+        .keypress(function (e) {
+            var keycode = (e.keyCode ? e.keyCode : e.which);
+            if (keycode == keyboard.keycodes.enter) {
+                that.states.create.buttons.AddCluster.click();
+            }
+        });
 };
 
 
@@ -826,38 +594,45 @@ K8sSelection.prototype.create_context = function() {
     var footer = this.modal.find('.modal-footer');
 
 
-    if(this.selected_tab == "local") {
-        this.local_selected_catoken = this.modal.find('input[name="catoken_text"]').val();
-        this.local_selected_clustername = this.modal.find('input[name="clustername_text"]').val();
-        this.local_selected_ip = this.modal.find('input[name="ip_text"]').val();
-        this.local_selected_token = this.modal.find('input[name="token_text"]').val();
+    if(this.selected_tab == "sa-token") {
+        this.stateConfigMap['local_selected_catoken'] = this.modal.find('input[name="catoken_text"]').val();
+        this.stateConfigMap['local_selected_clustername'] = this.modal.find('input[name="clustername_text"]').val();
+        this.stateConfigMap['local_selected_ip'] = this.modal.find('input[name="ip_text"]').val();
+        this.stateConfigMap['local_selected_token'] = this.modal.find('input[name="token_text"]').val();
     }
     else {
-        this.openstack_selected_clustername = this.modal.find('input[name="openstack_clustername_text"]').val();
-        this.openstack_selected_catoken = this.modal.find('input[name="openstack_catoken_text"]').val();
-        this.openstack_selected_ip = this.modal.find('input[name="openstack_ip_text"]').val();
+        this.stateConfigMap['openstack_selected_clustername'] = this.modal.find('input[name="openstack_clustername_text"]').val();
+        this.stateConfigMap['openstack_selected_catoken'] = this.modal.find('input[name="openstack_catoken_text"]').val();
+        this.stateConfigMap['openstack_selected_ip'] = this.modal.find('input[name="openstack_ip_text"]').val();
     }
 
     // Checks whether any input is empty before sending it to backend
-    if(this.selected_tab == "local") {
+    if(this.selected_tab == "sa-token") {
+        // Logging all the input from frontend just for debugging purposes.
+        console.log("Selected clustername: " + this.stateConfigMap['local_selected_clustername']);
+        console.log("Selected ip: " + this.stateConfigMap['local_selected_ip']);
+        console.log("Selected token: " + this.stateConfigMap['local_selected_token']);
+        console.log("Selected catoken: " + this.stateConfigMap['local_selected_catoken']);
+
         if(this.checkbox_status == "unchecked") {
-            if(!this.local_selected_clustername || !this.local_selected_ip || !this.local_selected_token || !this.local_selected_catoken) {
+            if(!this.stateConfigMap['local_selected_clustername'] || !this.stateConfigMap['local_selected_ip'] || !this.stateConfigMap['local_selected_token'] || !this.stateConfigMap['local_selected_catoken']) {
                 this.get_html_error("Please fill all the required fields.", this.states.create);
                 return;
             }
         }
         else {
-            if(!this.local_selected_clustername || !this.local_selected_ip || !this.local_selected_token) {
+            if(!this.stateConfigMap['local_selected_clustername'] || !this.stateConfigMap['local_selected_ip'] || !this.stateConfigMap['local_selected_token']) {
                 this.get_html_error("Please fill all the required fields.", this.states.create);
                 return;
             }
         }
     }
     else {
-        console.log("Openstack cluster name: " + this.openstack_selected_clustername);
-        console.log("Openstack ca token: " + this.openstack_selected_catoken);
-        console.log("Openstack ip: " + this.openstack_selected_ip);
-        if(!this.openstack_selected_catoken || !this.openstack_selected_clustername || !this.openstack_selected_ip) {
+        console.log("Openstack cluster name: " + this.stateConfigMap['openstack_selected_clustername']);
+        console.log("Openstack ca token: " + this.stateConfigMap['openstack_selected_catoken']);
+        console.log("Openstack ip: " + this.stateConfigMap['openstack_selected_ip']);
+
+        if(!this.stateConfigMap['openstack_selected_catoken'] || !this.stateConfigMap['openstack_selected_clustername'] || !this.stateConfigMap['openstack_selected_ip']) {
             this.get_html_error("Please fill all the required fields.", this.states.create);
             return;
         }
@@ -866,35 +641,26 @@ K8sSelection.prototype.create_context = function() {
     footer.find('#select-button').attr('disabled', true);
     header.find('.close').hide();
 
-    // Logging all the input from frontend just for debugging purposes.
-    console.log("Selected token: " + this.local_selected_token);
-    console.log("Selected catoken: " + this.local_selected_catoken);
-    console.log("Selected tab: " + this.selected_tab);
-    console.log("Insecure server: ", this.checkbox_status);
-    console.log("Selected openstack cluster: ", this.openstack_selected_clustername);
-    console.log("Selected openstack server ip: ", this.openstack_selected_ip);
-    console.log("Selected openstack ca token: ", this.openstack_selected_catoken);
-
     // Sending the data to the backend according to the tab selected currently
-    if(this.selected_tab == "local") {
+    if(this.selected_tab == "sa-token") {
         if(this.checkbox_status == "unchecked") {
             this.send({
                 'action': 'add-context-cluster',
-                'token': this.local_selected_token,
+                'token': this.stateConfigMap['local_selected_token'],
                 'tab': this.selected_tab,
-                'catoken': this.local_selected_catoken,
-                'cluster_name': this.local_selected_clustername,
-                'ip': this.local_selected_ip,
+                'catoken': this.stateConfigMap['local_selected_catoken'],
+                'cluster_name': this.stateConfigMap['local_selected_clustername'],
+                'ip': this.stateConfigMap['local_selected_ip'],
                 'insecure_server': "false"
             });
         }
         else {
             this.send({
                 'action': 'add-context-cluster',
-                'token': this.local_selected_token,
+                'token': this.stateConfigMap['local_selected_token'],
                 'tab': this.selected_tab,
-                'cluster_name': this.local_selected_clustername,
-                'ip': this.local_selected_ip,
+                'cluster_name': this.stateConfigMap['local_selected_clustername'],
+                'ip': this.stateConfigMap['local_selected_ip'],
                 'insecure_server': "true"
             });
         }
@@ -903,9 +669,9 @@ K8sSelection.prototype.create_context = function() {
         this.send({
             'action': 'add-context-cluster',
             'tab': this.selected_tab,
-            'catoken': this.openstack_selected_catoken,
-            'cluster_name': this.openstack_selected_clustername,
-            'ip': this.openstack_selected_ip
+            'catoken': this.stateConfigMap['openstack_selected_catoken'],
+            'cluster_name': this.stateConfigMap['openstack_selected_clustername'],
+            'ip': this.stateConfigMap['openstack_selected_ip']
         });
     }
 };
@@ -945,7 +711,7 @@ K8sSelection.prototype.get_html_create_users = function() {
         .addClass('form__field')
         .appendTo(user_create_div)
         .change(function() {
-            that.user_create_input = user_create_input.val();
+            that.stateConfigMap['user_create_input'] = user_create_input.val();
             user_email_create_input.val(user_create_input.val() + "@cern.ch");
             that.user_email_create_input = user_email_create_input.val();
         })
@@ -989,19 +755,19 @@ K8sSelection.prototype.get_html_create_users = function() {
 K8sSelection.prototype.create_users = function() {
 
 
-    this.user_create_input = this.modal.find('input[name="user_create_input"]').val();
-    this.user_email_create_input = this.modal.find('input[name="user_email_create_input"]').val();
+    this.stateConfigMap['user_create_input'] = this.modal.find('input[name="user_create_input"]').val();
+    this.stateConfigMap['user_email_create_input'] = this.modal.find('input[name="user_email_create_input"]').val();
 
     // Logging the inputs just for testing purposes
-    console.log("Username: " + this.user_create_input);
-    console.log("Email: " + this.user_email_create_input);
-    console.log("Selected context: " + this.user_create_context_name);
+    console.log("Username: " + this.stateConfigMap['user_create_input']);
+    console.log("Email: " + this.stateConfigMap['user_email_create_input']);
+    console.log("Selected context: " + this.stateConfigMap['user_create_context_name']);
 
 
     // Check whether the inputs are not empty.
     // Note: I have not validated the email field right now because it is going to be removed, right?
-    this.user_email_id = this.user_email_create_input;
-    if(!this.user_create_input || !this.user_email_create_input) {
+    this.stateConfigMap['user_email_id'] = this.stateConfigMap['user_email_create_input'];
+    if(!this.stateConfigMap['user_create_input'] || !this.stateConfigMap['user_email_create_input']) {
         this.get_html_error("Please fill all the required fields.", this.states.create_users);
         return;
     }
@@ -1010,9 +776,9 @@ K8sSelection.prototype.create_users = function() {
     this.switch_state(this.states.loading);
     this.send({
         'action': 'create-user',
-        'username': this.user_create_input,
-        'email': this.user_email_create_input,
-        'context': this.user_create_context_name
+        'username': this.stateConfigMap['user_create_input'],
+        'email': this.stateConfigMap['user_email_create_input'],
+        'context': this.stateConfigMap['user_create_context_name']
     });
 };
 
@@ -1029,9 +795,9 @@ K8sSelection.prototype.get_cluster_detials_view_html = function() {
     .appendTo(header)
     .on("click", $.proxy(this.switch_state, this, this.states.create_users));
 
-    $('<h4 class="modal-title">&nbsp;&nbsp;<span>Connection details for cluster: ' + this.user_create_context_name + '</span></h4>').appendTo(header);
+    $('<h4 class="modal-title">&nbsp;&nbsp;<span>Connection details for cluster: ' + this.stateConfigMap['user_create_context_name'] + '</span></h4>').appendTo(header);
 
-    $('<h4 id="detail_div">Please send the connection details via email to: ' + this.user_email_id + '</h4><br>').appendTo(html);
+    $('<h4 id="detail_div">Please send the connection details via email to: ' + this.stateConfigMap['user_email_id'] + '</h4><br>').appendTo(html);
 
     $('<div style="display: flex;"><h4 id="cluster_name">K8s Cluster Name:</h4>&nbsp;<p style="font-size: 15px; margin-top: 5px;">' + this.cluster_name_view + '</p><br></div>').appendTo(html);
 
@@ -1163,17 +929,15 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
     else if(msg.content.data.msgtype == 'added-context-successfully') {
         // The message received when cluster and context are added successfully
 
-        this.local_selected_token = undefined;
-        this.local_selected_catoken = undefined;
+        this.stateConfigMap['local_selected_token'] = undefined;
+        this.stateConfigMap['local_selected_catoken'] = undefined;
         this.selected_tab = undefined;
         this.checkbox_status = undefined;
-        this.insecure_server = undefined;
-        this.local_selected_clustername = undefined;
-        this.local_selected_ip = undefined;
-        this.openstack_selected_catoken = undefined;
-        this.openstack_selected_clustername = undefined;
-        this.openstack_selected_ip = undefined;
-        this.selected_tab = undefined;
+        this.stateConfigMap['local_selected_clustername'] = undefined;
+        this.stateConfigMap['local_selected_ip'] = undefined;
+        this.stateConfigMap['openstack_selected_catoken'] = undefined;
+        this.stateConfigMap['openstack_selected_clustername'] = undefined;
+        this.stateConfigMap['openstack_selected_ip'] = undefined;
 
         this.hide_close = false;
         this.refresh_modal();
@@ -1248,7 +1012,7 @@ K8sSelection.prototype.on_comm_msg = function (msg) {
     }
     else if(msg.content.data.msgtype == 'added-user-successfully') {
         // Message recieved when the user is added to a cluster successfully
-        this.user_create_input = undefined;
+        this.stateConfigMap['user_create_input'] = undefined;
         this.user_email_create_input = undefined;
         this.cluster_name_view = msg.content.data.cluster_name;
         this.server_ip_view = msg.content.data.server_ip;

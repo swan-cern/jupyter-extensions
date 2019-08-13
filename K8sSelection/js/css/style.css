@@ -265,24 +265,19 @@ header {
 		-webkit-transition: width .2s ease;
 }
 
-#tab1-tab.active ~ span.yellow-bar {
+#sa-token.active ~ span.yellow-bar {
 		left: 0;
 		width: 90px;
 }
 
-#tab2-tab.active ~ span.yellow-bar {
+#openstack.active ~ span.yellow-bar {
 		left:95px;
 		width: 130px;
 }
 
-#tab3-tab.active ~ span.yellow-bar {
+#gcloud.active ~ span.yellow-bar {
 		left: 230px;
 		width: 105px;
-}
-
-#tab4-tab.active ~ span.yellow-bar {
-		left:340px;
-		width: 80px;
 }
 
 .back-button {
