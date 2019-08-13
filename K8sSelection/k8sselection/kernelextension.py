@@ -36,12 +36,11 @@ class K8sSelection:
         """Send a message to the frontend"""
         self.comm.send(msg)
 
-    def get_kerberos_auth(self):
-        """ Check kerberos authentication for openstack commands """
-        if subprocess.call(['klist', '-s']) != 0:
-            return True
+    def get_auth_type(selfself, username):
+        if username.split('-')[0] == 'openstack':
+            return 'openstack'
         else:
-            return False
+            return 'local'
 
     def handle_comm_message(self, msg):
         """
@@ -59,22 +58,24 @@ class K8sSelection:
             # This action handles the requests from the frontend to change the current context in KUBECONFIG file
 
             context = msg['content']['data']['context']
-
+            tab = msg['content']['data']['tab']
             # Logging just for testing purposes
             self.log.info("Changing current context to: ", context)
 
             try:
-                # Currently unsetting the OS_TOKEN initially everytime while executing the token issue command because
-                # otherwise the command does not work
-                os.environ['OS_TOKEN'] = ''
-                my_env = os.environ.copy()
-                my_env["PYTHONPATH"] = "/usr/local/lib/python3.6/site-packages:" + my_env["PYTHONPATH"]
-                p = subprocess.Popen(['openstack token issue -c id -f value'], stdout=subprocess.PIPE, env=my_env,
-                                     shell=True)
-                out, err = p.communicate()
-                out = out.decode('utf-8').rstrip('\n')
-                self.log.info("Generated OS_TOKEN: ", out)
-                os.environ['OS_TOKEN'] = out
+
+                if tab == 'openstack':
+                    # Currently unsetting the OS_TOKEN initially everytime while executing the token issue command because
+                    # otherwise the command does not work
+                    os.environ['OS_TOKEN'] = ''
+                    my_env = os.environ.copy()
+                    my_env["PYTHONPATH"] = "/usr/local/lib/python3.6/site-packages:" + my_env["PYTHONPATH"]
+                    p = subprocess.Popen(['openstack token issue -c id -f value'], stdout=subprocess.PIPE, env=my_env,
+                                         shell=True)
+                    out, err = p.communicate()
+                    out = out.decode('utf-8').rstrip('\n')
+                    self.log.info("Generated OS_TOKEN: ", out)
+                    os.environ['OS_TOKEN'] = out
 
                 # Opening the YAML file using the yaml library
                 with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
@@ -166,7 +167,7 @@ class K8sSelection:
                 insecure_server = msg['content']['data']['insecure_server']
                 ip = msg['content']['data']['ip']
                 namespace = "spark-" + str(os.getenv('USER'))
-                svcaccount = str(os.getenv('USER')) + "-" + cluster_name
+                svcaccount = 'local-' + str(os.getenv('USER')) + "-" + cluster_name
                 context_name = cluster_name
 
                 # Checking whether user wants an insecure cluster or not
@@ -305,6 +306,28 @@ class K8sSelection:
                     # Handle general purpose exceptions
                     error = 'Cannot use these settings. Please contact the cluster administrator'
                     self.log.info(str(e))
+
+                    with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+                        load = yaml.safe_load(stream)
+
+                    for i in range(len(load['contexts'])):
+                        if load['contexts'][i]['name'] == context_name:
+                            load['contexts'].pop(i)
+                            break
+
+                    for i in range(len(load['clusters'])):
+                        if load['clusters'][i]['name'] == cluster_name:
+                            load['clusters'].pop(i)
+                            break
+
+                    for i in range(len(load['users'])):
+                        if load['users'][i]['name'] == svcaccount:
+                            load['users'].pop(i)
+                            break
+
+                    with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
+                        yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
+
                     self.send({
                         'msgtype': 'added-context-unsuccessfully',
                         'error': error,
@@ -318,7 +341,7 @@ class K8sSelection:
                 ip = msg['content']['data']['ip']
                 catoken = msg['content']['data']['catoken']
                 namespace = "spark-" + str(os.getenv('USER'))
-                svcaccount = str(os.getenv('USER'))
+                svcaccount = 'openstack-' + str(os.getenv('USER'))
                 context_name = cluster_name
 
                 try:
@@ -433,6 +456,28 @@ class K8sSelection:
                     # Handle general purpose exceptions.
                     error = 'Cannot use these settings. Please contact the cluster administrator'
                     self.log.info(str(e))
+
+                    with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+                        load = yaml.safe_load(stream)
+
+                    for i in range(len(load['contexts'])):
+                        if load['contexts'][i]['name'] == context_name:
+                            load['contexts'].pop(i)
+                            break
+
+                    for i in range(len(load['clusters'])):
+                        if load['clusters'][i]['name'] == cluster_name:
+                            load['clusters'].pop(i)
+                            break
+
+                    for i in range(len(load['users'])):
+                        if load['users'][i]['name'] == svcaccount:
+                            load['users'].pop(i)
+                            break
+
+                    with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
+                        yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
+
                     self.send({
                         'msgtype': 'added-context-unsuccessfully',
                         'error': error,
@@ -548,7 +593,7 @@ class K8sSelection:
             selected_context = msg['content']['data']['context']
 
             # Declaring the naming conventions of the resources to be created or checked
-            namespace = 'spark-' + username
+            namespace = 'swan-' + username
             username = username
             rolebinding_name = 'edit-cluster-' + namespace
 
@@ -691,6 +736,32 @@ class K8sSelection:
                     'msgtype': 'auth-unsuccessfull',
                     'error': error
                 })
+        elif action == 'check-auth-required':
+            context = msg['content']['data']['context']
+
+            try:
+                with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+                    load = yaml.safe_load(stream)
+
+                namespace = 'default'
+                for i in load['contexts']:
+                    if i['name'] == context:
+                        if 'namespace' in i['context'].keys():
+                            namespace = i['context']['namespace']
+
+
+                config.load_kube_config(context=context)
+                api_instance = client.CoreV1Api()
+                api_instance.list_namespaced_pod(namespace=namespace, timeout_seconds=2)
+
+                self.send({
+                    'msgtype': 'auth-not-required'
+                })
+            except Exception as e:
+                self.log.info(str(e))
+                self.send({
+                    'msgtype': 'auth-required'
+                })
 
     def send_sendgrid_email(self, dotenv_path, email, selected_cluster, ca_cert, server_ip):
         """
@@ -799,6 +870,18 @@ class K8sSelection:
         def _recv(msg):
             self.handle_comm_message(msg)
 
+        try:
+            with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+                load = yaml.safe_load(stream)
+
+            if load['current-context'] != '':
+                laod['current-context'] = ''
+
+            with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
+                yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
+        except Exception as e:
+            self.log.info(str(e))
+
         self.cluster_list()
 
     def cluster_list(self):
@@ -808,6 +891,7 @@ class K8sSelection:
 
         self.log.info("Getting clusters and contexts from KUBECONFIG")
         try:
+
             if os.path.isdir(os.getenv('HOME') + '/.kube'):
                 if not os.path.isfile(os.getenv('HOME') + '/.kube/config'):
                     load = {}
@@ -845,6 +929,15 @@ class K8sSelection:
                 if contexts[i]['name'] == load['current-context']:
                     active_context = contexts[i]
                     break
+
+            # Getting the type of authentication used by contexts
+            cluster_auth_type = []
+            current_cluster_auth_type = ''
+            for i in range(len(contexts)):
+                if load['current-context'] != '' and contexts[i]['name'] == load['current-context']:
+                    current_cluster_auth_type = self.get_auth_type(contexts[i]['context']['user'])
+                cluster_auth_type.append(self.get_auth_type(contexts[i]['context']['user']))
+
             contexts = [context['name'] for context in contexts]
             clusters = [cluster['name'] for cluster in load['clusters']]
 
@@ -857,10 +950,6 @@ class K8sSelection:
                 if i['name'] == load['current-context']:
                     current_cluster = i['context']['cluster']
 
-            kerberos_auth = False
-            self.log.info("Calling klist")
-            if self.get_kerberos_auth():
-                kerberos_auth = True
 
             self.send({
                 'msgtype': 'context-select',
@@ -868,7 +957,8 @@ class K8sSelection:
                 'active_context': current_context,
                 'clusters': clusters,
                 'current_cluster': current_cluster,
-                'kerberos_auth': kerberos_auth
+                'cluster_auth_type': cluster_auth_type,
+                'current_cluster_auth_type': current_cluster_auth_type
             })
         except Exception as e:
             error = "Error getting cluster list. The Kubeconfig file is probably corrupted. You can delete it using 'rm $HOME/.kube/config' on the terminal."
