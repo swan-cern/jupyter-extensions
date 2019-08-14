@@ -70,6 +70,8 @@ function K8sSelection() {
     this.is_admin = false;
     this.initial_select = true;
     this.stateConfigMap = {};
+    this.openstack_tab = 'openstack';
+    this.token_tab = 'sa-token';
 
     // Starts the communication with backend when the kernel is connected
     events.on('kernel_connected.Kernel', $.proxy(this.start_comm, this));
@@ -187,7 +189,7 @@ K8sSelection.prototype.get_html_select_cluster = function() {
                 $('<div class="cluster-list-div"><div class="not-connected-symbol"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text">' + current_context + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + current_context + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + current_context + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + current_context + '">Select</button><hr></div>').appendTo(list_div);
             }
             else {
-                if(this.is_admin == true && this.current_cluster_auth_type == 'openstack') {
+                if(this.is_admin == true && this.current_cluster_auth_type == this.openstack_tab) {
                     $('<div class="cluster-list-div"><div class="connect-symbol"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text">' + current_context + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + current_context + '">X</button><button class="list-item-share pure-material-button-text" id="share.' + current_context + '"><i class="fa fa-share-alt"></i></button><button disabled class="list-item-select pure-material-button-text" id="select.' + current_context + '">Select</button><hr></div>').appendTo(list_div);
                 }
                 else {
@@ -594,20 +596,20 @@ K8sSelection.prototype.create_context = function() {
     var footer = this.modal.find('.modal-footer');
 
 
-    if(this.selected_tab == "sa-token") {
+    if(this.selected_tab == this.token_tab) {
         this.stateConfigMap['local_selected_catoken'] = this.modal.find('input[name="catoken_text"]').val();
         this.stateConfigMap['local_selected_clustername'] = this.modal.find('input[name="clustername_text"]').val();
         this.stateConfigMap['local_selected_ip'] = this.modal.find('input[name="ip_text"]').val();
         this.stateConfigMap['local_selected_token'] = this.modal.find('input[name="token_text"]').val();
     }
-    else {
+    else if(this.selected_tab == this.openstack_tab) {
         this.stateConfigMap['openstack_selected_clustername'] = this.modal.find('input[name="openstack_clustername_text"]').val();
         this.stateConfigMap['openstack_selected_catoken'] = this.modal.find('input[name="openstack_catoken_text"]').val();
         this.stateConfigMap['openstack_selected_ip'] = this.modal.find('input[name="openstack_ip_text"]').val();
     }
 
     // Checks whether any input is empty before sending it to backend
-    if(this.selected_tab == "sa-token") {
+    if(this.selected_tab == this.token_tab) {
         // Logging all the input from frontend just for debugging purposes.
         console.log("Selected clustername: " + this.stateConfigMap['local_selected_clustername']);
         console.log("Selected ip: " + this.stateConfigMap['local_selected_ip']);
@@ -627,7 +629,7 @@ K8sSelection.prototype.create_context = function() {
             }
         }
     }
-    else {
+    else if(this.selected_tab == this.openstack_tab) {
         console.log("Openstack cluster name: " + this.stateConfigMap['openstack_selected_clustername']);
         console.log("Openstack ca token: " + this.stateConfigMap['openstack_selected_catoken']);
         console.log("Openstack ip: " + this.stateConfigMap['openstack_selected_ip']);
@@ -642,7 +644,7 @@ K8sSelection.prototype.create_context = function() {
     header.find('.close').hide();
 
     // Sending the data to the backend according to the tab selected currently
-    if(this.selected_tab == "sa-token") {
+    if(this.selected_tab == this.token_tab) {
         if(this.checkbox_status == "unchecked") {
             this.send({
                 'action': 'add-context-cluster',
@@ -665,7 +667,7 @@ K8sSelection.prototype.create_context = function() {
             });
         }
     }
-    else {
+    else if (this.selected_tab == this.openstack_tab){
         this.send({
             'action': 'add-context-cluster',
             'tab': this.selected_tab,
