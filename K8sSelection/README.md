@@ -63,7 +63,6 @@
     helm install \
         --wait \
         --kubeconfig "${KUBECONFIG}" \
-        --set namespace=spark-$USER \
         --set cvmfs.enable=true \
         --set user.name=$USER \
         --set user.admin=true \
@@ -75,7 +74,6 @@
     helm install \
         --wait \
         --kubeconfig "${KUBECONFIG}" \
-        --set namespace=spark-$USER \
         --set cvmfs.enable=true \
         --set user.name=$USER \
         --set user.admin=false \
