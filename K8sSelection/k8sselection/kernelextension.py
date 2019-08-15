@@ -485,20 +485,6 @@ class K8sSelection:
                         'error': error,
                         'tab': self.openstack
                     })
-        elif action == "show-error":
-            # This is a very basic action which just sends the below error to the user.
-            error = "Please fill all the required fields."
-            state = msg['content']['data']['state']
-            if state == 'create':
-                self.send({
-                    'msgtype': 'added-context-unsuccessfully',
-                    'error': error
-                })
-            elif state == 'create_users':
-                self.send({
-                    'msgtype': 'added-user-unsuccessfully',
-                    'error': error
-                })
         elif action == "delete-current-context":
             self.log.info("Deleting context from KUBECONFIG")
             # This action deletes the context and cluster from the KUBECONFIG file
@@ -509,6 +495,12 @@ class K8sSelection:
                 with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
                     load = yaml.safe_load(stream)
 
+                # Get the user to delete
+                for i in range(len(load['contexts'])):
+                    if load['contexts'][i]['name'] == context:
+                        user = load['contexts'][i]['context']['user']
+                        break
+
                 # Delete the given cluster and context
                 for i in range(len(load['contexts'])):
                     if load['contexts'][i]['name'] == context:
@@ -518,6 +510,12 @@ class K8sSelection:
                 for i in range(len(load['clusters'])):
                     if load['clusters'][i]['name'] == context:
                         load['clusters'].pop(i)
+                        break
+
+                #Delete the user
+                for i in range(len(load['users'])):
+                    if load['users'][i]['name'] == user:
+                        load['users'].pop(i)
                         break
 
                 # If the current context is deleted, also change the current-context in the kubeconfig file
