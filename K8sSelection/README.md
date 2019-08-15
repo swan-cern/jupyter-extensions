@@ -65,8 +65,9 @@
         --kubeconfig "${KUBECONFIG}" \
         --set namespace=spark-$USER \
         --set cvmfs.enable=true \
-        --set user.admin=true
-        --name "spark-admin-USER" https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz
+        --set user.name=$USER \
+        --set user.admin=true \
+        --name "spark-admin-$USER" https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz
     ```
   
 * Deploy User. Namespace should be of the form `spark-$USER`
@@ -76,8 +77,9 @@
         --kubeconfig "${KUBECONFIG}" \
         --set namespace=spark-$USER \
         --set cvmfs.enable=true \
-        --set user.admin=false
-        --name "spark-user-USER" https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz
+        --set user.name=$USER \
+        --set user.admin=false \
+        --name "spark-user-$USER" https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz
     ```
 
 * Create clusterolebinding. Clusterolebinding should be of the form `admin-cluster-spark-$USER`
@@ -118,7 +120,7 @@ ports = os.getenv("SPARK_PORTS").split(",")
 # change to SPARK_MASTER_IP
 swan_spark_conf.set("spark.master", "k8s://" + os.getenv("K8S_MASTER_IP"))
 swan_spark_conf.set("spark.kubernetes.container.image", "gitlab-registry.cern.ch/db/spark-service/docker-registry/swan:v1")
-swan_spark_conf.set("spark.kubernetes.namespace", "swan-"+os.getenv("USER"))
+swan_spark_conf.set("spark.kubernetes.namespace", "spark-"+os.getenv("USER"))
 swan_spark_conf.set("spark.driver.host", os.getenv("SERVER_HOSTNAME"))
 swan_spark_conf.set("spark.executor.instances", 1)
 swan_spark_conf.set("spark.executor.core", 1)

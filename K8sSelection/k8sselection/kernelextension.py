@@ -137,7 +137,7 @@ class K8sSelection:
                         'context': context
                     })
                 else:
-                    self.log.info("Failed to kinit or generate os_token")
+                    self.log.info("Context not reachable!")
                     self.send({
                         'msgtype': 'changed-current-context-unsuccessfully',
                         'is_reachable': is_reachable,
@@ -499,45 +499,6 @@ class K8sSelection:
                     'msgtype': 'added-user-unsuccessfully',
                     'error': error
                 })
-        elif action == "get-connection-detail":
-            # This action checks whether the currently set context can request the resources from the cluster
-            error = ''
-            namespace = 'default'
-
-            try:
-                with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
-                    load = yaml.safe_load(stream)
-
-                contexts = load['contexts']
-                for i in contexts:
-                    if i['name'] == load['current-context']:
-                        if 'namespace' in i['context'].keys():
-                            namespace = i['context']['namespace']
-                            break
-
-                # Calling kubernetes API to list pods
-                config.load_kube_config()
-                api_instance = client.CoreV1Api()
-                api_instance.list_namespaced_pod(namespace=namespace, timeout_seconds=2)
-
-                self.send({
-                    'msgtype': 'connection-details',
-                    'context': load['current-context']
-                })
-            except ApiException as e:
-                # If it cannot list pods then send the error to user
-                error = 'Cannot list pods in your namespace'
-                self.log.info(str(e))
-                self.send({
-                    'msgtype': 'connection-details-error',
-                })
-            except Exception as e:
-                # Handle general exception
-                error = 'Cannot load KUBECONFIG'
-                self.log.info(str(e))
-                self.send({
-                    'msgtype': 'connection-details-error',
-                })
         elif action == "delete-current-context":
             self.log.info("Deleting context from KUBECONFIG")
             # This action deletes the context and cluster from the KUBECONFIG file
@@ -560,8 +521,10 @@ class K8sSelection:
                         break
 
                 # If the current context is deleted, also change the current-context in the kubeconfig file
+                current_context_deleted = False
                 if context == load['current-context']:
                     load['current-context'] = ''
+                    current_context_deleted = True
 
                 current_context = load['current-context']
 
@@ -572,7 +535,8 @@ class K8sSelection:
                 self.log.info("Successfully deleted context")
                 self.send({
                     'msgtype': 'deleted-context-successfully',
-                    'current_context': current_context
+                    'current_context': current_context,
+                    'current_context_deleted': current_context_deleted
                 })
             except Exception as e:
                 # Handle general exception
@@ -607,10 +571,10 @@ class K8sSelection:
 
                 # Deploy helm chart for user
                 my_env = os.environ.copy()
-                command = 'helm install --name "spark-user-' + os.environ['USER'] + '" --set user.name="' + os.environ[
-                    'USER'] + '" --set cvmfs.enable=true --set user.admin=false  https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz'
-
-                p = subprocess.Popen([command], stdout=subprocess.PIPE, env=my_env, shell=True)
+                command = ["helm", "install", "--name", "spark-user-" + os.environ['USER'], "--set",
+                           "user.name=" + os.environ['USER'], "--set", "cvmfs.enable=true", "--set", "user.admin=false",
+                           "https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz"]
+                p = subprocess.Popen(command, stdout=subprocess.PIPE, env=my_env)
                 out, err = p.communicate()
 
                 if out.decode('utf-8') != '':
@@ -652,19 +616,7 @@ class K8sSelection:
                                      universal_newlines=True)
                 p.communicate(input=auth_kinit)
 
-                # Currently unsetting the OS_TOKEN initially everytime while executing the token issue command because
-                # otherwise the command does not work
-                os.environ['OS_TOKEN'] = ''
-                my_env = os.environ.copy()
-                my_env["PYTHONPATH"] = "/usr/local/lib/python3.6/site-packages:" + my_env["PYTHONPATH"]
-                p = subprocess.Popen(['openstack token issue -c id -f value'], stdout=subprocess.PIPE, env=my_env,
-                                     shell=True)
-                out, err = p.communicate()
-                out = out.decode('utf-8').rstrip('\n')
-                self.log.info("Generated OS_TOKEN: ", out)
-                os.environ['OS_TOKEN'] = out
-
-                if p.wait() == 0 and out != '':
+                if p.wait() == 0:
                     self.log.info("Got kerberos ticket and os_token successfully!")
                     self.send({
                         'msgtype': 'auth-successfull',
