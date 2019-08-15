@@ -58,6 +58,17 @@
         --set cvmfs.enable=true https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/master/cern-spark-services-1.0.0.tgz
     ```
 
+* Deploy Admin. Namespace should be of the form `spark-$USER`
+    ```bash
+    helm install \
+        --wait \
+        --kubeconfig "${KUBECONFIG}" \
+        --set namespace=spark-$USER \
+        --set cvmfs.enable=true \
+        --set user.admin=true
+        --name "spark-admin-USER" https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz
+    ```
+  
 * Deploy User. Namespace should be of the form `spark-$USER`
     ```bash
     helm install \
@@ -65,7 +76,8 @@
         --kubeconfig "${KUBECONFIG}" \
         --set namespace=spark-$USER \
         --set cvmfs.enable=true \
-        --name "spark-user-USER" https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/master/cern-spark-user-1.0.0.tgz
+        --set user.admin=false
+        --name "spark-user-USER" https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz
     ```
 
 * Create clusterolebinding. Clusterolebinding should be of the form `admin-cluster-spark-$USER`

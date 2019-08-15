@@ -605,87 +605,36 @@ class K8sSelection:
                         selected_cluster = i['context']['cluster']
                         break
 
-                # Declare all the clients to call kubernetes API
-                config.load_kube_config()
-                api_instance = client.CoreV1Api()
-                rbac_client = client.RbacAuthorizationV1Api()
-                flag = 0
-                flag1 = 0
+                # Deploy helm chart for user
+                my_env = os.environ.copy()
+                command = 'helm install --name "spark-user-' + os.environ['USER'] + '" --set user.name="' + os.environ[
+                    'USER'] + '" --set cvmfs.enable=true --set user.admin=false  https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz'
 
-                # Check whether the given namespace already exists
-                api_response = api_instance.list_namespace()
-                for i in api_response.items:
-                    if i.metadata.name == namespace:
-                        flag = 1
-                        break
+                p = subprocess.Popen([command], stdout=subprocess.PIPE, env=my_env, shell=True)
+                out, err = p.communicate()
 
-                if flag == 1:
-                    # If the namespace already exists then check whether the given rolebinding
-                    # exists.
-                    api_response = rbac_client.list_namespaced_role_binding(namespace=namespace)
-                    for i in api_response.items:
-                        if i.metadata.name == rolebinding_name:
-                            # error = 'A user \'{}\' already exists for this cluster'.format(username)
-                            flag1 = 1
+                if out.decode('utf-8') != '':
+                    # Get the server ip of the cluster to be sent in the email to the user.
+                    for i in load['clusters']:
+                        if i['name'] == selected_cluster:
+                            server_ip = i['cluster']['server']
+                            ca_cert = i['cluster']['certificate-authority-data']
                             break
 
-                    # If the rolebinding does not exist then create it with clusterrole as 'edit'
-                    if flag1 == 0:
-                        rolebinding_obj = client.V1ObjectMeta(name=rolebinding_name, namespace=namespace,
-                                                              cluster_name=selected_cluster)
-                        role_ref = client.V1RoleRef(api_group='rbac.authorization.k8s.io', kind='ClusterRole',
-                                                    name='edit')
-                        subject = client.V1Subject(api_group='rbac.authorization.k8s.io', kind='User', name=username)
-                        subject_list = [subject]
-                        rolebinding_body = client.V1RoleBinding(metadata=rolebinding_obj, role_ref=role_ref,
-                                                                subjects=subject_list)
-                        rbac_client.create_namespaced_role_binding(namespace, rolebinding_body)
+
+                    self.log.info("Successfully created user")
+                    self.send({
+                        'msgtype': 'added-user-successfully',
+                        'ca_cert': ca_cert,
+                        'server_ip': server_ip,
+                        'cluster_name': selected_cluster
+                    })
                 else:
-                    # If the namespace does not exist then create the namespace as well as the rolebinding
-                    obj = client.V1ObjectMeta(name=namespace, cluster_name=selected_cluster)
-                    body = client.V1Namespace(metadata=obj)
-                    api_instance.create_namespace(body)
-
-                    rolebinding_obj = client.V1ObjectMeta(name=rolebinding_name, namespace=namespace,
-                                                          cluster_name=selected_cluster)
-                    role_ref = client.V1RoleRef(api_group='rbac.authorization.k8s.io', kind='ClusterRole', name='edit')
-                    subject = client.V1Subject(api_group='rbac.authorization.k8s.io', kind='User', name=username)
-                    subject_list = [subject]
-                    rolebinding_body = client.V1RoleBinding(metadata=rolebinding_obj, role_ref=role_ref,
-                                                            subjects=subject_list)
-
-                    rbac_client.create_namespaced_role_binding(namespace, rolebinding_body)
-
-                # Get the server ip of the cluster to be sent in the email to the user.
-                for i in load['clusters']:
-                    if i['name'] == selected_cluster:
-                        server_ip = i['cluster']['server']
-                        ca_cert = i['cluster']['certificate-authority-data']
-                        break
-
-                # Load .env file which contains SENDGRID API_KEY
-                dotenv_path = join(dirname(__file__), 'sendgrid.env')
-                self.log.info(".env PATH: ", dotenv_path)
-                # First check for ca_cert and server_ip
-                # if ca_cert and server_ip:
-                #     if os.path.isfile(dotenv_path):
-                #         self.send_sendgrid_email(dotenv_path, email, selected_cluster, ca_cert, server_ip)
-                #     else:
-                #         self.send_email(email, selected_cluster, ca_cert, server_ip)
-                # else:
-                #     error = 'Cannot get CA-Cert or Server IP of the cluster'
-                #     self.send({
-                #         'msgtype': 'added-user-unsuccessfully',
-                #         'error': error
-                #     })
-
-                self.log.info("Successfully created user")
-                self.send({
-                    'msgtype': 'added-user-successfully',
-                    'ca_cert': ca_cert,
-                    'server_ip': server_ip,
-                    'cluster_name': selected_cluster
-                })
+                    error = 'Cannot create user due to some error.'
+                    self.send({
+                        'msgtype': 'added-user-unsuccessfully',
+                        'error': error
+                    })
             except Exception as e:
                 # Handle user creation exceptions
                 error = 'Cannot create user due to some error.'
