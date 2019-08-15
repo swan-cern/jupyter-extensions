@@ -1084,6 +1084,14 @@ K8sSelection.prototype.start_comm = function () {
         this.comm.close()
     }
 
+    if(this.toolbar_button) {
+        this.toolbar_button.html('<div id="extension_icon"></div>');
+        this.toolbar_button.find("#extension_icon").css('background-image', 'url("' + requirejs.toUrl('./' + kubernetes_icon) + '")');
+        this.toolbar_button.find("#extension_icon").css('width', '16px');
+        this.toolbar_button.find("#extension_icon").css('height', '16px');
+        this.toolbar_button.find("#extension_icon").css('margin-left', '5px');
+    }
+
     console.log('K8sSelection: Starting Comm with kernel');
 
     var that = this;
