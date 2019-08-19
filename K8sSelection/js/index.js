@@ -805,7 +805,7 @@ K8sSelection.prototype.get_cluster_detials_view_html = function() {
 
     $('<div style="display: flex;"><h4 id="server_ip">K8s master:</h4>&nbsp;<p style="font-size: 15px; margin-top: 5px;">' + this.server_ip_view + '</p><br></div>').appendTo(html);
 
-    $('<div style="display: flex;"><div class="content"><h4 id="ca_token" style="word-wrap: break-word;">CA Token:</h4>&nbsp;<p style="font-size: 15px; margin-top: 5px;">' + this.ca_cert_view + '</p><br></div>').appendTo(html);
+    $('<div style="display: flex;"><div class="content"><h4 id="ca_token">CA Token:</h4><p style="font-size: 15px; margin-top: 5px; word-wrap: break-word;">' + this.ca_cert_view + '</p><br></div>').appendTo(html);
 };
 
 

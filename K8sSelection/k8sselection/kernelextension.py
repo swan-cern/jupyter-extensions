@@ -73,8 +73,8 @@ class K8sSelection:
                     os.environ['OS_TOKEN'] = ''
                     my_env = os.environ.copy()
                     my_env["PYTHONPATH"] = "/usr/local/lib/python3.6/site-packages:" + my_env["PYTHONPATH"]
-                    p = subprocess.Popen(['openstack token issue -c id -f value'], stdout=subprocess.PIPE, env=my_env,
-                                         shell=True)
+                    command = ["openstack", "token", "issue", "-c", "id", "-f", "value"]
+                    p = subprocess.Popen(command, stdout=subprocess.PIPE, env=my_env)
                     out, err = p.communicate()
                     out = out.decode('utf-8').rstrip('\n')
                     self.log.info("Generated OS_TOKEN: ", out)
@@ -567,14 +567,24 @@ class K8sSelection:
                         selected_cluster = i['context']['cluster']
                         break
 
-                # Deploy helm chart for user
-                my_env = os.environ.copy()
-                command = ["helm", "install", "--name", "spark-user-" + username, "--set",
-                           "user.name=" + username, "--set", "cvmfs.enable=true", "--set", "user.admin=false",
-                           "https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz"]
+                #Initialize helm
+                command = ["helm", "init", "--client-only"]
                 p = subprocess.Popen(command, stdout=subprocess.PIPE, env=my_env)
                 out, err = p.communicate()
 
+
+                # If helm is initialized successfully then deploy te helm chart
+                if out.decode('utf-8') != '':
+                    # Deploy helm chart for user
+                    my_env = os.environ.copy()
+                    command = ["helm", "install", "--name", "spark-user-" + username, "--set",
+                               "user.name=" + username, "--set", "cvmfs.enable=true", "--set", "user.admin=false",
+                               "https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz"]
+                    p = subprocess.Popen(command, stdout=subprocess.PIPE, env=my_env)
+                    out, err = p.communicate()
+
+
+                # If helm chart is deployed successfully, send message to frontend
                 if out.decode('utf-8') != '':
                     # Get the server ip of the cluster to be sent in the email to the user.
                     for i in load['clusters']:
