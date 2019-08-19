@@ -569,7 +569,7 @@ class K8sSelection:
 
                 #Initialize helm
                 command = ["helm", "init", "--client-only"]
-                p = subprocess.Popen(command, stdout=subprocess.PIPE, env=my_env)
+                p = subprocess.Popen(command, stdout=subprocess.PIPE)
                 out, err = p.communicate()
 
 
