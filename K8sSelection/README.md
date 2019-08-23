@@ -68,26 +68,22 @@
         --set user.admin=true \
         --name "spark-admin-$USER" https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz
     ```
+
+* Config to add to k8sselection (name, server, certificate-authority-data)
+    ```bash
+    kubectl config view --flatten
+    ```
+
+## Deploy user (done by extension while sharing access with the user)
   
-* Deploy User. Namespace should be of the form `spark-$USER`
+* Deploy User. Namespace should be of the form `spark-$USER` 
     ```bash
     helm install \
         --wait \
         --kubeconfig "${KUBECONFIG}" \
         --set cvmfs.enable=true \
         --set user.name=$USER \
-        --set user.admin=false \
         --name "spark-user-$USER" https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz
-    ```
-
-* Create clusterolebinding. Clusterolebinding should be of the form `admin-cluster-spark-$USER`
-    ```bash
-    kubectl create clusterrolebinding cluster-admin-$USER --clusterrole=cluster-admin --user=$USER
-    ```
-
-* Config to add to k8sselection (name, server, certificate-authority-data)
-    ```bash
-    kubectl config view --flatten
     ```
 
 ## Instructions for User to use the extension
