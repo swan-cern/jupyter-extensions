@@ -1,40 +1,42 @@
-<!-- <div class="container-tabs"> -->
-    <header>
-            <div id="material-tabs">
-                    <a id="sa-token" href="#tab1" class="active">token</a>
-                    <a id="openstack" href="#tab2">openstack</a>
-                    <a id="gcloud" href="#tab3">gcloud</a>
-                    <span class="yellow-bar"></span>
-            </div>
-    </header>
+<div style="position: relative; text-align: center;" xmlns="http://www.w3.org/1999/html">
+        <div id="material-tabs">
+                        <a id="openstack" href="#tab1" class="active">openstack<br>(Recommended)</a>
+                        <a id="sa-token" href="#tab2">token</a>
+                        <a id="gcloud" href="#tab3">gcloud</a>
+                        <span class="yellow-bar"></span>
+        </div>
+</div>
 
-    <div class="tab-content">
-            <div id="tab1">
-                <!-- <form method="GET" action="" name="local-form" id="local-form"> -->
-                <div id="cluster-settings">
-                <label class="pure-material-checkbox">
-                        <input type="checkbox" id="cluster-mode">
-                        <span>Disable TLS support</span>
-                </label>
-                </div>
-                <br>
-                <hr>
-                <br>
-                <div id="other-settings">
+<div class="tab-content">
+        <div id="tab1">
+            <p>Please ensure that the <a id="openstack-readme">prerequisites</a> are satisfied before adding the newly created cluster</p>
+            <br><br>
+        </div>
+        <div id="tab2">
+            <p>Please ensure that the <a id="kubernetes-token-readme">prerequisites</a> are satisfied before adding the newly created cluster</p>
+            <br><br>
+        <!-- <form method="GET" action="" name="local-form" id="local-form"> -->
+        <div id="cluster-settings">
+        <label class="pure-material-checkbox">
+                <input type="checkbox" id="cluster-mode">
+                <span>Disable TLS support</span>
+        </label>
+        </div>
+        <br>
+        <hr>
+        <br>
+        <div id="other-settings">
 
-                </div>
-                <!-- </form> -->
-            </div>
-            <div id="tab2">
-            </div>
-            <div id="tab3">
-                    <p>Third tab content.</p>
-            </div>
-    </div>
+        </div>
+        <!-- </form> -->
+        </div>
+        <div id="tab3">
+                <p>This is currently not implemented.</p>
+        </div>
+</div>
 
-    <script
-  src="https://code.jquery.com/jquery-3.4.1.min.js"
-  integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
-  crossorigin="anonymous">
-  </script>
-<!-- </div> -->
+<script
+src="https://code.jquery.com/jquery-3.4.1.min.js"
+integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo="
+crossorigin="anonymous">
+</script>

@@ -10,6 +10,8 @@ import user_create from './templates/user_create.html';
 import './css/style.css';
 import kubernetes_icon from './images/k8s.png';
 import kubernetes_icon_blue from './images/k8s_blue.png';
+import openstack_md from './markdown/openstack.md';
+import kubernetes_token_md from './markdown/kubernetes_token.md';
 
 
 /**
@@ -168,6 +170,7 @@ K8sSelection.prototype.get_html_select_cluster = function() {
     var html = this.modal.find('.modal-body');
     var footer = this.modal.find('.modal-footer');
     var header = this.modal.find('.modal-header');
+
 
     $('<h4 class="modal-title">Spark cluster setting</h4>').appendTo(header);
     var contexts = this.contexts;
@@ -389,11 +392,19 @@ K8sSelection.prototype.get_html_create_clusters = function() {
     });
 
 
-    var tab1 = html.find("#tab1");
-    var tab1 = tab1.find("#other-settings");
-
     var tab2 = html.find("#tab2");
 
+    tab2.find("#kubernetes-token-readme").on('click', function() {
+        that.get_html_help(that.token_tab);
+    })
+
+    var tab2 = tab2.find("#other-settings");
+
+    var tab1 = html.find("#tab1");
+
+    tab1.find("#openstack-readme").on('click', function() {
+        that.get_html_help(that.openstack_tab);
+    });
 
     // "Insecure cluster" checkbox logic for the local tab.
     var checkbox = html.find("#cluster-mode");
@@ -401,18 +412,18 @@ K8sSelection.prototype.get_html_create_clusters = function() {
     checkbox.change(function() {
         if($(this).is(":checked")) {
             that.checkbox_status = "checked";
-            tab1.find("#br1").remove();
-            tab1.find("#br2").remove();
-            tab1.find("#br3").remove();
-            tab1.find("#catoken_text_label").remove();
-            tab1.find("#catoken_text").remove();
+            tab2.find("#br1").remove();
+            tab2.find("#br2").remove();
+            tab2.find("#br3").remove();
+            tab2.find("#catoken_text_label").remove();
+            tab2.find("#catoken_text").remove();
 
         }
         else {
             that.checkbox_status = "unchecked";
-            $('<br id="br1"><br id="br2">').appendTo(tab1);
+            $('<br id="br1"><br id="br2">').appendTo(tab2);
 
-            $('<label for="catoken_text" id="catoken_text_label">CA Token (Base64)</label><br id="br3">').appendTo(tab1);
+            $('<label for="catoken_text" id="catoken_text_label">CA Token (Base64)</label><br id="br3">').appendTo(tab2);
 
             var catoken_input = $('<input/>')
                 .attr('name', 'catoken_text')
@@ -422,7 +433,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
                 .attr('value', that.stateConfigMap['local_selected_catoken'])
                 .attr('placeholder', 'CA Token (Base64)')
                 .addClass('form__field')
-                .appendTo(tab1)
+                .appendTo(tab2)
                 .keypress(function (e) {
                     var keycode = (e.keyCode ? e.keyCode : e.which);
                     if (keycode == keyboard.keycodes.enter) {
@@ -435,7 +446,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
 
 
     // Adds Cluster name input to the local tab
-    $('<label for="clustername_text" id="clustername_text_label">Cluster name</label><br>').appendTo(tab1);
+    $('<label for="clustername_text" id="clustername_text_label">Cluster name</label><br>').appendTo(tab2);
 
     var clustername_input = $('<input required/>')
         .attr('name', 'clustername_text')
@@ -445,7 +456,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
         .attr('value', this.stateConfigMap['local_selected_clustername'])
         .attr('placeholder', 'Cluster name')
         .addClass('form__field')
-        .appendTo(tab1)
+        .appendTo(tab2)
         .keypress(function (e) {
             var keycode = (e.keyCode ? e.keyCode : e.which);
             if (keycode == keyboard.keycodes.enter) {
@@ -455,9 +466,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
 
 
     // Adds Server IP input to the local tab
-    $('<br><br>').appendTo(tab1);
+    $('<br><br>').appendTo(tab2);
 
-    $('<label for="ip_text" id="ip_text_label">Server IP</label><br>').appendTo(tab1);
+    $('<label for="ip_text" id="ip_text_label">Server IP</label><br>').appendTo(tab2);
 
     var ip_input = $('<input/>')
         .attr('name', 'ip_text')
@@ -467,7 +478,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
         .attr('value', this.stateConfigMap['local_selected_ip'])
         .attr('placeholder', 'Server IP')
         .addClass('form__field')
-        .appendTo(tab1)
+        .appendTo(tab2)
         .keypress(function (e) {
             var keycode = (e.keyCode ? e.keyCode : e.which);
             if (keycode == keyboard.keycodes.enter) {
@@ -477,9 +488,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
 
 
     // Adds Service Account Token input to the local tab
-    $('<br><br>').appendTo(tab1);
+    $('<br><br>').appendTo(tab2);
 
-    $('<label for="token_text" id="token_text_label">Service Account Token</label><br>').appendTo(tab1);
+    $('<label for="token_text" id="token_text_label">Service Account Token</label><br>').appendTo(tab2);
 
     var token_input = $('<input/>')
         .attr('name', 'token_text')
@@ -489,7 +500,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
         .attr('value', this.stateConfigMap['local_selected_token'])
         .attr('placeholder', 'Service Account Token')
         .addClass('form__field')
-        .appendTo(tab1)
+        .appendTo(tab2)
         .keypress(function (e) {
             var keycode = (e.keyCode ? e.keyCode : e.which);
             if (keycode == keyboard.keycodes.enter) {
@@ -499,9 +510,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
 
 
     // Adds CA Token input to the local tab is insecure checkbox is unchecked
-    $('<br id="br1"><br id="br2">').appendTo(tab1);
+    $('<br id="br1"><br id="br2">').appendTo(tab2);
 
-    $('<label for="catoken_text" id="catoken_text_label">CA Token (Base64)</label><br id="br3">').appendTo(tab1);
+    $('<label for="catoken_text" id="catoken_text_label">CA Token (Base64)</label><br id="br3">').appendTo(tab2);
 
 
     var catoken_input = $('<input/>')
@@ -512,7 +523,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
         .attr('value', this.stateConfigMap['local_selected_catoken'])
         .attr('placeholder', 'CA Token (Base64)')
         .addClass('form__field')
-        .appendTo(tab1)
+        .appendTo(tab2)
         .keypress(function (e) {
             var keycode = (e.keyCode ? e.keyCode : e.which);
             if (keycode == keyboard.keycodes.enter) {
@@ -522,7 +533,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
 
 
     // Adds Cluster name input to the openstack tab
-    $('<label for="openstack_clustername_text" id="openstack_clustername_text_label">Cluster name</label><br>').appendTo(tab2);
+    $('<label for="openstack_clustername_text" id="openstack_clustername_text_label">Cluster name</label><br>').appendTo(tab1);
 
     var openstack_clustername_input = $('<input required/>')
         .attr('name', 'openstack_clustername_text')
@@ -532,7 +543,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
         .attr('value', this.stateConfigMap['openstack_selected_clustername'])
         .attr('placeholder', 'Cluster name')
         .addClass('form__field')
-        .appendTo(tab2)
+        .appendTo(tab1)
         .keypress(function (e) {
             var keycode = (e.keyCode ? e.keyCode : e.which);
             if (keycode == keyboard.keycodes.enter) {
@@ -541,9 +552,9 @@ K8sSelection.prototype.get_html_create_clusters = function() {
         });
 
     // Adds Server IP input to the openstack tab
-    $('<br><br>').appendTo(tab2);
+    $('<br><br>').appendTo(tab1);
 
-    $('<label for="openstack_ip_text" id="openstack_ip_text_label">Server IP</label><br>').appendTo(tab2);
+    $('<label for="openstack_ip_text" id="openstack_ip_text_label">Server IP</label><br>').appendTo(tab1);
 
     var openstack_ip_input = $('<input/>')
         .attr('name', 'openstack_ip_text')
@@ -553,7 +564,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
         .attr('value', this.stateConfigMap['openstack_selected_ip'])
         .attr('placeholder', 'Server IP')
         .addClass('form__field')
-        .appendTo(tab2)
+        .appendTo(tab1)
         .keypress(function (e) {
             var keycode = (e.keyCode ? e.keyCode : e.which);
             if (keycode == keyboard.keycodes.enter) {
@@ -562,10 +573,11 @@ K8sSelection.prototype.get_html_create_clusters = function() {
         });
 
 
-    // Adds CA Token input to the openstack tab
-    $('<br><br>').appendTo(tab2);
 
-    $('<label for="openstack_catoken_text" id="openstack_catoken_text_label">CA Token (Base64)</label><br>').appendTo(tab2);
+    // Adds CA Token input to the openstack tab
+    $('<br><br>').appendTo(tab1);
+
+    $('<label for="openstack_catoken_text" id="openstack_catoken_text_label">CA Token (Base64)</label><br>').appendTo(tab1);
 
 
     var openstack_catoken_input = $('<input/>')
@@ -576,7 +588,7 @@ K8sSelection.prototype.get_html_create_clusters = function() {
         .attr('value', this.stateConfigMap['openstack_selected_catoken'])
         .attr('placeholder', 'CA Token (Base64)')
         .addClass('form__field')
-        .appendTo(tab2)
+        .appendTo(tab1)
         .keypress(function (e) {
             var keycode = (e.keyCode ? e.keyCode : e.which);
             if (keycode == keyboard.keycodes.enter) {
@@ -799,7 +811,7 @@ K8sSelection.prototype.get_cluster_detials_view_html = function() {
 
     $('<h4 class="modal-title">&nbsp;&nbsp;<span>Connection details for cluster: ' + this.stateConfigMap['user_create_context_name'] + '</span></h4>').appendTo(header);
 
-    $('<h4 id="detail_div">Please send the connection details via email to: ' + this.stateConfigMap['user_email_id'] + '</h4><br>').appendTo(html);
+    $('<h4 id="detail_div">Please send the connection details via email to: <a href="mailto:' + this.stateConfigMap['user_email_id'] + '">' + this.stateConfigMap['user_email_id'] + '</a></h4><br>').appendTo(html);
 
     $('<div style="display: flex;"><h4 id="cluster_name">K8s Cluster Name:</h4>&nbsp;<p style="font-size: 15px; margin-top: 5px;">' + this.cluster_name_view + '</p><br></div>').appendTo(html);
 
@@ -906,6 +918,42 @@ K8sSelection.prototype.get_html_error = function (error, prev_state) {
         $('<h4 class="modal-title">&nbsp;&nbsp;<span>Error</span></h4>').appendTo(header);
 
         $('<div id="setting-error"><br><h4 style="color: red;">' + error + '</h4></div>').appendTo(body);
+    }
+};
+
+
+K8sSelection.prototype.get_html_help = function (tab) {
+    if (this.modal) {
+        Jupyter.keyboard_manager.disable();
+        var header = this.modal.find('.modal-header');
+        var body = this.modal.find('.modal-body');
+        var footer = this.modal.find('.modal-footer');
+
+        header.html('');
+        body.html('');
+        footer.html('');
+
+        $('<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>').appendTo(header);
+
+        // Here the back button allows to go back to the previous state
+        $("<button>")
+            .attr("type", "button")
+            .addClass("back-button")
+            .html("<i class='fa fa-arrow-left' aria-hidden='true'></i>")
+            .appendTo(header)
+            .on("click", $.proxy(this.switch_state, this, this.states.create));
+
+        $('<h4 class="modal-title">&nbsp;&nbsp;<span>Help</span></h4>').appendTo(header);
+
+        var help_div = $('<div style="max-height: 400px; overflow-y: auto;"></div>').appendTo(body);
+
+        if(tab == this.openstack_tab) {
+            help_div.append(openstack_md);
+        }
+        else if(tab == this.token_tab) {
+            help_div.append(kubernetes_token_md);
+        }
+
     }
 };
 
