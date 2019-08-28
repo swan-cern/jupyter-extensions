@@ -343,7 +343,7 @@ class K8sSelection:
                 ip = msg['content']['data']['ip']
                 catoken = msg['content']['data']['catoken']
                 namespace = "spark-" + str(os.getenv('USER'))
-                svcaccount = self.openstack + '-' + str(os.getenv('USER'))
+                svcaccount = self.openstack + '-' + str(os.getenv('USER')) + "-" + cluster_name
                 context_name = cluster_name
 
                 try:
