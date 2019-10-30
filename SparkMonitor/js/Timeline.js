@@ -4,8 +4,8 @@
  * @module Timeline
  */
 
-import vis from 'vis/index-timeline-graph2d';   // The timeline library
-import 'vis/dist/vis-timeline-graph2d.min.css'; // Styles for timeline library
+import vis from 'vis-timeline';   // The timeline library
+import 'vis-timeline/dist/vis-timeline-graph2d.min.css'; // Styles for timeline library
 import './timeline.css';                        // Custom Styles
 import taskUI from './taskdetails'              // Module for displaying popup when clicking on a task
 

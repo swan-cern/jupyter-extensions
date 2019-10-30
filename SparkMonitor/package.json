@@ -36,6 +36,6 @@
     "moment-duration-format": "^1.3.0",
     "plotly.js": "^1.29.0",
     "twix": "^1.2.0",
-    "vis": "^4.20.1"
+    "vis-timeline": "^6.1.0"
   }
 }

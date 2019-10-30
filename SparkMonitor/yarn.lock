@@ -20,6 +20,12 @@
   dependencies:
     commander "^2.15.1"
 
+"@egjs/hammerjs@2.0.15":
+  version "2.0.15"
+  resolved "https://registry.yarnpkg.com/@egjs/hammerjs/-/hammerjs-2.0.15.tgz#b6ef675540d275f7445647a64413af425b97bb9a"
+  dependencies:
+    "@types/hammerjs" "^2.0.36"
+
 "@mapbox/geojson-area@0.2.2":
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/@mapbox/geojson-area/-/geojson-area-0.2.2.tgz#18d7814aa36bf23fbbcc379f8e26a22927debf10"
@@ -71,6 +77,10 @@
     d3-array "1"
     d3-collection "1"
     d3-shape "^1.2.0"
+
+"@types/hammerjs@^2.0.36":
+  version "2.0.36"
+  resolved "https://registry.yarnpkg.com/@types/hammerjs/-/hammerjs-2.0.36.tgz#17ce0a235e9ffbcdcdf5095646b374c2bf615a4c"
 
 a-big-triangle@^1.0.3:
   version "1.0.3"
@@ -1949,7 +1959,7 @@ elliptic@^6.0.0:
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.0"
 
-emitter-component@^1.1.1:
+emitter-component@1.1.1:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/emitter-component/-/emitter-component-1.1.1.tgz#065e2dbed6959bf470679edabeaf7981d1003ab6"
 
@@ -2989,7 +2999,7 @@ grid-index@^1.0.0:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/grid-index/-/grid-index-1.1.0.tgz#97f8221edec1026c8377b86446a7c71e79522ea7"
 
-hammerjs@^2.0.6, hammerjs@^2.0.8:
+hammerjs@^2.0.8:
   version "2.0.8"
   resolved "https://registry.yarnpkg.com/hammerjs/-/hammerjs-2.0.8.tgz#04ef77862cff2bb79d30f7692095930222bf60f1"
 
@@ -3573,7 +3583,7 @@ kdbush@^1.0.1:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/kdbush/-/kdbush-1.0.1.tgz#3cbd03e9dead9c0f6f66ccdb96450e5cecc640e0"
 
-keycharm@^0.2.0:
+keycharm@0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/keycharm/-/keycharm-0.2.0.tgz#fa6ea2e43b90a68028843d27f2075d35a8c3e6f9"
 
@@ -3972,7 +3982,7 @@ moment-duration-format@^1.3.0:
   version "1.3.0"
   resolved "https://registry.yarnpkg.com/moment-duration-format/-/moment-duration-format-1.3.0.tgz#541771b5f87a049cc65540475d3ad966737d6908"
 
-moment@^2.14.1, moment@^2.18.1:
+moment@2.24.0, moment@^2.14.1, moment@^2.24.0:
   version "2.24.0"
   resolved "https://registry.yarnpkg.com/moment/-/moment-2.24.0.tgz#0d055d53f5052aa653c9f6eb68bb5d12bf5c2b5b"
 
@@ -4947,11 +4957,11 @@ process@^0.11.10:
   version "0.11.10"
   resolved "https://registry.yarnpkg.com/process/-/process-0.11.10.tgz#7332300e840161bda3e69a1d1d91a7d4bc16f182"
 
-propagating-hammerjs@^1.4.6:
-  version "1.4.6"
-  resolved "https://registry.yarnpkg.com/propagating-hammerjs/-/propagating-hammerjs-1.4.6.tgz#fed00e9b00767ffd42d14f5b531bc493eb672e37"
+propagating-hammerjs@1.4.7:
+  version "1.4.7"
+  resolved "https://registry.yarnpkg.com/propagating-hammerjs/-/propagating-hammerjs-1.4.7.tgz#671ab1791a7f88b9dccce8fd8b14a9655950e7d6"
   dependencies:
-    hammerjs "^2.0.6"
+    hammerjs "^2.0.8"
 
 protocol-buffers-schema@^3.3.1:
   version "3.3.2"
@@ -6566,15 +6576,41 @@ vendors@^1.0.0:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/vendors/-/vendors-1.0.3.tgz#a6467781abd366217c050f8202e7e50cc9eef8c0"
 
-vis@^4.20.1:
-  version "4.21.0"
-  resolved "https://registry.yarnpkg.com/vis/-/vis-4.21.0.tgz#dd71638bff7f6495d00bc9f40c253526133ded6b"
+vis-data@6.1.1:
+  version "6.1.1"
+  resolved "https://registry.yarnpkg.com/vis-data/-/vis-data-6.1.1.tgz#f036eabd5089cf02753e2e5797fa58dfecbba244"
   dependencies:
-    emitter-component "^1.1.1"
-    hammerjs "^2.0.8"
-    keycharm "^0.2.0"
-    moment "^2.18.1"
-    propagating-hammerjs "^1.4.6"
+    vis-util "^1.1.0"
+
+vis-timeline@^6.1.0:
+  version "6.1.0"
+  resolved "https://registry.yarnpkg.com/vis-timeline/-/vis-timeline-6.1.0.tgz#66872b4ccc827e1380308226cd11e43ec407c1bc"
+  dependencies:
+    "@egjs/hammerjs" "2.0.15"
+    emitter-component "1.1.1"
+    keycharm "0.2.0"
+    moment "2.24.0"
+    propagating-hammerjs "1.4.7"
+    vis-data "6.1.1"
+    vis-util "1.1.4"
+
+vis-util@1.1.4:
+  version "1.1.4"
+  resolved "https://registry.yarnpkg.com/vis-util/-/vis-util-1.1.4.tgz#5e9229a4e8c217b8797c1d0a781380560ad6240c"
+  dependencies:
+    moment "^2.24.0"
+    vis-uuid "^1.1.3"
+
+vis-util@^1.1.0:
+  version "1.1.8"
+  resolved "https://registry.yarnpkg.com/vis-util/-/vis-util-1.1.8.tgz#d4b5c37b2c327ed2df1cb02d0b55882156c66374"
+  dependencies:
+    moment "^2.24.0"
+    vis-uuid "^1.1.3"
+
+vis-uuid@^1.1.3:
+  version "1.1.3"
+  resolved "https://registry.yarnpkg.com/vis-uuid/-/vis-uuid-1.1.3.tgz#2f53ff35e9e026b0ec93bc433ce685c40c2f784c"
 
 vlq@^0.2.2:
   version "0.2.3"
