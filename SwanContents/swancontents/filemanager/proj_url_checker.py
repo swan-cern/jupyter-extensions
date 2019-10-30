@@ -15,6 +15,7 @@ CERNBoxPrefixTesting = 'https://cernboxwebpreview.cern.ch/index.php/s'
 EOSUserPrefix = 'file://eos/'
 LocalPrefix = 'local:'
 EOSUserRE = '/eos/(docker/|up2u/)?(user/[a-z]|home-[a-z])/([a-z0-9]+)'
+GitlabRE = '^https://(.+:.+@)?gitlab\.cern\.ch'
 
 def raise_error(emsg):
     raise web.HTTPError(400, reason = emsg)
@@ -77,9 +78,10 @@ def has_good_chars(name, extra_chars=''):
 def check_url(url):
 
     url = parse.unquote(url)
+    gitlab_match = re.compile(GitlabRE).match(url)
 
     # Limit the sources
-    is_good_server = url.startswith('https://gitlab.cern.ch') or \
+    is_good_server = gitlab_match or \
                      url.startswith('https://github.com') or \
                      url.startswith('https://raw.githubusercontent.com') or \
                      url.startswith('https://root.cern.ch') or \
@@ -103,6 +105,8 @@ def check_url(url):
         extra_chars = " ()"
     if local:
         extra_chars = " ():"
+    if gitlab_match:
+        extra_chars = ":@"
     has_allowed_chars = has_good_chars(url, extra_chars)
     if not has_allowed_chars:
         raise_error('The URL of the project is invalid (some of its characters are not accepted).')
