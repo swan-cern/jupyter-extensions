@@ -1071,6 +1071,16 @@ define([
                                             }
                                             return 'href="' + url_string + '"' + (blank ? ' target="_blank"' : '');
                                         }
+                                    } else if (tag == 'img') {
+                                        if (name == 'src') {
+                                            if (!is_external(value)) {
+                                                new_value = utils.url_path_join(
+                                                    folder_path,
+                                                    value
+                                                );
+                                                return 'src="' + new_value + '"';
+                                            }
+                                        }
                                     }
                                 }
                             });
