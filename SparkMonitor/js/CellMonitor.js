@@ -93,7 +93,10 @@ CellMonitor.prototype.createDisplay = function () {
         if (this.cellcompleted) element.find('.stopbutton').hide();
         element.find('.closebutton').click(function () { that.removeDisplay(); });
 
-        element.find('.sparkuitabbutton').click(function () { that.openSparkUI(''); });
+        // FIXME: There is a problem with displaying Spark UI for YARN, disable temporarily (UCA-375)
+        //element.find('.sparkuitabbutton').click(function () { that.openSparkUI(''); });
+        element.find('.sparkuitabbutton').hide()
+
         element.find('.titlecollapse').click(function () {
             if (that.view != "hidden") {
                 that.lastview = that.view;
