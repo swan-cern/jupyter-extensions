@@ -86,7 +86,10 @@ class SwanFileManagerMixin(FileManagerMixin):
             path = path.split('/')
             if len(path) < 3:
                  raise HTTPError(404)
-            return url_path_join('/eos/user', path[1][0], path[1], 'SWAN_projects', "/".join(path[2:]))
+                
+            eosbasepath_format = os.getenv('EOS_PATH_FORMAT', '/eos/user/{username[0]}/{username}/')
+            user_basepath = eosbasepath_format.format(username = path[1])
+            return url_path_join(user_basepath, 'SWAN_projects', *(path[2:]))
 
         else:
             return super()._get_os_path(path)
