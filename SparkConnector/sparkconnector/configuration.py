@@ -124,7 +124,8 @@ class SparkConfiguration(object):
         # Extend conf with ports for the driver and block manager
         conf.set('spark.driver.host', os.environ.get('SERVER_HOSTNAME', 'localhost'))
         conf.set('spark.driver.port', ports[0])
-        conf.set('spark.blockManager.port', ports[1])
+        conf.set('spark.driver.blockManager.port', ports[1])
+        conf.set('spark.port.maxRetries', 100)
         conf.set('spark.ui.port', ports[2])
 
         # Extend conf with spark app name to allow the monitoring and filtering of SWAN jobs in the Spark clusters
