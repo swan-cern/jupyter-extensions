@@ -93,7 +93,7 @@ class K8sSelection:
                 # Creating two empty lists and looping over the contexts and checking whether the clusters are
                 # reachable and if the user is admin of the cluster.
                 try:
-                    config.load_kube_config(context=context)
+                    config.load_kube_config(context=context,config_file=os.environ['HOME'] + '/.kube/config')
                     api_instance = client.CoreV1Api()
                     api_response = api_instance.list_namespaced_pod(namespace=namespace, timeout_seconds=2)
                     is_reachable = True
@@ -101,7 +101,7 @@ class K8sSelection:
                     is_reachable = False
 
                 try:
-                    config.load_kube_config(context=context)
+                    config.load_kube_config(context=context,config_file=os.environ['HOME'] + '/.kube/config')
                     api_instance = client.CoreV1Api()
                     api_response = api_instance.list_namespaced_pod(namespace='kube-system', timeout_seconds=2)
                     is_admin = True
@@ -190,34 +190,7 @@ class K8sSelection:
                 try:
                     # Check whether KUBECONFIG file exists in the default localtion.
                     # If not then create the folder and file and initialize it.
-                    if os.path.isdir(os.getenv('HOME') + '/.kube'):
-                        if not os.path.isfile(os.getenv('HOME') + '/.kube/config'):
-                            load = {}
-                            load['apiVersion'] = 'v1'
-                            load['clusters'] = []
-                            load['contexts'] = []
-                            load['current-context'] = ''
-                            load['kind'] = 'Config'
-                            load['preferences'] = {}
-                            load['users'] = []
-
-                            with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
-                                yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
-                    else:
-                        os.makedirs(os.getenv('HOME') + '/.kube')
-
-                        load = {}
-                        load['apiVersion'] = 'v1'
-                        load['clusters'] = []
-                        load['contexts'] = []
-                        load['current-context'] = ''
-                        load['kind'] = 'Config'
-                        load['preferences'] = {}
-                        load['users'] = []
-
-                        with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
-                            yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
-
+                    self.create_empty_kconfig(os.environ['HOME'] + '/.kube/config')
                     # Load the KUBECONFIG file
                     with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
                         load = yaml.safe_load(stream)
@@ -486,6 +459,7 @@ class K8sSelection:
                         'tab': self.openstack
                     })
         elif action == "delete-current-context":
+            #TODO this does not work now, it leaves unused cluster and user in the file
             self.log.info("Deleting context from KUBECONFIG")
             # This action deletes the context and cluster from the KUBECONFIG file
             context = msg['content']['data']['context']
@@ -786,8 +760,51 @@ class K8sSelection:
                 yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
         except Exception as e:
             self.log.info(str(e))
-
         self.cluster_list()
+        self.merge_service_into_user()
+
+    def merge_service_into_user(self):
+        with open(os.getenv("KUBECONFIG")) as f:
+            service_kubeconf=yaml.safe_load(f)
+        os.environ["KUBECONFIG"]=os.getenv('HOME') + '/.kube/config'
+        with open(os.environ["KUBECONFIG"]) as f:
+            #this always exists because self.cluster_list creates an empty one at worst
+            existing_kubeconf=yaml.safe_load(f)
+
+        def add_ifnotthere(key):
+            if (service_kubeconf[key][0] in existing_kubeconf[key]):
+                self.log.info(f"not merging service cluster in user kubeconfig because {key} already there")
+                return
+            existing_kubeconf[key].append(service_kubeconf[key][0])
+
+        add_ifnotthere('contexts')
+        add_ifnotthere('users')
+        add_ifnotthere('clusters')
+        with open(os.environ["KUBECONFIG"], 'w') as f:
+            yaml.safe_dump(existing_kubeconf, f)
+        
+    def create_empty_kconfig(self, kpath):
+        emptyload = {}
+        emptyload['apiVersion'] = 'v1'
+        emptyload['clusters'] = []
+        emptyload['contexts'] = []
+        emptyload['current-context'] = ''
+        emptyload['kind'] = 'Config'
+        emptyload['preferences'] = {}
+        emptyload['users'] = []
+
+        if os.path.isdir(os.path.dirname(kpath)):
+            if (not os.path.isfile(kpath)
+                or os.stat(kpath).st_size < 8 ):
+
+                with io.open(kpath, 'w', encoding='utf8') as out:
+                    yaml.safe_dump(emptyload, out, default_flow_style=False, allow_unicode=True)
+        else:
+            os.makedirs(os.path.dirname(kpath))
+
+            with io.open(kpath, 'w', encoding='utf8') as out:
+                yaml.safe_dump(emptyload, out, default_flow_style=False, allow_unicode=True)
+
 
     def cluster_list(self):
         """
@@ -797,35 +814,9 @@ class K8sSelection:
         self.log.info("Getting clusters and contexts from KUBECONFIG")
         try:
 
-            if os.path.isdir(os.getenv('HOME') + '/.kube'):
-                if not os.path.isfile(os.getenv('HOME') + '/.kube/config'):
-                    load = {}
-                    load['apiVersion'] = 'v1'
-                    load['clusters'] = []
-                    load['contexts'] = []
-                    load['current-context'] = ''
-                    load['kind'] = 'Config'
-                    load['preferences'] = {}
-                    load['users'] = []
+            self.create_empty_kconfig(os.environ['HOME'] + '/.kube/config')
 
-                    with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
-                        yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
-            else:
-                os.makedirs(os.getenv('HOME') + '/.kube')
-
-                load = {}
-                load['apiVersion'] = 'v1'
-                load['clusters'] = []
-                load['contexts'] = []
-                load['current-context'] = ''
-                load['kind'] = 'Config'
-                load['preferences'] = {}
-                load['users'] = []
-
-                with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
-                    yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
-
-            with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+            with io.open(os.environ["KUBECONFIG"], 'r', encoding='utf8') as stream:
                 load = yaml.safe_load(stream)
 
             contexts = load['contexts']
