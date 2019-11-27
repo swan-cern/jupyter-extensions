@@ -489,6 +489,13 @@ button.back-button {
     width: 7rem;
 }
 
+.cluster-list-div > .unknown-connect-symbol {
+    margin-top: 10px;
+    width: 3rem;
+    color: #ffffff;
+    visibility: hidden;
+}
+
 .cluster-list-div > .connect-symbol {
     margin-top: 10px;
     width: 3rem;

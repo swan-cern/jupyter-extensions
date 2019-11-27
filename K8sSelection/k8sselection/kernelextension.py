@@ -54,6 +54,7 @@ class K8sSelection:
         Every action is handled seperately.
         """
         action = msg['content']['data']['action']
+        self.log.info("Received message: %s", str(msg['content']))
 
         if action == 'Refresh':
             self.cluster_list()
@@ -61,6 +62,7 @@ class K8sSelection:
             # This action handles the requests from the frontend to change the current context in KUBECONFIG file
 
             context = msg['content']['data']['context']
+            self.log.info(str(msg))
             tab = msg['content']['data']['tab']
             # Logging just for testing purposes
             self.log.info("Changing current context to: ", context)
@@ -92,21 +94,38 @@ class K8sSelection:
 
                 # Creating two empty lists and looping over the contexts and checking whether the clusters are
                 # reachable and if the user is admin of the cluster.
+                config.load_kube_config(context=context,config_file=os.environ['HOME'] + '/.kube/config')
+                api_instance = client.CoreV1Api()
                 try:
-                    config.load_kube_config(context=context,config_file=os.environ['HOME'] + '/.kube/config')
-                    api_instance = client.CoreV1Api()
                     api_response = api_instance.list_namespaced_pod(namespace=namespace, timeout_seconds=2)
                     is_reachable = True
                 except:
                     is_reachable = False
 
                 try:
-                    config.load_kube_config(context=context,config_file=os.environ['HOME'] + '/.kube/config')
-                    api_instance = client.CoreV1Api()
                     api_response = api_instance.list_namespaced_pod(namespace='kube-system', timeout_seconds=2)
                     is_admin = True
-                except:
+                    #if is admin, we check if the spark-services chart has been installed already
+                    #if it's not there, we install it
+                    create_services_cmd = ["helm", "install", 
+                            "--kube-context", context, 
+                            "--name", "spark-services",
+                            "--set", "cvmfs.enable=true",
+                            "https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/master/cern-spark-services-1.0.0.tgz"]
+                    create_user_cmd=["helm", "install", 
+                            "--kube-context", context, 
+                            "--name", "spark-user-" + os.environ["USER"],
+                            "--set", "user.name=" + os.environ["USER"], 
+                            "--set", "cvmfs.enable=true", "--set", "user.admin=false",
+                            "https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz"]
+                    self.run_helm(create_services_cmd)
+                    #disabled atm because of conflict with services
+                    #self.run_helm(create_user_cmd)
+
+                except Exception as e:
+                    self.log.info(e)
                     is_admin = False
+
 
                 # Setting the current context
                 load['current-context'] = context
@@ -188,9 +207,6 @@ class K8sSelection:
 
                 # The main logic
                 try:
-                    # Check whether KUBECONFIG file exists in the default localtion.
-                    # If not then create the folder and file and initialize it.
-                    self.create_empty_kconfig(os.environ['HOME'] + '/.kube/config')
                     # Load the KUBECONFIG file
                     with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
                         load = yaml.safe_load(stream)
@@ -541,21 +557,11 @@ class K8sSelection:
                         selected_cluster = i['context']['cluster']
                         break
 
-                #Initialize helm
-                command = ["helm", "init", "--client-only"]
-                p = subprocess.Popen(command, stdout=subprocess.PIPE)
-                out, err = p.communicate()
-
-
-                # If helm is initialized successfully then deploy te helm chart
-                if out.decode('utf-8') != '':
-                    # Deploy helm chart for user
-                    my_env = os.environ.copy()
-                    command = ["helm", "install", "--name", "spark-user-" + username, "--set",
+                create_user_cmd=["helm", "install", "--name", "spark-user-" + username, "--set",
                                "user.name=" + username, "--set", "cvmfs.enable=true", "--set", "user.admin=false",
                                "https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz"]
-                    p = subprocess.Popen(command, stdout=subprocess.PIPE, env=my_env)
-                    out, err = p.communicate()
+
+                out = self.run_helm(create_user_cmd)
 
 
                 # If helm chart is deployed successfully, send message to frontend
@@ -749,41 +755,33 @@ class K8sSelection:
         def _recv(msg):
             self.handle_comm_message(msg)
 
-        try:
-            with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
-                load = yaml.safe_load(stream)
-
-            if load['current-context'] != '':
-                load['current-context'] = ''
-
-            with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
-                yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
-        except Exception as e:
-            self.log.info(str(e))
-        self.cluster_list()
+        #KUBECONFIG initially points somewhere. in this function it is set to os.getenv('HOME') + '/.kube/config'
         self.merge_service_into_user()
+        self.cluster_list()
 
     def merge_service_into_user(self):
         with open(os.getenv("KUBECONFIG")) as f:
             service_kubeconf=yaml.safe_load(f)
         os.environ["KUBECONFIG"]=os.getenv('HOME') + '/.kube/config'
+
+        self.create_empty_kconfig_if_needed(os.environ["KUBECONFIG"])
         with open(os.environ["KUBECONFIG"]) as f:
-            #this always exists because self.cluster_list creates an empty one at worst
             existing_kubeconf=yaml.safe_load(f)
 
-        def add_ifnotthere(key):
-            if (service_kubeconf[key][0] in existing_kubeconf[key]):
+        def add_ifnotthere(key, kubeconf):
+            if (service_kubeconf[key][0] in kubeconf[key]):
                 self.log.info(f"not merging service cluster in user kubeconfig because {key} already there")
-                return
-            existing_kubeconf[key].append(service_kubeconf[key][0])
-
-        add_ifnotthere('contexts')
-        add_ifnotthere('users')
-        add_ifnotthere('clusters')
+            else:
+                kubeconf[key].append(service_kubeconf[key][0])
+        
+        add_ifnotthere('contexts',existing_kubeconf)
+        add_ifnotthere('users',existing_kubeconf)
+        add_ifnotthere('clusters',existing_kubeconf)
+        
         with open(os.environ["KUBECONFIG"], 'w') as f:
             yaml.safe_dump(existing_kubeconf, f)
         
-    def create_empty_kconfig(self, kpath):
+    def create_empty_kconfig_if_needed(self, kpath):
         emptyload = {}
         emptyload['apiVersion'] = 'v1'
         emptyload['clusters'] = []
@@ -812,9 +810,9 @@ class K8sSelection:
         """
 
         self.log.info("Getting clusters and contexts from KUBECONFIG")
+
         try:
 
-            self.create_empty_kconfig(os.environ['HOME'] + '/.kube/config')
 
             with io.open(os.environ["KUBECONFIG"], 'r', encoding='utf8') as stream:
                 load = yaml.safe_load(stream)
@@ -827,15 +825,16 @@ class K8sSelection:
                     break
 
             # Getting the type of authentication used by contexts
-            cluster_auth_type = []
+            cluster_auth_type = {}
             current_cluster_auth_type = ''
             for i in range(len(contexts)):
                 auth_type = self.get_auth_type(contexts[i]['context']['user'])
                 if load['current-context'] != '' and contexts[i]['name'] == load['current-context']:
                     current_cluster_auth_type = auth_type
-                cluster_auth_type.append(auth_type)
+                cluster_auth_type[contexts[i]['name']]=auth_type
 
-            contexts = [context['name'] for context in contexts]
+            contexts={context['name']:cluster_auth_type[context['name']] for context in load['contexts']}
+            #is this used anywhere????
             clusters = [cluster['name'] for cluster in load['clusters']]
 
             current_context = ''
@@ -864,6 +863,17 @@ class K8sSelection:
                 'error': error
             })
 
+    def run_helm(self,command_to_run):
+        command = ["helm", "init", "--client-only"]
+        p = subprocess.Popen(command, stdout=subprocess.PIPE)
+        out, err = p.communicate()
+        # If helm is initialized successfully then deploy te helm chart
+        if out.decode('utf-8') != '':
+            my_env = os.environ.copy()
+            p = subprocess.Popen(command_to_run, stdout=subprocess.PIPE, env=my_env)
+            out, err = p.communicate()
+
+        return out
 
 def load_ipython_extension(ipython):
     """ Load Jupyter kernel extension """

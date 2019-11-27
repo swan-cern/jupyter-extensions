@@ -182,39 +182,13 @@ K8sSelection.prototype.get_html_select_cluster = function() {
     var list_div = html.find("#user_html_inputs");
 
 
-
-    if(current_context != '') {
-        if(this.initial_select == true) {
-            $('<div class="cluster-list-div"><div class="connect-symbol" style="visibility: hidden;"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text" style="color: #C0C0C0;">' + current_context + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + current_context + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + current_context + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + current_context + '">Select</button><hr></div>').appendTo(list_div);
+    for (var k8scontext in contexts) {
+            var is_reachable = this.initial_select == true ? "unknown-connect-symbol" : 
+                this.is_reachable == true ? "connect-symbol" : "not-connected-symbol";
+            var is_admin = this.is_admin == true && this.current_cluster_auth_type == this.openstack_tab ? "" : "disabled";
+            var is_current_context = k8scontext == current_context ? "" : "visibility: hidden;";
+            $('<div class="cluster-list-div"><div class="' + is_reachable + '" style="' + is_current_context + '"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text" style="color: #C0C0C0;">' + k8scontext + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + k8scontext + '">X</button><button ' + is_admin + ' class="list-item-share pure-material-button-text" id="share.' + k8scontext + '"><i class="fa fa-share-alt"></i></button><button ' + is_reachable + ' class="list-item-select pure-material-button-text" id="select.' + k8scontext + '">Select</button><hr></div>').appendTo(list_div);
         }
-        else {
-            if(this.is_reachable == false) {
-                $('<div class="cluster-list-div"><div class="not-connected-symbol"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text">' + current_context + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + current_context + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + current_context + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + current_context + '">Select</button><hr></div>').appendTo(list_div);
-            }
-            else {
-                if(this.is_admin == true && this.current_cluster_auth_type == this.openstack_tab) {
-                    $('<div class="cluster-list-div"><div class="connect-symbol"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text">' + current_context + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + current_context + '">X</button><button class="list-item-share pure-material-button-text" id="share.' + current_context + '"><i class="fa fa-share-alt"></i></button><button disabled class="list-item-select pure-material-button-text" id="select.' + current_context + '">Select</button><hr></div>').appendTo(list_div);
-                }
-                else {
-                    $('<div class="cluster-list-div"><div class="connect-symbol"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text">' + current_context + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + current_context + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + current_context + '"><i class="fa fa-share-alt"></i></button><button disabled class="list-item-select pure-material-button-text" id="select.' + current_context + '">Select</button><hr></div>').appendTo(list_div);
-                }
-            }
-        }
-    }
-
-
-    for(var i = 0; i < contexts.length; i++) {
-        if(contexts[i] != current_context) {
-            if(this.cluster_auth_type[i] == 'none') {
-                $('<div class="cluster-list-div"><div class="connect-symbol" style="visibility: hidden;"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text" style="color: #C0C0C0;">' + contexts[i] + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + contexts[i] + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + contexts[i] + '"><i class="fa fa-share-alt"></i></button><button disabled class="list-item-select pure-material-button-text" id="select.' + contexts[i] + '">Select</button><hr></div>').appendTo(list_div);
-            }
-            else {
-                $('<div class="cluster-list-div"><div class="connect-symbol" style="visibility: hidden;"><i class="fa fa-circle" aria-hidden="true"></i></div><div class="list-item-text" style="color: #C0C0C0;">' + contexts[i] + '</div><button class="list-item-delete pure-material-button-text" id="delete.' + contexts[i] + '">X</button><button disabled class="list-item-share pure-material-button-text" id="share.' + contexts[i] + '"><i class="fa fa-share-alt"></i></button><button class="list-item-select pure-material-button-text" id="select.' + contexts[i] + '">Select</button><hr></div>').appendTo(list_div);
-            }
-
-        }
-    }
-
 
     /**
      * Load more button functionality
@@ -252,12 +226,7 @@ K8sSelection.prototype.get_html_select_cluster = function() {
         that.currently_selected_context = current_context;
         console.log("Selected cluster: " + current_context);
 
-        for(var i = 0; i < that.contexts.length; i++) {
-            if(that.contexts[i] == that.currently_selected_context) {
-                that.currently_selected_auth_type = that.cluster_auth_type[i];
-            }
-        }
-
+        that.currently_selected_auth_type = that.contexts[current_context];
 
         if(that.currently_selected_auth_type == that.token_tab) {
             that.switch_state(that.states.loading);
