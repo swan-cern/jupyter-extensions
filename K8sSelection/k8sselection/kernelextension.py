@@ -33,6 +33,7 @@ class K8sSelection:
         self.log = log
         self.openstack = 'openstack'
         self.local = 'sa-token'
+        self.managed_kubeconf_path = os.environ['HOME']+ "/.swan/kubeconfig"
 
     def send(self, msg):
         """Send a message to the frontend"""
@@ -83,7 +84,7 @@ class K8sSelection:
                     os.environ['OS_TOKEN'] = out
 
                 # Opening the YAML file using the yaml library
-                with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+                with io.open(self.managed_kubeconf_path, 'r', encoding='utf8') as stream:
                     load = yaml.safe_load(stream)
 
                 namespace = 'default'
@@ -94,7 +95,7 @@ class K8sSelection:
 
                 # Creating two empty lists and looping over the contexts and checking whether the clusters are
                 # reachable and if the user is admin of the cluster.
-                config.load_kube_config(context=context,config_file=os.environ['HOME'] + '/.kube/config')
+                config.load_kube_config(context=context,config_file=self.managed_kubeconf_path)
                 api_instance = client.CoreV1Api()
                 try:
                     api_response = api_instance.list_namespaced_pod(namespace=namespace, timeout_seconds=2)
@@ -122,10 +123,9 @@ class K8sSelection:
                         #if there is no namespace called spark we need to create the chart
                         self.log.info("installing spark-services chart")
                         self.run_helm(create_services_cmd)
-                    #disabled atm because of conflict with services
-                    #if not self.namespace_exists("spark-"+ os.environ["USER"],api_instance):
-                    #    self.log.info("installing spark-user chart")
-                    #    self.run_helm(create_user_cmd)
+                    if not self.namespace_exists("spark-"+ os.environ["USER"],api_instance):
+                        self.log.info("installing spark-user chart")
+                        self.run_helm(create_user_cmd)
 
                 except Exception as e:
                     self.log.info(e)
@@ -149,7 +149,7 @@ class K8sSelection:
                 os.environ["K8S_MASTER_IP"] = server_ip
 
                 # Writing to the file
-                with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
+                with io.open(self.managed_kubeconf_path, 'w', encoding='utf8') as out:
                     yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
 
                 if is_reachable == True:
@@ -213,7 +213,7 @@ class K8sSelection:
                 # The main logic
                 try:
                     # Load the KUBECONFIG file
-                    with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+                    with io.open(self.managed_kubeconf_path, 'r', encoding='utf8') as stream:
                         load = yaml.safe_load(stream)
 
                     contexts = []
@@ -281,7 +281,7 @@ class K8sSelection:
                     })
 
                     # Save the file
-                    with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
+                    with io.open(self.managed_kubeconf_path, 'w', encoding='utf8') as out:
                         yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
 
                     self.log.info("Successfully added cluster and context!")
@@ -303,7 +303,7 @@ class K8sSelection:
                     error = 'Cannot use these settings. Please contact the cluster administrator'
                     self.log.info(str(e))
 
-                    with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+                    with io.open(self.managed_kubeconf_path, 'r', encoding='utf8') as stream:
                         load = yaml.safe_load(stream)
 
                     for i in range(len(load['contexts'])):
@@ -321,7 +321,7 @@ class K8sSelection:
                             load['users'].pop(i)
                             break
 
-                    with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
+                    with io.open(self.managed_kubeconf_path, 'w', encoding='utf8') as out:
                         yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
 
                     self.send({
@@ -341,37 +341,8 @@ class K8sSelection:
                 context_name = cluster_name
 
                 try:
-                    # Check if the KUBECONFIG file is present at default location. If not then create a file
-                    if os.path.isdir(os.getenv('HOME') + '/.kube'):
-                        if not os.path.isfile(os.getenv('HOME') + '/.kube/config'):
-                            load = {}
-                            load['apiVersion'] = 'v1'
-                            load['clusters'] = []
-                            load['contexts'] = []
-                            load['current-context'] = ''
-                            load['kind'] = 'Config'
-                            load['preferences'] = {}
-                            load['users'] = []
-
-                            with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
-                                yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
-                    else:
-                        os.makedirs(os.getenv('HOME') + '/.kube')
-
-                        load = {}
-                        load['apiVersion'] = 'v1'
-                        load['clusters'] = []
-                        load['contexts'] = []
-                        load['current-context'] = ''
-                        load['kind'] = 'Config'
-                        load['preferences'] = {}
-                        load['users'] = []
-
-                        with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
-                            yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
-
                     # Open the KUBECONFIG file
-                    with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+                    with io.open(self.managed_kubeconf_path, 'r', encoding='utf8') as stream:
                         load = yaml.safe_load(stream)
 
                     contexts = []
@@ -431,7 +402,7 @@ class K8sSelection:
                             'name': svcaccount
                         })
 
-                    with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
+                    with io.open(self.managed_kubeconf_path, 'w', encoding='utf8') as out:
                         yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
 
                     self.log.info("Successfully added cluster and context!")
@@ -453,7 +424,7 @@ class K8sSelection:
                     error = 'Cannot use these settings. Please contact the cluster administrator'
                     self.log.info(str(e))
 
-                    with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+                    with io.open(self.managed_kubeconf_path, 'r', encoding='utf8') as stream:
                         load = yaml.safe_load(stream)
 
                     for i in range(len(load['contexts'])):
@@ -471,7 +442,7 @@ class K8sSelection:
                             load['users'].pop(i)
                             break
 
-                    with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
+                    with io.open(self.managed_kubeconf_path, 'w', encoding='utf8') as out:
                         yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
 
                     self.send({
@@ -487,7 +458,7 @@ class K8sSelection:
 
             try:
                 # Open the file
-                with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+                with io.open(self.managed_kubeconf_path, 'r', encoding='utf8') as stream:
                     load = yaml.safe_load(stream)
 
                 # Get the user to delete
@@ -522,7 +493,7 @@ class K8sSelection:
                 current_context = load['current-context']
 
                 # Save the file
-                with io.open(os.environ['HOME'] + '/.kube/config', 'w', encoding='utf8') as out:
+                with io.open(self.managed_kubeconf_path, 'w', encoding='utf8') as out:
                     yaml.safe_dump(load, out, default_flow_style=False, allow_unicode=True)
 
                 self.log.info("Successfully deleted context")
@@ -553,7 +524,7 @@ class K8sSelection:
 
             try:
                 # Load the KUBECONFIG file
-                with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+                with io.open(self.managed_kubeconf_path, 'r', encoding='utf8') as stream:
                     load = yaml.safe_load(stream)
 
                 for i in load['contexts']:
@@ -631,7 +602,7 @@ class K8sSelection:
             context = msg['content']['data']['context']
 
             try:
-                with io.open(os.environ['HOME'] + '/.kube/config', 'r', encoding='utf8') as stream:
+                with io.open(self.managed_kubeconf_path, 'r', encoding='utf8') as stream:
                     load = yaml.safe_load(stream)
 
                 namespace = 'default'
@@ -760,14 +731,14 @@ class K8sSelection:
         def _recv(msg):
             self.handle_comm_message(msg)
 
-        #KUBECONFIG initially points somewhere. in this function it is set to os.getenv('HOME') + '/.kube/config'
+        #KUBECONFIG initially points somewhere. in this function it is set to self.managed_kubeconf_path
         self.merge_service_into_user()
         self.cluster_list()
 
     def merge_service_into_user(self):
         with open(os.getenv("KUBECONFIG")) as f:
             service_kubeconf=yaml.safe_load(f)
-        os.environ["KUBECONFIG"]=os.getenv('HOME') + '/.kube/config'
+        os.environ["KUBECONFIG"]=self.managed_kubeconf_path
 
         self.create_empty_kconfig_if_needed(os.environ["KUBECONFIG"])
         with open(os.environ["KUBECONFIG"]) as f:
@@ -783,6 +754,9 @@ class K8sSelection:
         add_ifnotthere('users',existing_kubeconf)
         add_ifnotthere('clusters',existing_kubeconf)
         
+        if existing_kubeconf['current-context'] == None:
+            existing_kubeconf['current-context']='default'
+        self.log.info("exis %s",existing_kubeconf)
         with open(os.environ["KUBECONFIG"], 'w') as f:
             yaml.safe_dump(existing_kubeconf, f)
         
