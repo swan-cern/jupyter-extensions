@@ -118,9 +118,14 @@ class K8sSelection:
                             "--set", "user.name=" + os.environ["USER"], 
                             "--set", "cvmfs.enable=true", "--set", "user.admin=false",
                             "https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz"]
-                    self.run_helm(create_services_cmd)
+                    if not self.namespace_exists("spark",api_instance):
+                        #if there is no namespace called spark we need to create the chart
+                        self.log.info("installing spark-services chart")
+                        self.run_helm(create_services_cmd)
                     #disabled atm because of conflict with services
-                    #self.run_helm(create_user_cmd)
+                    #if not self.namespace_exists("spark-"+ os.environ["USER"],api_instance):
+                    #    self.log.info("installing spark-user chart")
+                    #    self.run_helm(create_user_cmd)
 
                 except Exception as e:
                     self.log.info(e)
@@ -544,7 +549,6 @@ class K8sSelection:
 
             # Declaring the naming conventions of the resources to be created or checked
             namespace = 'spark-' + username
-            username = username
             rolebinding_name = 'edit-cluster-' + namespace
 
             try:
@@ -557,30 +561,31 @@ class K8sSelection:
                         selected_cluster = i['context']['cluster']
                         break
 
-                create_user_cmd=["helm", "install", "--name", "spark-user-" + username, "--set",
-                               "user.name=" + username, "--set", "cvmfs.enable=true", "--set", "user.admin=false",
-                               "https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz"]
+                if not self.namespace_exists("spark-"+ username,api_instance):
+                    create_user_cmd=["helm", "install", "--name", "spark-user-" + username, "--set",
+                                "user.name=" + username, "--set", "cvmfs.enable=true", "--set", "user.admin=false",
+                                "https://gitlab.cern.ch/db/spark-service/spark-service-charts/raw/spark_user_accounts/cern-spark-user-1.1.0.tgz"]
 
-                out = self.run_helm(create_user_cmd)
-
-
-                # If helm chart is deployed successfully, send message to frontend
-                if out.decode('utf-8') != '':
-                    # Get the server ip of the cluster to be sent in the email to the user.
-                    for i in load['clusters']:
-                        if i['name'] == selected_cluster:
-                            server_ip = i['cluster']['server']
-                            ca_cert = i['cluster']['certificate-authority-data']
-                            break
+                    out = self.run_helm(create_user_cmd)
 
 
-                    self.log.info("Successfully created user")
-                    self.send({
-                        'msgtype': 'added-user-successfully',
-                        'ca_cert': ca_cert,
-                        'server_ip': server_ip,
-                        'cluster_name': selected_cluster
-                    })
+                    # If helm chart is deployed successfully, send message to frontend
+                    if out.decode('utf-8') != '':
+                        # Get the server ip of the cluster to be sent in the email to the user.
+                        for i in load['clusters']:
+                            if i['name'] == selected_cluster:
+                                server_ip = i['cluster']['server']
+                                ca_cert = i['cluster']['certificate-authority-data']
+                                break
+
+
+                        self.log.info("Successfully created user")
+                        self.send({
+                            'msgtype': 'added-user-successfully',
+                            'ca_cert': ca_cert,
+                            'server_ip': server_ip,
+                            'cluster_name': selected_cluster
+                        })
                 else:
                     error = 'Cannot create user due to some error.'
                     self.send({
@@ -862,6 +867,9 @@ class K8sSelection:
                 'msgtype': 'get-clusters-unsuccessfull',
                 'error': error
             })
+
+    def namespace_exists(self, ns, api_instance):
+        return ns in (ns.metadata.name  for ns in api_instance.list_namespace().items)
 
     def run_helm(self,command_to_run):
         command = ["helm", "init", "--client-only"]
