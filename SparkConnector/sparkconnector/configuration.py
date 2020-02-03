@@ -49,12 +49,34 @@ class SparkConfiguration(object):
         return spark_version
 
     def get_spark_user(self):
-        """ Get cluster name """
-        return os.environ.get('SPARK_USER', '')
+        """ Get spark user name """
+        return os.environ.get('SPARK_USER', 'root')
 
     def get_spark_needs_auth(self):
         """ When NXCals no longer require kinit, remove the function """
-        return self.cluster_name == "hadoop-nxcals" and subprocess.call(['klist', '-s']) != 0
+
+        if self.get_cluster_name() == "hadoop-nxcals":
+            # Use some static path to store the credentials
+            os.environ['KRB5CCNAME'] = '/tmp/sparkconn_krb5cc_%s' % self.get_spark_user()
+
+            return subprocess.call(['klist', '-s']) != 0
+
+        return False
+
+    def spark_auth(self, auth_kinit):
+        """ Do auth for the spark """
+
+        # Use some static path to store the credentials
+        os.environ['KRB5CCNAME'] = '/tmp/sparkconn_krb5cc_%s' % self.get_spark_user()
+
+        # Execute kinit and pipe password directly to the process without exposing it.
+        p = subprocess.Popen(['kinit'], stdin=subprocess.PIPE, universal_newlines=True)
+        p.communicate(input=auth_kinit)
+
+        if p.wait() == 0:
+            return True
+        else:
+            return False
 
     def close_spark_session(self):
         sc = self.connector.ipython.user_ns.get('sc')
