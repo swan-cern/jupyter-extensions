@@ -20,11 +20,15 @@
       <div class="navbar-inner">
         <div class="container">
           <div class="center-nav">
-            <p class="navbar-text nav">Password{% if token_available %} or token{% endif %}:</p>
             <form action="{{base_url}}login?next={{next}}" method="post" class="navbar-form pull-left">
               {{ xsrf_form_html() | safe }}
+              {% if token_available %}
+                <label for="password_input"><strong>{% trans %}Password or token:{% endtrans %}</strong></label>
+              {% else %}
+                <label for="password_input"><strong>{% trans %}Password:{% endtrans %}</strong></label>
+              {% endif %}
               <input type="password" name="password" id="password_input" class="form-control">
-              <button type="submit" id="login_submit">Log in</button>
+              <button type="submit" class="btn btn-default" id="login_submit">{% trans %}Log in{% endtrans %}</button>
             </form>
           </div>
         </div>
@@ -32,7 +36,7 @@
     </div>
     </div>
     {% else %}
-    <p>No login available, you shouldn't be seeing this page.</p>
+    <p>{% trans %}No login available, you shouldn't be seeing this page.{% endtrans %}</p>
     {% endif %}
     {% if message %}
       <div class="row">
@@ -81,6 +85,25 @@ http://localhost:8888/?token=c8de56fa... :: /Users/you/notebooks
       <p>
         Cookies are required for authenticated access to notebooks.
       </p>
+      {% if allow_password_change %}
+        <h3>{% trans %}Setup a Password{% endtrans %}</h3>
+        <p> You can also setup a password by entering your token and a new password
+        on the fields below:</p>
+        <form action="{{base_url}}login?next={{next}}" method="post" class="">
+                {{ xsrf_form_html() | safe }}
+          <div class="form-group">
+            <label for="token_input"><h4>Token</h4></label>
+            <input type="password" name="password" id="token_input" class="form-control">
+          </div>
+          <div class="form-group">
+            <label for="new_password_input"><h4>New Password</h4></label>
+            <input type="password" name="new_password" id="new_password_input" class="form-control" required>
+          </div>
+          <div class="form-group">
+            <button type="submit" class="btn btn-default" id="login_new_pass_submit">{% trans %}Log in and set new password{% endtrans %}</button>
+          </div>
+        </form>
+      {% endif %}
 
     </div>
     {% endblock token_message %}

@@ -253,47 +253,47 @@ data-server-root="{{server_root}}"
                   <div class="pull-right">
 
                   {% if share_page %}
-                    <button title="Download selected" class="download-button btn btn-default btn-xs"><i class="fa fa-download fa-fw" aria-hidden="true"></i></button>
+                    <button title="{% trans %}Download selected{% endtrans %}" aria-label="{% trans %}Download{% endtrans %}" class="download-button btn btn-default btn-xs"><i class="fa fa-download fa-fw" aria-hidden="true"></i></button>
                     <div class="separator"></div>
                     <button title="Clone project" id="clone-button" class="btn btn-default btn-xs"><i class="icon-clone" aria-hidden="true"></i></button>
                   {% else %}
-                    <button title="Shutdown selected notebook(s)" class="shutdown-button btn btn-default btn-xs btn-warning"><i class="fa fa-stop" aria-hidden="true"></i></button>
-                    <button title="Rename selected" class="rename-button btn btn-default btn-xs"><i class="fa fa-pencil fa-fw" aria-hidden="true"></i></button>
+                    <button title="{% trans %}Shutdown selected notebook(s){% endtrans %}" aria-label="{% trans %}Shutdown{% endtrans %}" class="shutdown-button btn btn-default btn-xs btn-warning"><i class="fa fa-stop" aria-hidden="true"></i></button>
+                    <button title="{% trans %}Rename selected{% endtrans %}" aria-label="{% trans %}Rename{% endtrans %}" class="rename-button btn btn-default btn-xs"><i class="fa fa-pencil fa-fw" aria-hidden="true"></i></button>
                     <span class="page-projects"{% if not projects_root %} style="display:none"{% endif %}>
-                      <button title="Delete selected" class="delete-button btn btn-default btn-xs btn-danger"><i class="icon-fa-times" aria-hidden="true"></i></button>
+                      <button title="{% trans %}Delete selected{% endtrans %}" aria-label="{% trans %}Delete selected{% endtrans %}" class="delete-button btn btn-default btn-xs btn-danger"><i class="icon-fa-times" aria-hidden="true"></i></button>
                       <div class="separator"></div>
                       <button title="Download Project from git" id="download-project" class="btn btn-default btn-xs"><i class="fa fa-cloud-download fa-fw"></i></button>
                       <button title="Add new Project" id="new-project" class="btn btn-default btn-xs"><i class="icon-fa-plus"></i></button>
                     </span><span class="page-tree"{% if projects_root %} style="display:none"{% endif %}>
-                      <button title="Duplicate selected" class="duplicate-button btn btn-default btn-xs"><i class="fa fa-files-o fa-fw" aria-hidden="true"></i></button>
-                      <button title="Move selected" class="move-button btn btn-default btn-xs"><i class="fa fa-scissors fa-fw" aria-hidden="true"></i></button>
-                      <button title="Download selected" class="download-button btn btn-default btn-xs"><i class="fa fa-download fa-fw" aria-hidden="true"></i></button>
-                      <button title="Delete selected" class="delete-button btn btn-default btn-xs btn-danger"><i class="icon-fa-times" aria-hidden="true"></i></button>
+                      <button title="{% trans %}View selected{% endtrans %}" aria-label="{% trans %}View{% endtrans %}" class="view-button btn btn-default btn-xs"><i class="fa fa-eye fa-fw" aria-hidden="true"></i></button>
+                      <button title="{% trans %}Edit selected{% endtrans %}" aria-label="{% trans %}Edit{% endtrans %}" class="edit-button btn btn-default btn-xs"><i class="fa fa-pencil-square-o fa-fw" aria-hidden="true"></i></button>
+                      <button title="{% trans %}Duplicate selected{% endtrans %}" aria-label="{% trans %}Duplicate{% endtrans %}" class="duplicate-button btn btn-default btn-xs"><i class="fa fa-files-o fa-fw" aria-hidden="true"></i></button>
+                      <button title="{% trans %}Move selected{% endtrans %}" aria-label="{% trans %}Move{% endtrans %}" class="move-button btn btn-default btn-xs"><i class="fa fa-scissors fa-fw" aria-hidden="true"></i></button>
+                      <button title="{% trans %}Download selected{% endtrans %}" aria-label="{% trans %}Download{% endtrans %}" class="download-button btn btn-default btn-xs"><i class="fa fa-download fa-fw" aria-hidden="true"></i></button>
+                      <button title="{% trans %}Delete selected{% endtrans %}" aria-label="{% trans %}Delete selected{% endtrans %}" class="delete-button btn btn-default btn-xs btn-danger"><i class="icon-fa-times" aria-hidden="true"></i></button>
                       <div class="separator"></div>
                       <button title="Share this Project" id="share-project-button" class="btn btn-default btn-xs"><i class="fa fa-share-alt fa-fw"></i></button>
 
                       <form id='alternate_upload'  class='alternate_upload'>
-                      <span id="notebook_list_info">
-                        <input  id="upload" title="Click to browse for a file to upload." type="file" name="datafile" class="fileinput" multiple='multiple'>
-                        <label for="upload">
-                          <span title="Upload file" class="btn btn-xs btn-default btn-upload">
-                            <i class="fa fa-upload fa-fw" aria-hidden="true"></i>
-                          </span>
-                        </label>
-                      </span>
+                        <span id="notebook_list_info">
+                        <span id="upload_span" class="btn btn-xs btn-default btn-upload" role="button" tabindex="0">
+                          <input id="upload_span_input" title="{% trans %}Click to browse for a file to upload.{% endtrans %}" type="file" name="datafile" class="fileinput" multiple='multiple' tabindex="-1">
+                          <i class="fa fa-upload fa-fw" aria-hidden="true"></i>
+                        </span>
+                        </span>
                       </form>
                       <div id="new-buttons" class="btn-group">
                         <button title="Add new..." class="dropdown-toggle btn btn-default btn-xs" data-toggle="dropdown">
                           <i class="icon-fa-plus" aria-hidden="true"></i>
                         </button>
-                        <ul id="new-menu" class="dropdown-menu">
-                          <li role="presentation" class="dropdown-header" id="notebook-kernels">Notebooks</li>
-                          <li class="divider"></li>
-                          <li role="presentation" id="new-file">
-                            <a role="menuitem" tabindex="-1" href="javascript:">Text File</a>
+                        <ul id="new-menu" class="dropdown-menu" role="menu">
+                          <li role="menuitem" class="dropdown-header" id="notebook-kernels">Notebook:</li>
+                          <li role="presentation" class="divider"></li>
+                          <li role="none" id="new-file">
+                            <a role="menuitem" tabindex="-1" href="#">{% trans %}Text File{% endtrans %}</a>
                           </li>
-                          <li role="presentation" id="new-folder">
-                            <a role="menuitem" tabindex="-1" href="javascript:">Folder</a>
+                          <li role="none" id="new-folder">
+                            <a role="menuitem" tabindex="-1" href="#">{% trans %}Folder{% endtrans %}</a>
                           </li>
                         </ul>
                       </div>
@@ -317,7 +317,7 @@ data-server-root="{{server_root}}"
                   <div class="col-xs-11 name">
                     <div id="sort_name" >
                       <span class="sort-action" id="sort-name">
-                          Name
+                          {% trans %}Name{% endtrans %}
                           <i class="fa fa-sort-desc"></i>
                       </span>
                     </div>
@@ -328,17 +328,17 @@ data-server-root="{{server_root}}"
               </div>
               <div class="col-md-1 hidden-xs">
                   <span class="sort-action" id="file-size">
-                    Size
+                    {% trans %}Size{% endtrans %}
                     <i class="fa fa-sort-desc" style="display: none"></i>
                   </span>
               </div>
               <div class="col-md-1 hidden-xs">
-                Status
+                {% trans %}Status{% endtrans %}
               </div>
               <div class="col-md-2 col-xs-3">
                 <div id="last_modified">
                   <span class="sort-action" id="last-modified">
-                    Modified
+                    {% trans %}Modified{% endtrans %}
                     <i class="fa fa-sort-desc" style="display: none"></i>
                   </span>
                 </div>

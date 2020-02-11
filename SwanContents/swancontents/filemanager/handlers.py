@@ -1,8 +1,7 @@
 from notebook.base.handlers import (
     AuthenticatedFileHandler, APIHandler
 )
-from notebook.utils import url_path_join
-from notebook.base.handlers import json_errors
+from notebook.utils import maybe_future, url_path_join
 from tornado import gen, web
 from .proj_url_checker import check_url
 import os, json
@@ -54,7 +53,7 @@ class FetchHandler(APIHandler):
             raise web.HTTPError(400, u'No url provided')
         check_url(url)
 
-        model = yield gen.maybe_future(self.contents_manager.download(
+        model = yield maybe_future(self.contents_manager.download(
             url=url
         ))
         self._finish_model(model)
@@ -62,13 +61,12 @@ class FetchHandler(APIHandler):
 
 class ContentsHandler(APIHandler):
 
-    @json_errors
     @web.authenticated
     @gen.coroutine
     def delete(self, path=''):
         """delete a file in the given path"""
         cm = self.contents_manager
         self.log.warning('delete %s', path)
-        yield gen.maybe_future(cm.delete(path, force=True))
+        yield maybe_future(cm.delete(path, force=True))
         self.set_status(204)
         self.finish()

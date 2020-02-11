@@ -182,7 +182,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
             model = self._proj_model(path, content=content)
 
         else:
-            model = super(LargeFileManager, self).get(path, content)
+            model = super(LargeFileManager, self).get(path, content, type, format)
         return model
 
     def save(self, model, path=''):

@@ -8,7 +8,7 @@ define([
     'base/js/events',
     'base/js/keyboard',
     'moment'
-], function ($, require, Jupyter, notebook_list, dialog, utils, events, keyboard, moment) {
+], function ($, requirejs, IPython, notebook_list, dialog, utils, events, keyboard, moment) {
 
     /**
      * Extends Jupyter notebooklist lib to cope with the new filemanager and handlers
@@ -204,7 +204,7 @@ define([
             var share_button = $('#share-project-button');
             share_button.unbind();
             share_button.on('click', function () {
-                require(['nbextensions/swanshare/extension'], function (share) {
+                requirejs(['nbextensions/swanshare/extension'], function (share) {
                     share.share_button_click(project);
                 }, function (err) {
                     console.log('Failure while loading swanshare lib');
@@ -223,7 +223,7 @@ define([
 
             if (path.length >= 3) {
                 clone_button.on('click', function () {
-                    require(['nbextensions/swanshare/extension'], function (share) {
+                    requirejs(['nbextensions/swanshare/extension'], function (share) {
                         share.clone_project(utils.url_path_join(swan_projects_name, path[2]), path[1]);
                     }, function (err) {
                         console.log('Failure while loading swanshare lib');
@@ -976,8 +976,8 @@ define([
      */
     window.open_external = function (url) {
         dialog.modal({
-            notebook: Jupyter.notebook,
-            keyboard_manager: Jupyter.keyboard_manager,
+            notebook: IPython.notebook,
+            keyboard_manager: IPython.keyboard_manager,
             title: 'Opening external link',
             body: $('<p>Are you sure you want to open the following <b>external link</b>?<br>' + url + '</p>'),
             buttons: {
@@ -1016,7 +1016,7 @@ define([
             // Use showdown to convert markdown into HTML and xss to remove not allowed HTML elements
             // (for security reasons).
             // Replace the links with safer versions
-            require(['codemirror/lib/codemirror', './libs/showdown.min', './libs/xss.min', 'codemirror/mode/python/python',
+            requirejs(['codemirror/lib/codemirror', './libs/showdown.min', './libs/xss.min', 'codemirror/mode/python/python',
                 'notebook/js/codemirror-ipython'], function (CodeMirror, showdown) {
 
                 var whitelist = filterXSS.getDefaultWhiteList();
