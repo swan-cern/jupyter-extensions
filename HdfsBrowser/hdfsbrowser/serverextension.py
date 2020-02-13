@@ -9,8 +9,7 @@
 """
 
 from notebook.base.handlers import IPythonHandler
-import tornado.web
-from tornado import httpclient
+from tornado import httpclient, gen
 import os
 import json
 from urllib.request import urlopen
@@ -66,7 +65,7 @@ class HdfsBrowserHandler(IPythonHandler):
                                   ).read())['beans'][0]['State'] == 'active':
                 return namenode
 
-    @tornado.web.asynchronous
+    @gen.coroutine
     def get(self):
         """
             Handles get requests to the HDFS Browser

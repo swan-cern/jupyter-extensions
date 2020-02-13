@@ -6,8 +6,7 @@ to the endpoint notebook_base_url/sparkmonitor
 """
 
 from notebook.base.handlers import IPythonHandler
-import tornado.web
-from tornado import httpclient
+from tornado import httpclient, gen
 import json
 import re
 import os
@@ -24,7 +23,7 @@ class SparkMonitorHandler(IPythonHandler):
 
     http = httpclient.AsyncHTTPClient()
 
-    @tornado.web.asynchronous
+    @gen.coroutine
     def get(self):
         """Handles get requests to the Spark UI
 
