@@ -506,7 +506,7 @@ define([
                     console.warn(message, exception);
                 }
 
-                var reason = exception ? (exception.xhr_error || exception.reason || exception.message || exception) : '';
+                var reason = exception ? (exception.message || exception.xhr_error || exception.reason || exception) : '';
 
                 var alert = $('<div/>')
                     .addClass('alert alert-dismissable')

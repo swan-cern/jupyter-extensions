@@ -17,9 +17,6 @@ LocalPrefix = 'local:'
 EOSUserRE = '/eos/(docker/|up2u/)?(user/[a-z]|home-[a-z])/([a-z0-9]+)'
 GitlabRE = '^https://(.+:.+@)?gitlab\.cern\.ch'
 
-def raise_error(emsg):
-    raise web.HTTPError(400, reason = emsg)
-
 def get_name_from_shared_from_link(r):
     hdr = r.raw.getheader('Content-Disposition')
     encodedName = re.search('filename="(.*)"$',hdr).group(1)
@@ -91,7 +88,7 @@ def check_url(url):
                      url.startswith(EOSUserPrefix) or \
                      url.startswith(LocalPrefix)
     if not is_good_server:
-        raise_error('The URL of the project is not a github, CERN gitlab, CERNBox shared link nor root.cern.ch URL. It is not a path on EOS either.')
+        raise web.HTTPError(400, 'The URL of the project is not a github, CERN gitlab, CERNBox shared link nor root.cern.ch URL. It is not a path on EOS either.')
 
     # Check the chars
     onEOS = is_file_on_eos(url)
@@ -109,18 +106,18 @@ def check_url(url):
         extra_chars = ":@"
     has_allowed_chars = has_good_chars(url, extra_chars)
     if not has_allowed_chars:
-        raise_error('The URL of the project is invalid (some of its characters are not accepted).')
+        raise web.HTTPError(400, 'The URL of the project is invalid (some of its characters are not accepted).')
 
     # Limit the kind of project
     is_good_ext = is_good_proj_name(url)
     if not local and not is_good_ext:
-        raise_error('The project must be a notebook or a git repository.')
+        raise web.HTTPError(400, 'The project must be a notebook or a git repository.')
 
     # Check it exists
     if not onEOS and not local:
         request = requests.get(url, verify=not is_cernbox_shared_link(url))
         sc = request.status_code
         if sc != 200:
-            raise_error('The URL of the project does not exist or is not reachable (status code is %s)' %sc)
+            raise web.HTTPError(400, 'The URL of the project does not exist or is not reachable (status code is %s)' %sc)
 
     return True

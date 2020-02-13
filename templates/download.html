@@ -60,7 +60,7 @@ data-base-url="{{base_url | urlencode}}"
                     error('Error downloading project.');
                 }
             }).catch(function (e) {
-            error(e.xhr_error || e.reason || e.message || e);
+            error(e.message || e.xhr_error || e.reason || e);
         });
 
         function error(reason) {

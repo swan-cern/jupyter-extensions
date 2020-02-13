@@ -374,7 +374,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
             rc = subprocess.call(['git', 'clone', url, tmp_dir_name])
             if rc != 0:
-                raise web.HTTPError(400, "It was not possible to clone the repo %s" % url)
+                raise web.HTTPError(400, "It was not possible to clone the repo %s. Did you pass the username/token?" % url)
 
             # Also download submodules if they exist
             subprocess.call(['git', 'submodule', 'update', '--init', '--recursive'], cwd=tmp_dir_name)
