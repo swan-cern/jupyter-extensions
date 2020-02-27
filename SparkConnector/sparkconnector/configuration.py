@@ -53,8 +53,10 @@ class SparkConfiguration(object):
         return os.environ.get('SPARK_USER', '')
 
     def get_spark_needs_auth(self):
-        """ When NXCals no longer require kinit, remove the function """
-        return self.cluster_name == "hadoop-nxcals" and subprocess.call(['klist', '-s']) != 0
+        """ Do not require auth if SPARK_AUTH_REQUIRED is 0,
+        e.g. in case HADOOP_TOKEN_FILE_LOCATION has been provided
+        """
+        return os.environ.get('SPARK_AUTH_REQUIRED', 1) == 1
 
     def close_spark_session(self):
         sc = self.connector.ipython.user_ns.get('sc')

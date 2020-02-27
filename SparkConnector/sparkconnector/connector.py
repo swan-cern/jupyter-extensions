@@ -68,13 +68,6 @@ class SparkConnector:
                 )
                 return
 
-            # As of today, NXCals still requires a valid kerberos token to
-            # access their own API.
-            if self.spark_configuration.get_spark_needs_auth():
-                self.send_error('sparkconn-auth', 'No valid credentials provided.')
-                return
-
-
             try:
                 # Ask port allocator to reserve and return 3 available ports
                 self.port_allocator.connect()
