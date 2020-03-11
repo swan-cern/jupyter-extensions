@@ -21,38 +21,53 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
 
     root_dir = Unicode(config=True)
 
+    version_base = Unicode(
+        default_value='.sys.v#.%s',
+        config=True
+    )
+
+    latest_recorded = {}
+
 
     def create_checkpoint(self, contents_mgr, path):
         """
-            Copies the current file to make a version of it.
-            Creates the versions folder if it doesn't exist.
+            EOS creates automatically a version by using the atomic writing.
+            So we just need to return the latest checkpoint created
         """
-        try:
-            checkpoint = self._new_checkpoint(path)
-            os.makedirs(checkpoint['base_path'], exist_ok=True)
-            self._copy(checkpoint['src_path'], checkpoint['checkpoint_path'])
-            return self._get_checkpoint_return(checkpoint)
-        except:
+        # To check if the version returned is new or already knows (an error might have occurred)
+        previous_recorded = self.latest_recorded[path] if path in self.latest_recorded else None
+        checkpoints = self.list_checkpoints(path)
+
+        if not checkpoints:
+            self.log.error("No checkpoint was created")
             return None
+
+        current_checkpoint = checkpoints[-1]
+        
+        if previous_recorded and previous_recorded['id'] == current_checkpoint['id']:
+            #If we're returning the same checkpoint again, something happened...
+            self.log.error("Same checkpoint found. Something happened...")
+            return None
+
+        return current_checkpoint
 
     def restore_checkpoint(self, contents_mgr, checkpoint_id, path):
         """ Replace the current file with a previous version"""
         checkpoint = self._get_checkpoint_info(path, checkpoint_id)
-        self._copy(checkpoint['checkpoint_path'], checkpoint['src_path'])
+        try:
+            self._copy(checkpoint['checkpoint_path'], checkpoint['src_path'])
+        except: 
+            # the version might no longer exist if it was cleaned (by default EOS should keep 10 versions)
+            self._no_such_checkpoint(path, checkpoint_id)
+
+
 
     def rename_checkpoint(self, checkpoint_id, old_path, new_path):
-        """ Moves all checkpoints when the notebook file is renamed """
-        checkpoint_old_path = self._get_checkpoint_info(old_path, checkpoint_id)['checkpoint_path']
-        checkpoint_new = self._get_checkpoint_info(new_path, checkpoint_id)
-        checkpoint_new_path = checkpoint_new['checkpoint_path']
-
-        os.makedirs(checkpoint_new['base_path'], exist_ok=True)
-
-        if os.path.isfile(checkpoint_old_path):
-            self.log.debug("Renaming checkpoint %s -> %s", checkpoint_old_path, checkpoint_new_path)
-
-            with self.perm_to_403():
-                shutil.move(checkpoint_old_path, checkpoint_new_path)
+        """
+            Called when notebook file is renamed.
+            EOS should handle this by itself.
+        """
+        pass
 
     def delete_checkpoint(self, checkpoint_id, path):
         """Remove a created version"""
@@ -66,51 +81,25 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
             os.unlink(cp_path)
 
     def list_checkpoints(self, path):
-        """
-            On notebook opening, returns a list of all available versions.
-            Limit the number of versions to avoid polute the interface
-        """
+        """ On notebook opening, returns a list of all available versions. """
         base = self._get_checkpoint_base(path)
-
-        if not os.path.isdir(base['base_path']):
-            return []
 
         try:
             files = os.listdir(base['base_path'])
             files.sort()
-
-            # Clean old versions to prevent the list from growing indefinitely.
-            # It only gets cleaned here, and not when creating a new version for example,
-            # because otherwise the user would see versions that were deleted from the user interface
-            # (in the restore versions menu).
-            if len(files) > self.max_versions:
-                n_to_delete = len(files) - self.max_versions
-                for i, version in enumerate(files):
-                    if i >= n_to_delete:
-                        break
-                    os.unlink(os.path.join(base['base_path'], version))
-                files = files[n_to_delete:]
-
-            checkpoints = []
-            for file in files:
-                # If the version was created outside of SWAN (i.e CERNBox), we might have
-                # extra things after the timestamp, separated by a .
-                name = file.split('.')[0]
-                checkpoints.append(self._get_checkpoint_return(name))
-            return checkpoints
-        except: # If folder not accessible (the case in old FUSE) we get permission denied
+            to_return = [self._get_checkpoint_return(file) for file in files]
+            # Keep track of the latest version to compare when creating a new one
+            self.latest_recorded[path] = to_return[-1]
+            return to_return
+        except: # If folder doesn't exist or we get permission denied/not accessible (the case in old FUSE)
             return []
 
 
     # Aux functions
 
-    # Get the info of a new version, which corresponds to the current time
-    def _new_checkpoint(self, path):
-        curr_time = int(time.time())
-        return self._get_checkpoint_info(path, curr_time)
-
     # Get the info of a version which id is given
     def _get_checkpoint_info(self, path, id):
+        id = id.replace('_', '.') # Jupyter does not support . in the url
         base = self._get_checkpoint_base(path)
         base.update(dict(
             id=id,
@@ -125,26 +114,22 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
         dirname, basename = os.path.split(src_path)
         return dict(
             src_path=src_path,
-            base_path = os.path.join(dirname, '.sys.v#.%s' % basename),
+            base_path = os.path.join(dirname, self.version_base % basename),
         )
 
     # Get the information structure to be returned to the caller
     def _get_checkpoint_return(self, checkpoint):
-        if 'id' in checkpoint:
-            id = str(checkpoint['id'])
-            ts = checkpoint['id']
-        else:
-            # It should be string
-            id = checkpoint
-            ts = int(checkpoint)
+        id = checkpoint.replace('.', '_') # Jupyter does not support . in the url
+        ts = int(checkpoint.split('.')[0])
+        ts = datetime.datetime.fromtimestamp(ts)
         return dict(
                 id = id,
-                last_modified = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%dT%H:%M:%S')
+                last_modified = ts.strftime('%Y-%m-%dT%H:%M:%S')
             )
 
     # Error Handling
     def _no_such_checkpoint(self, path, checkpoint_id):
         raise HTTPError(
             404,
-            u'Checkpoint does not exist: %s@%s' % (path, checkpoint_id)
+            u'Checkpoint no longer exists: %s@%s' % (path, checkpoint_id)
         )
