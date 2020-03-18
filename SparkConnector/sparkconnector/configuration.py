@@ -56,7 +56,7 @@ class SparkConfiguration(object):
         """ Do not require auth if SPARK_AUTH_REQUIRED is 0,
         e.g. in case HADOOP_TOKEN_FILE_LOCATION has been provided
         """
-        return os.environ.get('SPARK_AUTH_REQUIRED', 1) == 1
+        return os.environ.get('SPARK_AUTH_REQUIRED', 'false') == 'true'
 
     def close_spark_session(self):
         sc = self.connector.ipython.user_ns.get('sc')
