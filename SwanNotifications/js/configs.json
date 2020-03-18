@@ -1,5 +1,5 @@
 {
-  "endpoint": "/services/notifications",
+  "endpoint": "/services/notifications/",
   "local_storage_name": "swan-notifications",
   "stack": {
     "dir1": "up",
