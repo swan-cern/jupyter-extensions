@@ -188,6 +188,10 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
     def save(self, model, path=''):
         """ Save the file model and return the model with no content """
 
+        chunk = model.get('chunk', None)
+        if chunk is not None:
+            return LargeFileManager.save(self, model, path)
+
         if 'type' not in model:
             raise web.HTTPError(400, u'No file type provided')
         if 'content' not in model and model['type'] != 'directory' and model['type'] != 'project':
