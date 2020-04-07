@@ -3,6 +3,7 @@ from notebook.utils import url_path_join
 from tornado.web import HTTPError
 from contextlib import contextmanager
 import io, os, nbformat
+import subprocess
 
 swan_sharing_folder = 'swan_sharing_folder/'
 
@@ -54,8 +55,12 @@ def atomic_writing(path, text=True, encoding='utf-8', log=None, **kwargs):
         os.fsync(fileobj.fileno())
         fileobj.close()
 
+        # To create a version of the file, enable that eos functionality on the parent directory
+        subprocess.run(["setfattr","-n", "user.fusex.rename.version", "-v", "1", dirname])
+
         # Try to rename tmp file to the original name
         # This is an atomic operation and will silently replace the current file
+        # This operation will also create a version automatically, since we set the option before
         os.replace(tmp_path, path)
 
     except:
@@ -67,6 +72,12 @@ def atomic_writing(path, text=True, encoding='utf-8', log=None, **kwargs):
 
         # Even if renaming failed, there's nothing else to do because the temp was already deleted....
         raise
+
+    finally:
+        # Remove the versioning option to revert to default behaviour
+        # This will complain if the exception occurred before setting this attr,
+        # but it will not generate a new exception.
+        subprocess.run(["setfattr","-x", "user.fusex.rename.version", dirname])
 
 
 class SwanFileManagerMixin(FileManagerMixin):
