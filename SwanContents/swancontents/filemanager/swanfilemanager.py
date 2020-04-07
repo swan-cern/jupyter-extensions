@@ -218,9 +218,8 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
                         self.create_checkpoint(path)
 
                 elif model['type'] == 'file':
-                    # Missing format will be handled internally by _save_large_file.
-                    self._save_large_file(os_path, model['content'], model.get('format'))
-                    
+                    # Missing format will be handled internally by _save_file.
+                    self._save_file(os_path, model['content'], model.get('format'))
 
                 elif model['type'] == 'directory':
                     self._save_directory(os_path, model, path)
