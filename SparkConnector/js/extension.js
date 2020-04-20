@@ -122,25 +122,6 @@ function SparkConnector() {
     events.on('kernel_connected.Kernel', $.proxy(this.start_comm, this));//Make sure there is always a comm when the kernel connects.
 }
 
-SparkConnector.prototype.filter_bundle_options = function (bundled_options) {
-    var that = this;
-    var filtered_options = {};
-    $.each(bundled_options, function (name, data) {
-        // Dont add bundle if currently selected cluster is filtered out
-        if (data.cluster_filter && data.cluster_filter.length != 0 && !data.cluster_filter.includes(that.cluster)) {
-            return;
-        }
-
-        // Dont add bundle if currently selected spark version is filtered out
-        if (data.spark_version_filter && data.spark_version_filter.length != 0 && !data.spark_version_filter.includes(that.spark_version)) {
-            return;
-        }
-
-        filtered_options[name] = data;
-    });
-    return filtered_options;
-}
-
 /**
  * Handler for messages received from the kernel
  * Messages can be an action or a page to show, which switched the current state
@@ -550,21 +531,22 @@ SparkConnector.prototype.get_html_configuring = function (config, error) {
     html.append(template_configuring.replace('{cluster_name}', this.cluster));
 
     var new_option = html.find('.new-option');
-    var bundled_options = html.find('#bundled-options');
+    var bundles_list = html.find('#bundled-options');
     var options_list = html.find('.spark-options');
 
     // Filter bundle options
-    this.extra_options = this.filter_bundle_options(this.extra_options);
+    var bundles = get_available_bundle_options();
 
     // Add the bundle options to the panel
-    $.each(this.extra_options, function (name, data) {
+    $.each(bundles, function (name, data) {
+        var checked = check_bundle_enabled(name);
         // Add bundle checkbox and action to show options on checkbox click
-        $('<div><input type="checkbox" ' + (that.options.bundled_options.includes(name) ? 'checked' : '') + '> Include ' + name + ' options</div>')
-            .appendTo(bundled_options)
+        $('<div><input type="checkbox" ' + (checked ? 'checked' : '') + '> Include ' + name + ' options</div>')
+            .appendTo(bundles_list)
             .find('input')
             .on('click', function () {
                 // on select, add/remove bundle to/from the metadata
-                if (that.options.bundled_options.includes(name)) {
+                if (check_bundle_enabled(name)) {
                     that.options.bundled_options.splice(that.options.bundled_options.indexOf(name), 1);
                     hide_bundle_option(name);
                 } else {
@@ -574,7 +556,7 @@ SparkConnector.prototype.get_html_configuring = function (config, error) {
             });
     });
 
-    if (!this.extra_options) {
+    if (!bundles) {
         html.find('#bundled-options').hide();
     }
 
@@ -584,6 +566,81 @@ SparkConnector.prototype.get_html_configuring = function (config, error) {
     fill_options();
     // Hightligh all the errors that might exist
     highlight_errors();
+
+    function get_available_bundle_options() {
+        var filtered_options = {};
+        $.each(that.extra_options, function (name, data) {
+            // Dont add bundle if currently selected cluster is filtered out
+            if (data.cluster_filter && data.cluster_filter.length != 0 && !data.cluster_filter.includes(that.cluster)) {
+                return;
+            }
+
+            // Dont add bundle if currently selected spark version is filtered out
+            if (data.spark_version_filter && data.spark_version_filter.length != 0 && !data.spark_version_filter.includes(that.spark_version)) {
+                return;
+            }
+
+            filtered_options[name] = data;
+        });
+        return filtered_options;
+    }
+
+    function check_bundle_enabled(name) {
+        for (var i = 0; i < that.options.bundled_options.length; i++) {
+            var option = that.options.bundled_options[i];
+
+            if (option == name) {
+                // bundle can be string, overwrite with json
+                that.options.bundled_options[i] = {
+                    "name": name,
+                    "value": true
+                };
+                return true;
+            } else if (option.hasOwnProperty('name') && option.name == name && option.hasOwnProperty('value')) {
+                // bundle can be json, return its value (true/false)
+                return option.value;
+            }
+        }
+
+        // bundle not found, add to metadata
+        that.options.bundled_options.append({
+            "name": name,
+            "value": false
+        });
+        return false;
+    }
+
+    function enable_bundle(name) {
+        // enable bundle
+        for (var i = 0; i < that.options.bundled_options.length; i++) {
+            var option = that.options.bundled_options[i];
+
+            // enable option by overwriting it with json with value true
+            if (option.name == name) {
+                that.options.bundled_options[i] = {
+                    "name": name,
+                    "value": true
+                };
+            }
+        }
+    }
+
+    function disable_bundle(name) {
+        // remove string-based bundle_option if any
+        that.options.bundled_options.splice(that.options.bundled_options.indexOf(name), 1);
+
+        for (var i = 0; i < that.options.bundled_options.length; i++) {
+            var option = that.options.bundled_options[i];
+
+            // enable option by overwriting it with json with value true
+            if (option == name || (option.hasOwnProperty('name') && option.name == name && option.hasOwnProperty('value'))) {
+                that.options.bundled_options[i] = {
+                    "name": name,
+                    "value": false
+                };
+            }
+        }
+    }
 
     /**
      * Display the first input, where users enter the name of the option.
