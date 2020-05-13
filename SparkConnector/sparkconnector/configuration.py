@@ -337,9 +337,6 @@ class SparkYarnConfiguration(SparkConfiguration):
 
         # Initialize YARN Specific configuration
         conf.set('spark.master', 'yarn')
-        conf.set('spark.authenticate', True)
-        conf.set('spark.network.crypto.enabled', True)
-        conf.set('spark.authenticate.enableSaslEncryption', True)
 
         # Archive the local python packages and set spark.submit.pyFiles if the propagate python packages bundle is selected
         if conf.get('spark.cern.user.pyModules') is not None:
