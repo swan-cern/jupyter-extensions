@@ -1,0 +1,27 @@
+{
+  "name": "swanhelp-nbextension",
+  "version": "0.1.0",
+  "description": "Jupyter Notebook extension to provide a help panel to users",
+  "keywords": [
+    "Jupyter",
+    "Extension",
+    "Notebook",
+    "SWAN",
+    "CERN"
+  ],
+  "author": "SWAN Admins",
+  "devDependencies": {
+    "copy-webpack-plugin": "^4.2.0",
+    "webpack": "^3.3.0"
+  },
+  "scripts": {
+    "build": "yarn webpack",
+    "webpack": "webpack -p --config webpack.config.js",
+    "dev": "webpack --watch --config webpack.config.js",
+    "clean": "rimraf ../swanhelp/nbextension"
+  },
+  "dependencies": {
+    "showdown": "^1.8.6",
+    "xss": "^0.3.7"
+  }
+}

@@ -2,9 +2,9 @@ var path = require('path');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-    entry: './js/extension.js',
+    entry: './src/extension.js',
     output: {
-        path: path.resolve(__dirname, 'swanhelp/js'),
+        path: path.resolve(__dirname, '../swanhelp/nbextension'),
         filename: 'extension.js',
         libraryTarget: 'umd'
     },

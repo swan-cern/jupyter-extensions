@@ -1,23 +1,63 @@
 {
-  "name": "sparkhelp",
-  "version": "0.0.1",
-  "description": "Jupyter Notebook extension to provide a help panel to users",
+  "name": "@swan-cern/swanhelp",
+  "version": "0.1.0",
+  "description": "Help panel for SWAN",
   "keywords": [
-    "Jupyter",
-    "Extension",
-    "Notebook"
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension",
+    "SWAN",
+    "CERN"
   ],
-  "author": "Diogo Castro",
-  "devDependencies": {
-    "copy-webpack-plugin": "^4.2.0",
-    "webpack": "^3.3.0"
+  "homepage": "https://github.com/swan-cern/jupyter-extensions",
+  "bugs": {
+    "url": "https://github.com/swan-cern/jupyter-extensions/issues"
+  },
+  "license": "BSD-3-Clause",
+  "author": "SWAN Admins",
+  "files": [
+    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/swan-cern/jupyter-extensions.git",
+    "directory": "SwanHelp"
   },
   "scripts": {
-    "webpack": "webpack -p --config webpack.config.js",
-    "dev": "webpack --watch --config webpack.config.js"
+    "build": "jlpm run build:lib",
+    "build:labextension": "cd swanhelp && rimraf labextension && mkdirp labextension && cd labextension && npm pack ../..",
+    "build:nbextension": "yarn --cwd nbextension build",
+    "build:lib": "tsc",
+    "build:all": "jlpm run build:labextension && jlpm run build:nbextension",
+    "clean": "jlpm run clean:lib",
+    "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
+    "clean:labextension": "rimraf swanhelp/labextension",
+    "clean:nbextension": "rimraf swanhelp/nbextension",
+    "clean:all": "jlpm run clean:lib && jlpm run clean:labextension && jlpm run clean:nbextension",
+    "eslint": "eslint . --ext .ts,.tsx --fix",
+    "eslint:check": "eslint . --ext .ts,.tsx",
+    "prepare": "jlpm run clean && jlpm run build",
+    "watch": "tsc -w",
+    "install:all": "jlpm install && yarn --cwd nbextension install",
+    "removeall": "rimraf nbextension/node_modules && rimraf node_modules"
   },
   "dependencies": {
-    "showdown": "^1.8.6",
-    "xss": "^0.3.7"
+    "@jupyterlab/application": "^2.0.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^2.25.0",
+    "@typescript-eslint/parser": "^2.25.0",
+    "eslint": "^6.8.0",
+    "eslint-config-prettier": "^6.10.1",
+    "eslint-plugin-prettier": "^3.1.2",
+    "mkdirp": "^1.0.3",
+    "prettier": "1.16.4",
+    "rimraf": "^2.6.1",
+    "typescript": "~3.7.0"
+  },
+  "jupyterlab": {
+    "extension": true
   }
 }
