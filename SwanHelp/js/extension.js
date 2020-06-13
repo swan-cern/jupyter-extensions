@@ -283,7 +283,7 @@ function markdown_to_html(markdown, path) {
     var relative_path = path.split('/');
     if (relative_path.length > 1) {
         relative_path.pop();
-        relative_path.join('/');
+        relative_path = relative_path.join('/');
         relative_path += '/';
     } else {
         relative_path = "";
