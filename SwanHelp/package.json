@@ -1,6 +1,6 @@
 {
   "name": "@swan-cern/swanhelp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Help panel for SWAN",
   "keywords": [
     "jupyter",
@@ -13,7 +13,7 @@
   "bugs": {
     "url": "https://github.com/swan-cern/jupyter-extensions/issues"
   },
-  "license": "BSD-3-Clause",
+  "license": "AGPL-3.0",
   "author": "SWAN Admins",
   "files": [
     "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}"
