@@ -1,10 +1,11 @@
+from hdfsbrowser.serverextension import HDFSBrowserProxy
+from notebook.utils import url_path_join
+from ._version import __version__ 
+
 """
     Package hdfsbrowser
     This package contains a server, nb and lab extensions
 """
-
-from hdfsbrowser.serverextension import HDFSBrowserProxy
-from notebook.utils import url_path_join
 
 
 def _jupyter_nbextension_paths():
@@ -12,7 +13,7 @@ def _jupyter_nbextension_paths():
     """
     return [dict(
         section="notebook",
-        src="js",
+        src="nbextension",
         dest="hdfsbrowser",
         require="hdfsbrowser/extension")]
 
