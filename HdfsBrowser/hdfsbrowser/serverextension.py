@@ -2,6 +2,10 @@ import json
 import re
 import os
 import traceback
+
+from traitlets import Unicode, Long, Float
+from traitlets.config import Configurable
+
 from notebook.utils import url_path_join
 from notebook.base.handlers import IPythonHandler
 
@@ -12,45 +16,42 @@ import xml.etree.ElementTree as ET
 from bs4 import BeautifulSoup
 
 
-class HDFSBrowserConfig():
+class HDFSBrowserConfig(Configurable):
     """
     Allows configuration of HDFS Browser, set defaults for server extenions
-
-    Note: should be HDFSBrowserConfig(Configurable) and based on jupyter_notebook_config.py
     """
 
-    def __init__(self, config):
-        # adjust hdfs-site.xml properties
-        cluster = os.environ['SPARK_CLUSTER_NAME']
-        if cluster == 'k8s':
-            # default hadoop cluster for k8s is analytix
-            cluster = 'analytix'
-        if cluster == 'hadoop-qa':
-            self.hdfs_site_namenodes_property = 'dfs.ha.namenodes.hdpqa'
-        elif cluster == 'hadoop-nxcals':
-            self.hdfs_site_namenodes_property = 'dfs.ha.namenodes.nxcals'
-        else:
-            self.hdfs_site_namenodes_property = 'dfs.ha.namenodes.{0}'.format(
-                cluster)
+    hdfs_site_path = Unicode(
+        'test/hdfs-site.xml', config=True, help='Path to hdfs-site.xml'
+    )
 
-        self.hdfs_site_path = '/cvmfs/sft.cern.ch/lcg/etc/hadoop-confext/conf/etc/{0}/hadoop.{0}/hdfs-site.xml'.format(
-            cluster)
-        self.hdfs_site_namenodes_port = 50070
+    hdfs_site_namenodes_property = Unicode(
+        'dfs.ha.namenodes.test', config=True, help='Property of hdfs-site.xml pointing to namenode'
+    )
 
-        # define webhdfs token
-        self.webhdfs_token = os.environ.get('WEBHDFS_TOKEN', '')
+    hdfs_site_namenodes_port = Unicode(
+        '50070', config=True, help='Port of web hdfs on namenode'
+    )
 
-        # Do not respond to webhdfs requests longer than this value e.g. for download
-        self.webhdfs_response_timeout = 3600
+    webhdfs_token = Unicode(
+        os.environ.get("WEBHDFS_TOKEN", ""), config=True, help='Token for webhdfs'
+    )
 
-        # Do not download files larger than this value
-        self.webhdfs_max_body_size = 10 * 1024 * 1024 * 1024
+    webhdfs_response_timeout = Float(
+        3600, config=True, help='Do not respond to webhdfs requests longer than this value e.g. for download'
+    )
 
-        # Do not download file chunks larger than this value
-        self.webhdfs_max_chunk_size = 10 * 1024 * 1024
+    webhdfs_max_body_size = Long(
+        10 * 1024 * 1024 * 1024, config=True, help='Do not download files larger than this value'
+    )
 
-        # Do not wait for connection longer than this value
-        self.connection_timeout = 2
+    webhdfs_max_chunk_size = Long(
+        10 * 1024 * 1024, config=True, help='Do not download file chunks larger than this value'
+    )
+
+    connection_timeout = Float(
+        2, config=True, help='Do not wait for connection longer than this value'
+    )
 
 
 class HDFSBrowserProxy(IPythonHandler):
@@ -252,16 +253,3 @@ class HDFSBrowserProxy(IPythonHandler):
         """Disable caching with etag
         """
         return None
-
-def load_jupyter_server_extension(nbapp):
-    """Load the Jupyter server extension.
-    """
-
-    nbapp.log.info('HDFS Browser enabled')
-    base_url = nbapp.web_app.settings['base_url']
-    hdfs_browser_proxy_root = '/hdfsbrowser'
-    hdfs_browser_endpoint = url_path_join(base_url, hdfs_browser_proxy_root)
-    hadoop_handlers = [
-        ('{0}.*'.format(hdfs_browser_endpoint), HDFSBrowserProxy, dict(proxy_root=hdfs_browser_proxy_root))
-    ]
-    nbapp.web_app.add_handlers('.*', hadoop_handlers)
