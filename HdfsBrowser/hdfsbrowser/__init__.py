@@ -1,24 +1,36 @@
 """
     Package hdfsbrowser
-    This package contains two modules:
-    serverextension.py is the Jupyter web server extension.
+    This package contains a server, nb and lab extensions
 """
+
+from hdfsbrowser.serverextension import HDFSBrowserProxy
+from notebook.utils import url_path_join
 
 
 def _jupyter_nbextension_paths():
-    """Used by 'jupyter nbextension' command to install frontend extension"""
+    """Used by 'jupyter nbextension' command to install frontend extension
+    """
     return [dict(
         section="notebook",
-        # the path is relative to the `my_fancy_module` directory
         src="js",
-        # directory in the `nbextension/` namespace
         dest="hdfsbrowser",
-        # _also_ in the `nbextension/` namespace
         require="hdfsbrowser/extension")]
 
 
 def _jupyter_server_extension_paths():
-    """Used by "jupyter serverextension" command to install web server extension'"""
-    return [{
-        "module": "hdfsbrowser.serverextension"
-    }]
+    """Declare the Jupyter server extension paths.
+    """
+    return [{"module": "hdfsbrowser"}]
+
+
+def load_jupyter_server_extension(nbapp):
+    """Load the Jupyter server extension.
+    """
+
+    base_url = nbapp.web_app.settings["base_url"]
+    hdfs_browser_proxy_root = '/hdfsbrowser'
+    hdfs_browser_endpoint = url_path_join(base_url, hdfs_browser_proxy_root)
+    hadoop_handlers = [
+        (hdfs_browser_endpoint+ ".*", HDFSBrowserProxy, dict(proxy_root=hdfs_browser_proxy_root))
+    ]
+    nbapp.web_app.add_handlers(".*", hadoop_handlers)
