@@ -1,9 +1,9 @@
 var path = require('path');
 
 module.exports = {
-    entry: './js/extension.js',
+    entry: './src/extension.js',
     output: {
-        path: path.resolve(__dirname, 'hdfsbrowser/js'),
+        path: path.resolve(__dirname, '../hdfsbrowser/nbextension'),
         filename: 'extension.js',
         libraryTarget: 'umd'
     },
