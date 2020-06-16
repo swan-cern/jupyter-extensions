@@ -1,6 +1,6 @@
 {
   "name": "@swan-cern/swanhelp",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Help panel for SWAN",
   "keywords": [
     "jupyter",
@@ -16,10 +16,12 @@
   "license": "AGPL-3.0",
   "author": "SWAN Admins",
   "files": [
-    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}"
+    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
+    "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
   ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "style": "style/index.css",
   "repository": {
     "type": "git",
     "url": "https://github.com/swan-cern/jupyter-extensions.git",
@@ -44,7 +46,12 @@
     "removeall": "rimraf nbextension/node_modules && rimraf node_modules"
   },
   "dependencies": {
-    "@jupyterlab/application": "^2.0.0"
+    "@jupyterlab/application": "^2.1.0",
+    "@jupyterlab/mainmenu": "^2.1.0",
+    "@jupyterlab/apputils": "^2.1.0",
+    "@jupyterlab/services": "^5.1.0",
+    "@jupyterlab/ui-components": "^2.1.0",
+    "react": "~16.9.0"
   },
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^2.25.0",
