@@ -83,6 +83,7 @@ def check_url(url):
                      url.startswith('https://raw.githubusercontent.com') or \
                      url.startswith('https://root.cern.ch') or \
                      url.startswith('https://root.cern') or \
+                     url.startswith('https://swan-gallery.web.cern.ch') or \
                      url.startswith(CERNBoxPrefix) or \
                      url.startswith(CERNBoxPrefixTesting) or \
                      url.startswith(EOSUserPrefix) or \
