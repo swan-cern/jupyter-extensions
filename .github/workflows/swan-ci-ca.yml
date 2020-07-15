@@ -1,0 +1,46 @@
+# This workflows will upload a Python Package using Twine when a release is created
+# Also a package for node is created and uploaded
+# author: Omar.Zapata@cern.ch 2020
+
+name: SWAN CI/CD pipeline
+
+on:
+  push:
+    tags:
+       - '*/*'
+  
+jobs:
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+    - name: Install node
+      uses: actions/setup-node@v1
+      with:
+       node-version: '12.x'
+    - name:  Set environnment package name  and version
+      run: |
+        echo ::set-env name=PACKAGE_TAG::${GITHUB_REF#refs/*/}
+        echo ::set-env name=PACKAGE_NAME::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 1)
+        echo ::set-env name=PACKAGE_VERSION::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 2)
+    - name: Install dependencies ${{ env.PACKAGE_VERSION }}
+      run: |
+        cd $PACKAGE_NAME
+        python -m pip install --upgrade pip
+        pip install setuptools wheel twine jupyter_packaging jupyterlab
+    - name: Build and publish ${{ env.PACKAGE_VERSION }}
+      env:
+        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        cd $PACKAGE_NAME
+        python setup.py sdist bdist_wheel
+        twine upload --repository testpypi dist/*
+        npm publish -dry-run
+        
