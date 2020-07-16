@@ -31,6 +31,7 @@ jobs:
       run: |
         echo ::set-env name=PACKAGE_TAG::${GITHUB_REF#refs/*/}
         echo ::set-env name=PACKAGE_NAME::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 1)
+        echo ::set-env name=PACKAGE_VERSION::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 2)
 
     - name: Install dependencies 
       run: |
