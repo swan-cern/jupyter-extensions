@@ -17,6 +17,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Install Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+
     - name: Install node
       uses: actions/setup-node@v1
       with:
@@ -30,7 +35,7 @@ jobs:
     - name: Install dependencies 
       run: |
         cd $PACKAGE_NAME
-        pip3 install setuptools wheel jupyter_packaging jupyterlab
+        pip install setuptools wheel twine jupyter_packaging jupyterlab~=2.0
 
     - name: Build wheel
       run: |
