@@ -45,7 +45,7 @@ jobs:
 
     - name: Publish distribution to PyPI
       env:
-        TWINE_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
         cd $PACKAGE_NAME
