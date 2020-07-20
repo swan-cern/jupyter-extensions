@@ -56,6 +56,19 @@ jobs:
     - name: Publish distribution to NPM
       run: |
         cd $PACKAGE_NAME
-        npm publish --access public 
+
+        #The next variables are requried to build the path to the pre-created npm package
+        #the package is already created by setup.py and it's not required to build it again.
+
+        #The name should be lower case
+        NPM_PKG_NAME=$(echo $PACKAGE_NAME | tr "[:upper:]" "[:lower:]")
+
+        #Version without v
+        NPM_PKG_VERSION=$(echo $PACKAGE_VERSION | sed -e 's/v//g')
+
+        #Full path with package name, version and organization
+        NPM_PKG_PATH=build/lib/$NPM_PKG_NAME/labextension/swan-cern-$NPM_PKG_NAME-$NPM_PKG_VERSION.tgz
+
+        npm publish $NPM_PKG_PATH --access public
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
