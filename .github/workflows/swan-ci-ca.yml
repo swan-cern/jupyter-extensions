@@ -25,8 +25,10 @@ jobs:
     - name: Install node
       uses: actions/setup-node@v1
       with:
-       node-version: '12.x'
-
+        always-auth: true
+        node-version: '12.x'
+        registry-url: https://registry.npmjs.org
+   
     - name: Set environnment package name  and version
       run: |
         echo ::set-env name=PACKAGE_TAG::${GITHUB_REF#refs/*/}
@@ -52,8 +54,8 @@ jobs:
         twine upload --repository testpypi dist/*
 
     - name: Publish distribution to NPM
-      env:
-        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
       run: |
         cd $PACKAGE_NAME
         npm publish --access public 
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
