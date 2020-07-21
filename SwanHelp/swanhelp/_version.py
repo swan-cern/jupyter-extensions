@@ -1,2 +1,3 @@
-version_info = (0, 1, 2)
-__version__ = ".".join(map(str, version_info))
+# please don't modify this file,
+# this is automatically updated by bump2version
+__version__ = '0.1.2'

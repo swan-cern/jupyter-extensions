@@ -1,0 +1,82 @@
+# This workflows will upload a Python Package using Twine when a release is created
+# Also a package for node is created and uploaded
+# author: Omar.Zapata@cern.ch 2020
+
+name: SWAN CI/CD pipeline
+
+on:
+  push:
+    tags:
+       - '*/*'
+  
+jobs:
+  build-publish:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Install Python
+      uses: actions/setup-python@v1
+      with:
+        python-version: '3.x'
+
+    - name: Install node
+      uses: actions/setup-node@v1
+      with:
+        always-auth: true
+        node-version: '12.x'
+        registry-url: https://registry.npmjs.org
+   
+    - name: Set environnment package name  and version
+      run: |
+        echo ::set-env name=PACKAGE_TAG::${GITHUB_REF#refs/*/}
+        echo ::set-env name=PACKAGE_NAME::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 1)
+        echo ::set-env name=PACKAGE_VERSION::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 2)
+
+    - name: Install dependencies 
+      run: |
+        cd $PACKAGE_NAME
+        pip install setuptools wheel twine jupyter_packaging jupyterlab~=2.0
+
+    - name: Build wheel
+      run: |
+        cd $PACKAGE_NAME
+        python setup.py sdist bdist_wheel
+
+    - name: Publish distribution to PyPI
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      run: |
+        cd $PACKAGE_NAME
+        twine upload --repository pypi dist/*
+
+    - name: Publish distribution to NPM
+      run: |
+        cd $PACKAGE_NAME
+
+        #The next variables are requried to build the path to the pre-created npm package
+        #the package is already created by setup.py and it's not required to build it again.
+
+        #The name should be lower case
+        NPM_PKG_NAME=$(echo $PACKAGE_NAME | tr "[:upper:]" "[:lower:]")
+
+        #Version without v
+        NPM_PKG_VERSION=$(echo $PACKAGE_VERSION | sed -e 's/v//g')
+
+        #Full path with package name, version and organization
+        NPM_PKG_PATH=build/lib/$NPM_PKG_NAME/labextension/swan-cern-$NPM_PKG_NAME-$NPM_PKG_VERSION.tgz
+
+        npm publish $NPM_PKG_PATH --access public
+      env:
+        NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+#    - name: Invoke workflow in systemuser-image
+#      uses: benc-uk/workflow-dispatch@v1
+#      with:
+#        workflow: SWAN CI/CD pipeline
+#        repo: swan-cern/systemuser-image
+#        token: ${{ secrets.WORKFLOW_ACCESS_TOKEN }}
+#        inputs: '{ "package": "${{env.PACKAGE_NAME}}", "version": "${{env.PACKAGE_VERSION}}" }'
