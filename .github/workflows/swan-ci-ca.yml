@@ -7,7 +7,7 @@ name: SWAN CI/CD pipeline
 on:
   push:
     tags:
-       - '*/*'
+       - '*/v*'
   
 jobs:
   build-publish:
