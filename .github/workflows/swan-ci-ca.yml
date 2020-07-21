@@ -72,3 +72,11 @@ jobs:
         npm publish $NPM_PKG_PATH --access public
       env:
         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+    - name: Invoke workflow in systemuser-image
+      uses: benc-uk/workflow-dispatch@v1
+      with:
+        workflow: SWAN CI/CD pipeline
+        repo: swan-cern/systemuser-image
+        token: ${{ secrets.SWAN_DISPATCH_TOKEN }}
+        inputs: '{ "package": "${{env.PACKAGE_NAME}}", "version": "${{env.PACKAGE_VERSION}}" }'
