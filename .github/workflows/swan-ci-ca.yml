@@ -17,24 +17,29 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
+    - name: Set environnment package name  and version
+      run: |
+        echo ::set-env name=PACKAGE_TAG::${GITHUB_REF#refs/*/}
+        echo ::set-env name=PACKAGE_NAME::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 1)
+        echo ::set-env name=PACKAGE_VERSION::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 2)
+        cd `echo  ${GITHUB_REF#refs/*/} | cut -d / -f 1`
+        if test -f 'package.json'; then
+          echo ::set-env name=PACKAGE_JSON::$(echo 1)
+        fi
+
     - name: Install Python
       uses: actions/setup-python@v1
       with:
         python-version: '3.x'
 
     - name: Install node
+      if: ${{env.PACKAGE_JSON}}
       uses: actions/setup-node@v1
       with:
         always-auth: true
         node-version: '12.x'
         registry-url: https://registry.npmjs.org
    
-    - name: Set environnment package name  and version
-      run: |
-        echo ::set-env name=PACKAGE_TAG::${GITHUB_REF#refs/*/}
-        echo ::set-env name=PACKAGE_NAME::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 1)
-        echo ::set-env name=PACKAGE_VERSION::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 2)
-
     - name: Install dependencies 
       run: |
         cd $PACKAGE_NAME
@@ -54,6 +59,7 @@ jobs:
         twine upload --repository pypi dist/*
 
     - name: Publish distribution to NPM
+      if: ${{env.PACKAGE_JSON}}
       run: |
         cd $PACKAGE_NAME
 
