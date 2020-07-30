@@ -19,18 +19,18 @@ jobs:
 
     - name: Set environnment package name  and version
       run: |
-      PACKAGE_NAME=$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 1)
+        PACKAGE_NAME=$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 1)
 
-      echo ::set-env name=PACKAGE_TAG::${GITHUB_REF#refs/*/}
-      echo ::set-env name=PACKAGE_NAME::$PACKAGE_NAME
-      echo ::set-env name=PACKAGE_VERSION::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 2)
-      cd $PACKAGE_NAME
-      if test -f 'package.json'; then
-        echo ::set-env name=PACKAGE_JSON::$(echo 1)
-      fi
-      if [ "$PACKAGE_NAME" == "SparkMonitor" ]; then
-        echo ::set-env name=PACKAGE_JAVA::$(echo 1)
-      fi
+        echo ::set-env name=PACKAGE_TAG::${GITHUB_REF#refs/*/}
+        echo ::set-env name=PACKAGE_NAME::$PACKAGE_NAME
+        echo ::set-env name=PACKAGE_VERSION::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 2)
+        cd $PACKAGE_NAME
+        if test -f 'package.json'; then
+          echo ::set-env name=PACKAGE_JSON::$(echo 1)
+        fi
+        if [ "$PACKAGE_NAME" == "SparkMonitor" ]; then
+          echo ::set-env name=PACKAGE_JAVA::$(echo 1)
+        fi
 
     - name: Install Python
       uses: actions/setup-python@v1
