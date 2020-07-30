@@ -46,10 +46,10 @@ jobs:
         registry-url: https://registry.npmjs.org
    
     - name: Set up JDK 1.8
-    if: ${{env.PACKAGE_JAVA}}
-    uses: actions/setup-java@v1
-    with:
-      java-version: 1.8
+      if: ${{env.PACKAGE_JAVA}}
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
 
     - name: Install dependencies 
       run: |
