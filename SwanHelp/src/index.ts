@@ -7,7 +7,8 @@ import swanDialog from './dialog';
 const defaultConfigs = {
   help: "https://swan.docs.cern.ch/",
   community: "https://cern.ch/swan-community",
-  support: "https://cern.service-now.com/service-portal/function.do?name=swan"
+  support: "https://cern.service-now.com/service-portal/function.do?name=swan",
+  gallery: "https://cern.ch/swan-gallery"
 }
 
 const extension: JupyterFrontEndPlugin<void> = {
@@ -24,6 +25,7 @@ namespace CommandIDs {
   export const help = 'swanhelp:help';
   export const community = 'swanhelp:community';
   export const support = 'swanhelp:support';
+  export const gallery = 'swanhelp:gallery';
 }
 
 async function activate(
@@ -46,6 +48,7 @@ async function activate(
   const swanGroup = [
     CommandIDs.about,
     CommandIDs.help,
+    CommandIDs.gallery,
     CommandIDs.community,
     CommandIDs.support,
   ].map(command => ({ command }));
@@ -64,6 +67,16 @@ async function activate(
       label: "Help",
       execute: () => {
         return newIframeWidget(helpUrl, "Help");
+      }
+    });
+  }
+  
+  let galleryUrl = config.get('gallery') as string;
+  if (galleryUrl !== '') {
+    app.commands.addCommand(CommandIDs.gallery, {
+      label: 'Examples Gallery',
+      execute: () => {
+        return newIframeWidget(galleryUrl, "Gallery");
       }
     });
   }

@@ -20,7 +20,7 @@ data-server-root="{{server_root}}"
     <i class="fa fa-terminal" aria-hidden="true"></i>
   </button>
   {% endif %}
-  <button class="btn btn-default btn-xs" onclick="window.open('{{base_url}}gallery', '_blank')" title="Examples Gallery">
+  <button class="btn btn-default btn-xs" onclick="window.open('{{ gallery_url | default("https://swan-gallery.web.cern.ch/", true) }}', '_blank')" title="Examples Gallery">
     <i class="fa fa-picture-o" aria-hidden="true"></i>
   </button>
 {% endblock %}
