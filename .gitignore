@@ -4,6 +4,7 @@
 SparkMonitor/scalalistener/project/
 SparkMonitor/scalalistener/target/
 SparkMonitor/sparkmonitor/listener.jar
+SparkMonitor/sparkmonitor/nbextension/*
 .idea/
 
 # Byte-compiled / optimized / DLL files

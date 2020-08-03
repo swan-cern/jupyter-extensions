@@ -2,12 +2,12 @@ var path = require('path');
 
 module.exports = {
     entry: {
-        extension: './js/extension.js',
-        timeline: './js/Timeline.js',
-        taskchart: './js/TaskChart.js'
+        extension: './src/extension.js',
+        timeline: './src/Timeline.js',
+        taskchart: './src/TaskChart.js'
     },
     output: {
-        path: path.resolve(__dirname, 'sparkmonitor/js'),
+        path: path.resolve(__dirname, '../sparkmonitor/nbextension'),
         filename: '[name].js',
         // library:'sparkmonitor',
         libraryTarget: 'umd'
@@ -15,8 +15,7 @@ module.exports = {
     externals: ['jquery', 'require', 'base/js/namespace', 'base/js/events', 'notebook/js/codecell', 'moment'],
     devtool: 'source-map',
     module: {
-        rules: [
-            {
+        rules: [{
                 test: /d3\.js$/,
                 use: "imports-loader?define=>false"
             },
