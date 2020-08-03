@@ -11,7 +11,7 @@ Building the extension involves three parts:
 3. Package and install the python package.
 
 ```bash
-git clone https://gitlab.cern.ch/dmaas/jupyter
+git clone https://github.com/swan-cern/jupyter-extensions
 cd SparkMonitor
 ```
 and then
