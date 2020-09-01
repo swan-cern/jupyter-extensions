@@ -1,0 +1,28 @@
+{
+    "name": "swanintro-nbextension",
+    "version": "0.0.1",
+    "description": "SWAN extension to show an information pop up to new users",
+    "keywords": [
+        "Jupyter",
+        "Extension",
+        "Notebook",
+        "SWAN",
+        "CERN"
+    ],
+    "author": "SWAN Admins",
+    "devDependencies": {
+        "copy-webpack-plugin": "^4.2.0",
+        "html-loader": "^0.5.1",
+        "webpack": "^3.3.0"
+    },
+    "scripts": {
+        "build": "yarn webpack",
+        "webpack": "webpack -p --config webpack.config.js",
+        "dev": "webpack --watch --config webpack.config.js",
+        "clean": "rimraf ../swanintro/nbextension"
+    },
+    "dependencies": {
+        "lory.js": "^2.4.2",
+        "tiny-slider": "^2.6.0"
+    }
+}

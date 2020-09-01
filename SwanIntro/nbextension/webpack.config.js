@@ -2,9 +2,9 @@ var path = require('path');
 var CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-    entry: './js/extension.js',
+    entry: './src/extension.js',
     output: {
-        path: path.resolve(__dirname, 'swanintro/js'),
+        path: path.resolve(__dirname, '../swanintro/nbextension'),
         filename: 'extension.js',
         libraryTarget: 'umd'
     },
@@ -13,7 +13,7 @@ module.exports = {
     module: {
         rules: [{
             test: /\.html$/,
-            use: [ {
+            use: [{
                 loader: 'html-loader',
                 options: {
                     minimize: true
@@ -22,12 +22,10 @@ module.exports = {
         }]
     },
     plugins: [
-        new CopyWebpackPlugin([
-            {
-                from: 'js/img',
-                to: 'img',
-                toType: 'dir'
-            }
-        ])
+        new CopyWebpackPlugin([{
+            from: 'src/img',
+            to: 'img',
+            toType: 'dir'
+        }])
     ]
 };

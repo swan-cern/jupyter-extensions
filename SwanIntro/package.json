@@ -1,24 +1,65 @@
 {
-  "name": "sparkintro",
-  "version": "0.0.1",
-  "description": "SWAN extension to show an information pop up to new users",
-  "keywords": [
-    "Jupyter",
-    "Extension",
-    "Notebook"
-  ],
-  "author": "Diogo Castro",
-  "devDependencies": {
-    "copy-webpack-plugin": "^4.2.0",
-    "html-loader": "^0.5.1",
-    "webpack": "^3.3.0"
-  },
-  "scripts": {
-    "webpack": "webpack -p --config webpack.config.js",
-    "watch": "webpack --watch --config webpack.config.js"
-  },
-  "dependencies": {
-    "lory.js": "^2.4.2",
-    "tiny-slider": "^2.6.0"
-  }
+    "name": "@swan-cern/swanintro",
+    "version": "0.0.1",
+    "description": "SWAN extension to show an information pop up to new users",
+    "keywords": [
+        "jupyter",
+        "jupyterlab",
+        "jupyterlab-extension",
+        "SWAN",
+        "CERN"
+    ],
+    "homepage": "https://github.com/swan-cern/jupyter-extensions",
+    "bugs": {
+        "url": "https://github.com/swan-cern/jupyter-extensions/issues"
+    },
+    "license": "AGPL-3.0",
+    "author": "SWAN Admins",
+    "files": [
+        "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
+        "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
+    ],
+    "main": "lib/index.js",
+    "types": "lib/index.d.ts",
+    "style": "style/index.css",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/swan-cern/jupyter-extensions.git",
+        "directory": "SwanIntro"
+    },
+    "scripts": {
+        "build": "jlpm run build:lib",
+        "build:labextension": "cd swanintro && rimraf labextension && mkdirp labextension && cd labextension && npm pack ../..",
+        "build:nbextension": "yarn --cwd nbextension build",
+        "build:lib": "tsc",
+        "build:all": "jlpm run build:labextension && jlpm run build:nbextension",
+        "clean": "jlpm run clean:lib",
+        "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
+        "clean:labextension": "rimraf swanintro/labextension",
+        "clean:nbextension": "rimraf swanintro/nbextension",
+        "clean:all": "jlpm run clean:lib && jlpm run clean:labextension && jlpm run clean:nbextension",
+        "eslint": "eslint . --ext .ts,.tsx --fix",
+        "eslint:check": "eslint . --ext .ts,.tsx",
+        "prepare": "jlpm run clean && jlpm run build",
+        "watch": "tsc -w",
+        "install:all": "jlpm install && yarn --cwd nbextension install",
+        "removeall": "rimraf nbextension/node_modules && rimraf node_modules"
+    },
+    "dependencies": {
+        "@jupyterlab/application": "^2.1.0"
+    },
+    "devDependencies": {
+        "@typescript-eslint/eslint-plugin": "^2.25.0",
+        "@typescript-eslint/parser": "^2.25.0",
+        "eslint": "^6.8.0",
+        "eslint-config-prettier": "^6.10.1",
+        "eslint-plugin-prettier": "^3.1.2",
+        "mkdirp": "^1.0.3",
+        "prettier": "1.16.4",
+        "rimraf": "^2.6.1",
+        "typescript": "~3.7.0"
+    },
+    "jupyterlab": {
+        "extension": true
+    }
 }
