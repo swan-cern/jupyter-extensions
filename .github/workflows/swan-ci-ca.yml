@@ -25,11 +25,16 @@ jobs:
         echo ::set-env name=PACKAGE_NAME::$PACKAGE_NAME
         echo ::set-env name=PACKAGE_VERSION::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 2)
         cd $PACKAGE_NAME
-        if test -f 'package.json'; then
+        if [ -f 'package.json' ]; then
           echo ::set-env name=PACKAGE_JSON::$(echo 1)
         fi
+
         if [ "$PACKAGE_NAME" == "SparkMonitor" ]; then
           echo ::set-env name=PACKAGE_JAVA::$(echo 1)
+        fi
+
+        if [ -f 'package.json' ] && [ ! "$PACKAGE_NAME" == "SwanShare" ]; then
+          echo ::set-env name=PUBLISH_NPM::$(echo 1)
         fi
 
     - name: Install Python
@@ -70,7 +75,7 @@ jobs:
         twine upload --repository pypi dist/*
 
     - name: Publish distribution to NPM
-      if: ${{env.PACKAGE_JSON}}
+      if: ${{env.PUBLISH_NPM}}
       run: |
         cd $PACKAGE_NAME
 
@@ -97,7 +102,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ github.ref }}
-        release_name: Release ${{ github.ref }}
+        release_name: ${{ github.ref }}
         body: |
           ${{github.event.head_commit.message}}
         draft: false
