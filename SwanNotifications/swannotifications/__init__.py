@@ -1,9 +1,11 @@
+from ._version import __version__ 
+
 
 def _jupyter_nbextension_paths():
     # Used by "jupyter nbextension" command to install frontend extension
     return [dict(
                 section="common",
-                src="js",
+                src="nbextension",
                 dest="swannotifications",
                 require="swannotifications/extension"),
             ]
