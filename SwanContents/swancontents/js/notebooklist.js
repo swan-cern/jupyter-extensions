@@ -152,7 +152,7 @@ define([
             span12.empty();
             span12.append($('<div style="margin:auto;text-align:center;color:grey"/>').text('No Projects'));
         }
-
+        this.add_header_footer(list)
         // Trigger an event when we've finished drawing the notebook list.
         events.trigger('draw_notebook_list.NotebookList');
 
@@ -757,10 +757,9 @@ define([
             $('.move-button').css('display', 'none');
         }
 
-        // Download is only visible when one item is selected, and it is not a
-        // running notebook or a directory
-        // TODO(nhdaly): Add support for download multiple items at once.
-        if (selected.length === 1 && !has_running_notebook && !has_directory) {
+        // Download is only visible when items are selected, and none are
+        // running notebooks or a directories
+        if (selected.length > 0 && !has_running_notebook && !has_directory) {
             $('.download-button').css('display', 'inline-block');
         } else {
             $('.download-button').css('display', 'none');
