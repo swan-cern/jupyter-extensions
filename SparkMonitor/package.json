@@ -1,6 +1,6 @@
 {
     "name": "@swan-cern/sparkmonitor",
-    "version": "0.0.10",
+    "version": "1.0.0",
     "description": "Helper to connect to CERN's Spark Clusters",
     "keywords": [
         "jupyter",
