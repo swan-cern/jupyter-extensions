@@ -1,5 +1,12 @@
 # SparkMonitor
 
+SparkMonitor is an extension for Jupyter Notebook that enables the live monitoring of Apache Spark Jobs spawned from a notebook. The extension provides several features to monitor and debug a Spark job from within the notebook interface itself.
+
+![jobdisplay](https://user-images.githubusercontent.com/6822941/29753710-ff8849b6-8b94-11e7-8f9c-bdc59bf72143.gif)
+
+It was originally developed as part of Google Summer of Code by @krishnan-r. The original repo can be seen here: https://github.com/krishnan-r/sparkmonitor
+
+
 This extension is composed of a Python package named `sparkmonitor`, which installs the nbextension, Kernel extension and a NPM package named `@swan-cern/sparkmonitor` for the JupyterLab extension.
 
 

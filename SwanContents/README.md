@@ -4,6 +4,7 @@ Server and NB extension that provides:
 * SWAN Projects (including readme preview)
 * EOS integration (versioning and atomic save)
 * git download
+* SWAN style in a form of Jupyter Notebook templates
 
 ## Requirements
 
