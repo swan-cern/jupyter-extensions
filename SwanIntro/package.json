@@ -1,6 +1,6 @@
 {
     "name": "@swan-cern/swanintro",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "description": "SWAN extension to show an information pop up to new users",
     "keywords": [
         "jupyter",
