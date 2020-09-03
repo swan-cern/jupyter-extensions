@@ -1,5 +1,12 @@
+from ._version import __version__ 
 from .filemanager import *
 from .handlers import *
+import os
+
+
+def get_templates():
+    path = os.path.abspath(__file__)
+    return os.path.join(os.path.dirname(path), 'templates')
 
 
 def _jupyter_nbextension_paths():
@@ -15,7 +22,6 @@ def _jupyter_nbextension_paths():
                 dest="swancontents",
                 require="swancontents/notebooklist"),
             ]
-
 
 
 def _jupyter_server_extension_paths():
