@@ -1,6 +1,6 @@
 {
     "name": "swannotifications-nbextension",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "description": "Jupyter Notebook extension to display users' notifications",
     "keywords": [
         "Jupyter",

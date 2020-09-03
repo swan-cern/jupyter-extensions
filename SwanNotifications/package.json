@@ -1,6 +1,6 @@
 {
     "name": "@swan-cern/swannotifications",
-    "version": "0.0.1",
+    "version": "1.0.0",
     "description": "Jupyterlab extension to display users' notifications",
     "keywords": [
         "jupyter",
