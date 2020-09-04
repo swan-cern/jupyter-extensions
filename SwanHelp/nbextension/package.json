@@ -21,7 +21,7 @@
     "clean": "rimraf ../swanhelp/nbextension"
   },
   "dependencies": {
-    "showdown": "^1.8.6",
+    "showdown": "^1.9.1",
     "xss": "^0.3.7"
   }
 }
