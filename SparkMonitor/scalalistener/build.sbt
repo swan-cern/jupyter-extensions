@@ -2,11 +2,11 @@ name := "sparkmonitor"
 
 version := "1.0"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.0"
 
 organization := "cern"
 
-val sparkVersion = "2.1.1"
+val sparkVersion = "3.0.1"
 
 libraryDependencies ++= List(
   "org.apache.spark" %% "spark-core" % sparkVersion,
