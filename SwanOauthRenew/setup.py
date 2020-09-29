@@ -25,7 +25,8 @@ setup_args = dict(
     packages=setuptools.find_packages(),
     install_requires=[
         'notebook',
-        'requests'
+        'requests',
+        'PyJWT'
     ],
     zip_safe=False,
     include_package_data=True,
