@@ -1,4 +1,4 @@
-# OauthRenew
+# SwanOauthRenew
 
 Extension that refreshes the Oauth token 
 
