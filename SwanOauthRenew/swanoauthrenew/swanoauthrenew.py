@@ -1,33 +1,55 @@
-from notebook.base.handlers import IPythonHandler, FilesRedirectHandler, path_regex
-from notebook.utils import url_path_join
-from tornado import web, gen
-from tornado.ioloop import PeriodicCallback
-from traitlets.config import Config
-from nbconvert import HTMLExporter
-import nbformat
 import logging
 import os
+import threading
 import requests
 from time import sleep
 import jwt
 from datetime import datetime
 
 
-def refresh_token():
-    r = requests.get(f"{os.environ['JUPYTERHUB_API_URL']}/user",
-                     headers={"Authorization": f"token {os.environ['JUPYTERHUB_API_TOKEN']}"})
-    access_token = jwt.decode(
-        r.json()['auth_state']['access_token'].encode(), verify=False, algorithms='RS256')
-    with open(os.environ['OAUTH2_FILE'], 'w') as f:
-        f.write(
-            f"oauth2:{r.json()['auth_state']['access_token']}:{os.environ['OAUTH_INSPECTION_ENDPOINT']}")
-    ttl = access_token['exp']-int(datetime.now().timestamp())
-    # to renew one minute before expiration
-    ttl = ttl - 60
-    if ttl < 60:
-        ttl = 60
-    log.info(f'next refresh in {ttl}s ')
-    return ttl
+class TokenRefresher(threading.Thread):
+
+    def __init__(self, log):
+        self.log = log
+        self.api_url = os.environ['JUPYTERHUB_API_URL']
+        self.api_token = os.environ['JUPYTERHUB_API_TOKEN']
+        self.auth_file = os.environ['OAUTH2_FILE']
+        self.inspection_url = os.environ['OAUTH_INSPECTION_ENDPOINT']
+        
+        super(self.__class__, self).__init__()
+
+    def run(self):
+        while True:
+            try:
+                ttl = self.refresh_token()
+                self.log.info(f'oAuth token refreshed. Next in {ttl}s')
+            except:
+                self.log.error(
+                    "Error renewing oAuth token. Trying later.", exc_info=True)
+                ttl = 60
+            sleep(ttl)
+
+    def refresh_token(self):
+        r = requests.get(f"{self.api_url}/user",
+                         headers={"Authorization": f"token {self.api_token}"})
+
+        access_token = r.json()['auth_state']['access_token'].encode()
+        access_token_decoded = jwt.decode(
+            access_token, verify=False, algorithms='RS256')
+
+        # Replace the token in the file observed by EOS
+        with open(self.auth_file, 'w') as f:
+            f.write("oauth2:%s:%s" % (access_token, self.inspection_url))
+
+        # renew one minute before expiration
+        ttl = access_token_decoded['exp'] - int(datetime.now().timestamp())
+        ttl = ttl - 60
+
+        # If the token has already expired, something went wrong but we'll try again later
+        if ttl < 60:
+            ttl = 60
+
+        return ttl
 
 
 def load_jupyter_server_extension(nb_server_app):
@@ -37,8 +59,6 @@ def load_jupyter_server_extension(nb_server_app):
     Args:
         nb_server_app (NotebookWebApplication): handle to the Notebook webserver instance.
     """
-
-    global log
     log = logging.getLogger('tornado.swanoauthrenew')
     log.name = "SwanOauthRenew"
     log.setLevel(logging.INFO)
@@ -46,10 +66,7 @@ def load_jupyter_server_extension(nb_server_app):
 
     log.info("Loading Server Extension")
     try:
-        while True:
-            ttl = refresh_token()
-            sleep(ttl)
+        thread = TokenRefresher(log)
+        thread.start()
     except KeyError as e:
-        log.info(f"one environment variable, {e}")
-        log.info(f"is not set, so the extension f{__name__} is exiting ")
-        return
+        log.info(f"Environment variable {e} is not set. Exiting...")
