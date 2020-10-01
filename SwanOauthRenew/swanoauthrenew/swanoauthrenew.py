@@ -33,7 +33,7 @@ class TokenRefresher(threading.Thread):
         r = requests.get(f"{self.api_url}/user",
                          headers={"Authorization": f"token {self.api_token}"})
 
-        access_token = r.json()['auth_state']['access_token'].encode()
+        access_token = r.json()['auth_state']['access_token']
         access_token_decoded = jwt.decode(
             access_token, verify=False, algorithms='RS256')
 
