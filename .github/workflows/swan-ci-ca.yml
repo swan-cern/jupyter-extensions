@@ -108,10 +108,11 @@ jobs:
         draft: false
         prerelease: false
 
-#    - name: Invoke workflow in systemuser-image
-#      uses: benc-uk/workflow-dispatch@v1
-#      with:
-#        workflow: SWAN CI/CD pipeline
-#        repo: swan-cern/systemuser-image
-#        token: ${{ secrets.WORKFLOW_ACCESS_TOKEN }}
-#        inputs: '{ "package": "${{env.PACKAGE_NAME}}", "version": "${{env.PACKAGE_VERSION}}" }'
+    - name: Invoke workflow in systemuser-image
+      uses: benc-uk/workflow-dispatch@v1
+      with:
+        workflow: SWAN CI/CD pipeline
+        ref: master
+        repo: swan-cern/jupyter-extensions
+        token: ${{ secrets.WORKFLOW_ACCESS_TOKEN }}
+        inputs: '{ "package": "${{env.PACKAGE_NAME}}", "version": "${{env.PACKAGE_VERSION}}" }'
