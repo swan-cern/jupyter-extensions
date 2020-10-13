@@ -7,6 +7,7 @@ Adds a configuration object to users namespace.
 import socket
 import logging
 import os
+import subprocess
 from threading import Thread
 
 ipykernel_imported = True
@@ -186,7 +187,10 @@ def configure(conf):
     log.info(os.environ["SPARKMONITOR_KERNEL_PORT"])
     conf.set("spark.extraListeners",
              "sparkmonitor.listener.JupyterSparkMonitorListener")
-    jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.11.jar"
+    if "2.11" in get_spark_version():
+        jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.11.jar"
+    elif "2.12" in get_spark_version():
+        jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.12.jar"
     log.info("Adding jar from %s ", jarpath)
     conf.set("spark.driver.extraClassPath", jarpath)
 
@@ -195,3 +199,8 @@ def sendToFrontEnd(msg):
     """Send a message to the frontend through the singleton monitor object."""
     global monitor
     monitor.send(msg)
+
+def get_spark_version():
+    cmd = "pyspark --version 2>&1 | grep -m 1  -Eo '[0-9]*[.][0-9]*[.][0-9]*[,]' | sed 's/,$//'"
+    version = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    return version.stdout.strip()
