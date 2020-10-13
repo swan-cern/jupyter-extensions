@@ -17,6 +17,7 @@ except ImportError:
     ipykernel_imported = False
 
 try:
+    import pyspark
     from pyspark import SparkConf
 except ImportError:
     spark_imported = False
@@ -186,7 +187,15 @@ def configure(conf):
     log.info(os.environ["SPARKMONITOR_KERNEL_PORT"])
     conf.set("spark.extraListeners",
              "sparkmonitor.listener.JupyterSparkMonitorListener")
-    jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.11.jar"
+
+    # Note: this is stopgap solution to address Scala version for different versions of Apache Spark
+    # Use scala 2.12 for Spark 3.x and scala 2.11 for the rest
+    # A better solution would find the scala version used to compile rather than relying on Spark version
+    if pyspark.__version__.find('3.') == 0:
+        jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.12.jar"
+    else:
+        jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.12.jar"
+
     log.info("Adding jar from %s ", jarpath)
     conf.set("spark.driver.extraClassPath", jarpath)
 
