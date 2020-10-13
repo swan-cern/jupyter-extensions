@@ -186,7 +186,7 @@ def configure(conf):
     log.info(os.environ["SPARKMONITOR_KERNEL_PORT"])
     conf.set("spark.extraListeners",
              "sparkmonitor.listener.JupyterSparkMonitorListener")
-    jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener.jar"
+    jarpath = os.path.abspath(os.path.dirname(__file__)) + "/listener_2.11.jar"
     log.info("Adding jar from %s ", jarpath)
     conf.set("spark.driver.extraClassPath", jarpath)
 
