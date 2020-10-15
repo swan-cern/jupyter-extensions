@@ -27,7 +27,8 @@ nb_path = os.path.join(HERE, name, "nbextension")
 targets = [
     os.path.join(HERE, "lib", "index.js"),
     os.path.join(nb_path, "extension.js"),
-    os.path.join(HERE, name, "listener.jar"),
+    os.path.join(HERE, name, "listener_2.11.jar"),
+    os.path.join(HERE, name, "listener_2.12.jar"),
 ]
 
 package_data_spec = {
