@@ -48,9 +48,9 @@ spark.extraListeners = sparkmonitor.listener.JupyterSparkMonitorListener
 
 # Pick one of the following:
 # For Spark 2
-park.driver.extraClassPath = /usr/local/lib/sparkmonitor/listener_2.11.jar #lives inside the sparkmonitor module
+spark.driver.extraClassPath = /usr/local/lib/sparkmonitor/listener_2.11.jar #lives inside the sparkmonitor module
 # For Spark 3
-park.driver.extraClassPath = /usr/local/lib/sparkmonitor/listener_2.12.jar #lives inside the sparkmonitor module
+spark.driver.extraClassPath = /usr/local/lib/sparkmonitor/listener_2.12.jar #lives inside the sparkmonitor module
 ```
 
 To ease the configuration, and if the kernel extension is correctly installed, you should have the variable `swan_spark_conf` available from inside your notebook with everything already set.
