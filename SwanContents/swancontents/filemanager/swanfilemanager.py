@@ -84,6 +84,9 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
         if parent_project and not parent_project == 'invalid':
             model['project'] = parent_project
+            model['is_project'] = True
+        else:
+            model['is_project'] = False
 
         return model
 
@@ -105,7 +108,9 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
             raise web.HTTPError(404, four_o_four)
 
         model = self._base_model(path)
-        model['type'] = 'project'
+        model['type'] = 'directory'
+        model['is_project'] = True
+
         if content:
             model['content'] = contents = []
             os_dir = self._get_os_path(path)
@@ -294,6 +299,8 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         if type:
             model['type'] = type
 
+        model['is_project'] = False
+
         if ext == '.ipynb':
             model.setdefault('type', 'notebook')
         else:
@@ -305,6 +312,8 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
             insert = ' '
 
         elif model['type'] == 'project':
+            model['type'] = 'directory'
+            model['is_project'] = True
             untitled = self.untitled_project
             insert = ' '
 
