@@ -1,13 +1,15 @@
 include LICENSE
 include README.md
 include pyproject.toml
-
 include jupyter-config/swanhelp.json
 
 include package.json
+include install.json
 include ts*.json
-include swanhelp/labextension/*.tgz
-include swanhelp/nbextension/*.js
+include yarn.lock
+
+graft swanhelp/labextension
+graft swanhelp/nbextension
 
 # Javascript files
 graft src
