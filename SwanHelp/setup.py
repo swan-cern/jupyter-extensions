@@ -1,30 +1,30 @@
 """
-Setup Module to setup Python Handlers for the SwanHelp extension.
+swanhelp setup
 """
+import json
 import os
 
 from jupyter_packaging import (
     create_cmdclass, install_npm, ensure_targets,
-    combine_commands, ensure_python, get_version,
+    combine_commands, skip_if_exists
 )
 import setuptools
 
+HERE = os.path.abspath(os.path.dirname(__file__))
+
+# The name of the project
 name="swanhelp"
 
-HERE = os.path.abspath(os.path.dirname(__file__))
-NBEXTENSION = os.path.join(HERE, "nbextension")
-
-ensure_python(">=3.5")
-
 # Get our version
-version = get_version(os.path.join(name, "_version.py"))
+with open(os.path.join(HERE, 'package.json')) as f:
+    version = json.load(f)['version']
 
 lab_path = os.path.join(HERE, name, "labextension")
 nb_path = os.path.join(HERE, name, "nbextension")
 
 # Representative files that should exist after a successful build
 jstargets = [
-    os.path.join(HERE, "lib", "index.js"),
+    os.path.join(lab_path, "package.json"),
     os.path.join(nb_path, "extension.js"),
 ]
 
@@ -34,20 +34,29 @@ package_data_spec = {
     ]
 }
 
+labext_name = "@swan-cern/swanhelp"
+
 data_files_spec = [
-    ("share/jupyter/lab/extensions", lab_path, "*.tgz"),
+    ("share/jupyter/labextensions/%s" % labext_name, lab_path, "**"),
+    ("share/jupyter/labextensions/%s" % labext_name, HERE, "install.json"),
+     
 ]
 
-cmdclass = create_cmdclass("jsdeps", 
+cmdclass = create_cmdclass("jsdeps",
     package_data_spec=package_data_spec,
     data_files_spec=data_files_spec
 )
 
-cmdclass["jsdeps"] = combine_commands(
-    install_npm(HERE, build_cmd="build:labextension", npm=["jlpm"]),
-    install_npm(NBEXTENSION, build_cmd="webpack"),
+js_command = combine_commands(
+    install_npm(HERE, build_cmd="build:prod", npm=["jlpm"]),
     ensure_targets(jstargets),
 )
+
+is_repo = os.path.exists(os.path.join(HERE, ".git"))
+if is_repo:
+    cmdclass["jsdeps"] = js_command
+else:
+    cmdclass["jsdeps"] = skip_if_exists(jstargets, js_command)
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -55,7 +64,7 @@ with open("README.md", "r") as fh:
 setup_args = dict(
     name=name,
     version=version,
-    url="https://github.com/swan-cern/jupyter-extensions",
+    url="https://github.com/swan-cern/jupyter-extensions.git",
     author="SWAN Admins",
     description="Help panel for SWAN",
     long_description= long_description,
@@ -63,18 +72,18 @@ setup_args = dict(
     cmdclass= cmdclass,
     packages=setuptools.find_packages(),
     install_requires=[
-        "jupyterlab~=2.0",
+        "jupyterlab>=3.0.0rc13,==3.*",
     ],
     zip_safe=False,
     include_package_data=True,
+    python_requires=">=3.6",
     license="AGPL-3.0",
     platforms="Linux, Mac OS X, Windows",
-    keywords=["Jupyter", "JupyterLab", "SWAN", "CERN"],
+    keywords=["Jupyter", "JupyterLab", "JupyterLab3", "SWAN", "CERN"],
     classifiers=[
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
         "Programming Language :: Python :: 3.6",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
