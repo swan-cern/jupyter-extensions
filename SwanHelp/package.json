@@ -17,7 +17,8 @@
   "author": "SWAN Admins",
   "files": [
     "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
-    "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
+    "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
+    "style/index.js"
   ],
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -28,43 +29,52 @@
     "directory": "SwanHelp"
   },
   "scripts": {
-    "build": "jlpm run build:lib",
-    "build:labextension": "cd swanhelp && rimraf labextension && mkdirp labextension && cd labextension && npm pack ../..",
-    "build:nbextension": "yarn --cwd nbextension build",
-    "build:lib": "tsc",
+    "build": "jlpm run build:lib && jlpm run build:labextension:dev",
     "build:all": "jlpm run build:labextension && jlpm run build:nbextension",
+    "build:labextension": "jupyter labextension build .",
+    "build:labextension:dev": "jupyter labextension build --development True .",
+    "build:lib": "tsc",
+    "build:nbextension": "yarn --cwd nbextension build",
+    "build:prod": "jlpm run build:lib && jlpm run build:labextension && jlpm run build:nbextension",
     "clean": "jlpm run clean:lib",
-    "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
-    "clean:labextension": "rimraf swanhelp/labextension",
-    "clean:nbextension": "rimraf swanhelp/nbextension",
     "clean:all": "jlpm run clean:lib && jlpm run clean:labextension && jlpm run clean:nbextension",
+    "clean:labextension": "rimraf swanhelp/labextension",
+    "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
+    "clean:nbextension": "rimraf swanhelp/nbextension",
     "eslint": "eslint . --ext .ts,.tsx --fix",
     "eslint:check": "eslint . --ext .ts,.tsx",
-    "prepare": "jlpm run clean && jlpm run build",
-    "watch": "tsc -w",
-    "install:all": "jlpm install && yarn --cwd nbextension install",
-    "removeall": "rimraf nbextension/node_modules && rimraf node_modules"
+    "install:all": "jlpm install && jlpm --cwd nbextension install",
+    "install:extension": "jupyter labextension develop --overwrite .",
+    "prepare": "jlpm run clean && jlpm run build:prod",
+    "removeall": "rimraf nbextension/node_modules && rimraf node_modules",
+    "watch": "run-p watch:src watch:labextension",
+    "watch:labextension": "jupyter labextension watch .",
+    "watch:src": "tsc -w"
   },
   "dependencies": {
-    "@jupyterlab/application": "^2.1.0",
-    "@jupyterlab/mainmenu": "^2.1.0",
-    "@jupyterlab/apputils": "^2.1.0",
-    "@jupyterlab/services": "^5.1.0",
-    "@jupyterlab/ui-components": "^2.1.0",
-    "react": "~16.9.0"
+    "@jupyterlab/application": "^3.0.3",
+    "@jupyterlab/apputils": "^3.0.2",
+    "@jupyterlab/mainmenu": "^3.0.2",
+    "@jupyterlab/services": "^6.0.2",
+    "@jupyterlab/ui-components": "^3.0.2",
+    "react": "^17.0.1"
   },
   "devDependencies": {
-    "@typescript-eslint/eslint-plugin": "^2.25.0",
-    "@typescript-eslint/parser": "^2.25.0",
-    "eslint": "^6.8.0",
+    "@jupyterlab/builder": "^3.0.0-rc.13",
+    "@typescript-eslint/eslint-plugin": "^2.27.0",
+    "@typescript-eslint/parser": "^2.27.0",
+    "eslint": "^7.5.0",
     "eslint-config-prettier": "^6.10.1",
     "eslint-plugin-prettier": "^3.1.2",
     "mkdirp": "^1.0.3",
-    "prettier": "1.16.4",
-    "rimraf": "^2.6.1",
-    "typescript": "~3.7.0"
+    "npm-run-all": "^4.1.5",
+    "prettier": "^1.19.0",
+    "rimraf": "^3.0.2",
+    "typescript": "~4.1.3"
   },
   "jupyterlab": {
-    "extension": true
-  }
+    "extension": true,
+    "outputDir": "swanhelp/labextension"
+  },
+  "styleModule": "style/index.js"
 }

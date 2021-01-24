@@ -1,0 +1,14 @@
+.jp-AboutSWAN-name {
+    padding-left: 20px;
+    font-size: 0.8em;
+    padding-right: 50px;
+}
+
+.jp-AboutSWAN-name h1 {
+    margin: 0;
+}
+
+.jp-AboutSWAN-body .jp-About-externalLinks {
+    flex-direction: row;
+    text-transform: uppercase;
+}

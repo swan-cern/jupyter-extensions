@@ -16,7 +16,7 @@
   },
   "scripts": {
     "build": "yarn webpack",
-    "webpack": "webpack -p --config webpack.config.js",
+    "webpack": "webpack --config webpack.config.js",
     "dev": "webpack --watch --config webpack.config.js",
     "clean": "rimraf ../swanhelp/nbextension"
   },
