@@ -3,7 +3,7 @@
 !SwanContents/swancontents/js/
 SparkMonitor/scalalistener/project/
 SparkMonitor/scalalistener/target/
-SparkMonitor/sparkmonitor/listener.jar
+SparkMonitor/sparkmonitor/listener*.jar
 SparkMonitor/sparkmonitor/nbextension/*
 .idea/
 
