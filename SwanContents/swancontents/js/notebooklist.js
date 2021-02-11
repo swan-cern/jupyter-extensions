@@ -116,10 +116,10 @@ define([
         for (var i = 0; i < len; i++) {
             model = list.content[i];
 
-            if (!is_project_view || model.type == 'project') {
+            if (!is_project_view || model.is_project ) {
                 item = this.new_item_swan(i + offset, true, len);
 
-                if (model.type === 'project') {
+                if (model.is_project) {
                     model.size = undefined;
                 }
 
@@ -129,7 +129,7 @@ define([
                     console.log('Error adding link: ' + err);
                 }
 
-                if (list.type === 'project' && model.name.toLowerCase() === 'readme.md') {
+                if (list.is_project && model.name.toLowerCase() === 'readme.md') {
                     var path = utils.url_path_join(
                         this.base_url,
                         'files',
@@ -178,7 +178,7 @@ define([
          */
 
 
-        if (list.type === 'project' || list.path.startsWith(swan_share_root)) {
+        if (list.is_project || list.path.startsWith(swan_share_root)) {
             show_share_related_buttons(list.path);
         } else if (list.type === 'directory' && list.project) {
             show_share_related_buttons(list.project);
@@ -248,7 +248,15 @@ define([
         item.data('type', model.type);
         item.find(".item_name").text(model.name);
         item.find(".item_name").attr('title', model.name);
-        var icon = parent_notebook_list.icons[model.type];
+        var icon = null;
+        if(model.is_project)
+        {
+            icon = parent_notebook_list.icons['project'];
+        }else
+        {
+            icon = parent_notebook_list.icons[model.type];
+        }
+
         if (running) {
             icon = 'running_' + icon;
         }
@@ -275,7 +283,7 @@ define([
         item.find(".item_icon").addClass(icon).addClass('icon-fixed-width');
 
         var url_path = model.path;
-        if (this.current_page != this.pages.cernbox && (model.type === 'directory' || model.type === 'project')) {
+        if (this.current_page != this.pages.cernbox && (model.type === 'directory' || model.is_project)) {
             url_path = url_path.split('/').slice(1).join('/');
         }
         var link = item.find("a.item_link")
@@ -293,7 +301,7 @@ define([
 
         // directory nav doesn't open new tabs
         // files, notebooks do
-        if (model.type !== "directory" && model.type !== "project") {
+        if (model.type !== "directory" && !model.is_project) {
             link.attr('target', IPython._target);
         } else {
             // Replace with a click handler that will use the History API to
