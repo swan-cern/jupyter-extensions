@@ -175,14 +175,14 @@ def load_ipython_extension(ipython):
 
 
 def configure(conf):
-    """Configures the provided conf object. 
+    """Configures the provided conf object.
 
     Sets the Java Classpath and listener jar file path to "conf".
     Also sets an environment variable for ports for communication with scala listener.
     """
     global monitor
     port = monitor.getPort()
-    log.info("SparkConf Configured, Starting to listen on port:", str(port))
+    log.info("SparkConf Configured, Starting to listen on port: %s", str(port))
     os.environ["SPARKMONITOR_KERNEL_PORT"] = str(port)
     log.info(os.environ["SPARKMONITOR_KERNEL_PORT"])
     conf.set("spark.extraListeners",
@@ -203,5 +203,5 @@ def sendToFrontEnd(msg):
 
 def get_spark_version():
     cmd = "pyspark --version 2>&1 | grep -m 1  -Eo '[0-9]*[.][0-9]*[.][0-9]*[,]' | sed 's/,$//'"
-    version = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    version = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding="utf-8")
     return version.stdout.strip()
