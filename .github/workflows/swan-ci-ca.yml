@@ -21,20 +21,21 @@ jobs:
       run: |
         PACKAGE_NAME=$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 1)
 
-        echo ::set-env name=PACKAGE_TAG::${GITHUB_REF#refs/*/}
-        echo ::set-env name=PACKAGE_NAME::$PACKAGE_NAME
-        echo ::set-env name=PACKAGE_VERSION::$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 2)
+        echo "PACKAGE_TAG=${GITHUB_REF#refs/*/}"  >> $GITHUB_ENV
+        echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_ENV
+        echo "PACKAGE_VERSION=$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 2)" >> $GITHUB_ENV
+
         cd $PACKAGE_NAME
         if [ -f 'package.json' ]; then
-          echo ::set-env name=PACKAGE_JSON::$(echo 1)
+          echo "PACKAGE_JSON=$(echo 1)" >> $GITHUB_ENV
         fi
 
         if [ "$PACKAGE_NAME" == "SparkMonitor" ]; then
-          echo ::set-env name=PACKAGE_JAVA::$(echo 1)
+          echo "PACKAGE_JAVA=$(echo 1)" >> $GITHUB_ENV
         fi
 
         if [ -f 'package.json' ] && [ ! "$PACKAGE_NAME" == "SwanShare" ]; then
-          echo ::set-env name=PUBLISH_NPM::$(echo 1)
+          echo "PUBLISH_NPM=$(echo 1)"  >> $GITHUB_ENV
         fi
 
     - name: Install Python
