@@ -85,8 +85,6 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
         if parent_project and not parent_project == 'invalid':
             model['project'] = parent_project
-            model['is_project'] = True
-        else:
             model['is_project'] = False
 
         return model
