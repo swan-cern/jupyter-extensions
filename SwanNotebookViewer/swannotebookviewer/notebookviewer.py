@@ -5,7 +5,6 @@ from notebook.utils import url_path_join
 from tornado import web
 from traitlets.config import Config
 from nbconvert import HTMLExporter
-import nbformat
 import logging
 
 def get_NotebookViewerHandler(show_clone=False, content_manager=None):
@@ -40,7 +39,7 @@ def get_NotebookViewerHandler(show_clone=False, content_manager=None):
                 return FilesRedirectHandler.redirect_to_files(self, path)
 
             html_exporter = HTMLExporter()
-            html_exporter.template_file = 'basic'
+            html_exporter.template_name = 'classic'
 
             (body, resources) = html_exporter.from_notebook_node(model['content'])
 
