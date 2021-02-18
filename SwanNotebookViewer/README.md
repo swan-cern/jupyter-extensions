@@ -6,7 +6,6 @@ Extension that provides a Jupyter Notebook viewer as an endpoint
 
 * notebook
 * nbconvert
-* nbformat
 
 ## Install
 

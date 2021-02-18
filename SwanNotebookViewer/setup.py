@@ -25,8 +25,7 @@ setup_args = dict(
     packages=setuptools.find_packages(),
     install_requires=[
         'notebook',
-        'nbconvert',
-        'nbformat'
+        'nbconvert>=6.0'
     ],
     zip_safe=False,
     include_package_data=True,
