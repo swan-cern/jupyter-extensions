@@ -129,7 +129,7 @@ define([
                     console.log('Error adding link: ' + err);
                 }
 
-                if (list.is_project && model.name.toLowerCase() === 'readme.md') {
+                if ((list.is_project || list.project) && model.name.toLowerCase() === 'readme.md') {
                     var path = utils.url_path_join(
                         this.base_url,
                         'files',
