@@ -52,7 +52,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         path_to_project = folders[0]
         for folder in folders[1:]:
             path_to_project += '/' + folder
-            if os.path.isfile(self._get_os_path(path_to_project + '/' + self.swan_default_file)):
+            if os.path.isfile(self._get_os_path(os.path.join(path_to_project, self.swan_default_file))):
                 return path_to_project
 
         return None
@@ -158,7 +158,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         if not os.path.exists(os_path):
             with self.perm_to_403():
                 os.mkdir(os_path)
-                self._save_file(os_path + '/' + self.swan_default_file, '', 'text')
+                self._save_file(os.path.join(os_path, self.swan_default_file), '', 'text')
         elif not os.path.isdir(os_path):
             raise web.HTTPError(400, u'Not a directory: %s' % (os_path))
         else:
@@ -177,7 +177,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         if path == self.swan_default_folder and not os.path.isdir(os_path):
             os.mkdir(os_path)
 
-        os_path_proj = self._get_os_path(path + '/' + self.swan_default_file)
+        os_path_proj = self._get_os_path(os.path.join(path, self.swan_default_file))
 
         if os.path.isdir(os_path) and os.path.isfile(os_path_proj):
             if type not in (None, 'project', 'directory'):
@@ -483,6 +483,6 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
             path = shutil.move(origin, dest)
 
         # Make the folder a SWAN Project
-        os.mknod(os.path.join(dest, self.swan_default_file))
+        self._save_file(os.path.join(dest, self.swan_default_file), '', 'text')
 
         return path
