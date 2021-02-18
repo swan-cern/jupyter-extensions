@@ -53,10 +53,14 @@ class FetchHandler(APIHandler):
             raise web.HTTPError(400, u'No url provided')
         check_url(url)
 
-        model = yield maybe_future(self.contents_manager.download(
-            url=url
-        ))
-        self._finish_model(model)
+        try:
+            model = yield maybe_future(self.contents_manager.download(
+                url=url
+            ))
+            self._finish_model(model)
+        except Exception as e:
+            # Clean the error and show only the message
+            raise web.HTTPError(400, str(e))
 
 
 class ContentsHandler(APIHandler):
