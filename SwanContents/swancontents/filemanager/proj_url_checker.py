@@ -27,7 +27,7 @@ def is_cernbox_shared_link(proj_name):
     return (proj_name.startswith(CERNBoxPrefix) or proj_name.startswith(CERNBoxPrefixTesting)) and 'download' in proj_name
 
 def is_good_proj_name(proj_name):
-    if proj_name.endswith('.git') or proj_name.endswith('.ipynb'):
+    if proj_name.endswith('.git') or proj_name.endswith('.ipynb') or proj_name.endswith('.zip'):
         return True
     if is_cernbox_shared_link(proj_name):
         return True

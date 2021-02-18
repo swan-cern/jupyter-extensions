@@ -8,6 +8,7 @@ import nbformat
 from nbformat.v4 import new_notebook
 from traitlets import Unicode
 import os, io, stat, shutil, subprocess, tempfile, requests
+import zipfile
 from notebook.utils import (
     is_hidden, is_file_hidden
 )
@@ -449,12 +450,19 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
             file_name = os.path.basename(url)
 
             # Download the file and store it with the correct name inside the temp folder
-            r = requests.get(url, verify=not is_on_cernbox)
+            # or unzip all files if it's compressed
+            r = requests.get(url, stream=True)
             if is_on_cernbox:
                 file_name = get_name_from_shared_from_link(r)
-            nb_path = os.path.join(tmp_dir_name, file_name)
-            nb = open(nb_path, "w+b")
-            nb.write(r.content)
+
+            if file_name.endswith('.zip'):
+                with zipfile.ZipFile(io.BytesIO(r.content)) as nb_zip:
+                    nb_zip.extractall(tmp_dir_name)
+
+            else:
+                nb_path = os.path.join(tmp_dir_name, file_name)
+                with open(nb_path, "w+b") as nb:
+                    nb.write(r.content)
 
             # Get the destination folder path
             file_name_no_ext = os.path.splitext(file_name)[0]
