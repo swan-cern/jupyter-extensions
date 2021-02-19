@@ -2,19 +2,38 @@ import logging
 import os
 import threading
 import requests
-from time import sleep
+import time
 import jwt
-from datetime import datetime
+from functools import reduce
+from traitlets.config import Configurable
+from traitlets import Tuple, List
 
+
+class SwanOauthRenew(Configurable):
+
+    files = List (
+        Tuple(),
+        default_value=[],
+        config=True,
+        help="""
+        List of files to write the respective oauth token to.
+        Each element needs to be a tuple of (file path, path to retrieve the token from auth state dict, text format)
+
+        Examples:
+            [
+                ('/tmp/swan_oauth.token', 'access_token', '{token}'),
+                ('/tmp/eos_oauth.token', 'exchanged_tokens/eos-service', 'oauth2:{token}:auth.cern.ch')
+            ]
+        """
+    )
 
 class TokenRefresher(threading.Thread):
 
-    def __init__(self, log):
+    def __init__(self, log, config):
         self.log = log
+        self.config = config
         self.api_url = os.environ['JUPYTERHUB_API_URL']
         self.api_token = os.environ['JUPYTERHUB_API_TOKEN']
-        self.auth_file = os.environ['OAUTH2_FILE']
-        self.inspection_url = os.environ['OAUTH_INSPECTION_ENDPOINT']
         
         super(self.__class__, self).__init__()
 
@@ -23,27 +42,33 @@ class TokenRefresher(threading.Thread):
             try:
                 ttl = self.refresh_token()
                 self.log.info(f'oAuth token refreshed. Next in {ttl}s')
-            except:
-                self.log.error(
-                    "Error renewing oAuth token. Trying later.", exc_info=True)
+            except Exception as e:
+                self.log.error(f"Error renewing oAuth token: {str(e)}. Trying later.", exc_info=False)
                 ttl = 60
-            sleep(ttl)
+            time.sleep(ttl)
 
     def refresh_token(self):
         r = requests.get(f"{self.api_url}/user",
                          headers={"Authorization": f"token {self.api_token}"})
 
-        access_token = r.json()['auth_state']['access_token']
-        access_token_decoded = jwt.decode(
-            access_token, verify=False, algorithms='RS256')
+        if r.status_code != requests.codes.ok:
+            raise Exception(f'Non ok code accessing API: {r.status_code}')
 
-        # Replace the token in the file observed by EOS
-        with open(self.auth_file, 'w') as f:
-            f.write("oauth2:%s:%s" % (access_token, self.inspection_url))
+        auth_state = r.json()['auth_state']
+        ttl = -1
 
-        # renew one minute before expiration
-        ttl = access_token_decoded['exp'] - int(datetime.now().timestamp())
-        ttl = ttl - 60
+        for file, key, content in self.config.files:
+            token = reduce(lambda x, y : x[y], key.split("/"), auth_state)
+            # Write the token in the corresponding file, by using the given content format
+            with open(file, 'w') as f:
+                f.write(content.format(token = token))
+
+            # renew one minute before expiration, but use the time of the token that will expire sooner
+            token_decoded = jwt.decode(token, verify=False, algorithms='RS256')
+            token_ttl = token_decoded['exp'] - time.time() - 60
+
+            if ttl == -1 or token_ttl < ttl:
+                ttl = token_ttl
 
         # If the token has already expired, something went wrong but we'll try again later
         if ttl < 60:
@@ -65,8 +90,18 @@ def load_jupyter_server_extension(nb_server_app):
     log.propagate = True
 
     log.info("Loading Server Extension")
-    try:
-        thread = TokenRefresher(log)
-        thread.start()
-    except KeyError as e:
-        log.info(f"Environment variable {e} is not set. Exiting...")
+
+    config = SwanOauthRenew(config=nb_server_app.config)
+    n_files = len(config.files)
+    
+    if n_files > 0:
+        log.info(f"Loaded {n_files} files ")
+
+        try:
+            thread = TokenRefresher(log, config)
+            thread.start()
+        except KeyError as e:
+            log.info(f"Environment variable {e} is not set. Exiting...")
+    else:
+        log.info(f"No files were configured. Exiting...")
+
