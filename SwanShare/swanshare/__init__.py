@@ -17,4 +17,4 @@ def _jupyter_nbextension_paths():
 
 def _jupyter_server_extension_paths():
     # Empty to avoid error when automatically trying to enable all serverextensions
-    return []
+    return [{"module": "swanshare.serverextension"}]
