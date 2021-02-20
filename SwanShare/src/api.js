@@ -72,27 +72,16 @@ var authtoken = {
 
         console.log('Getting CERNBox auth token');
 
-        var frame = $("<iframe></iframe>");
-        frame.hide();
-
         var that = this;
-        /**
-         * Listen for a call from inside the iFrame that passes the token as a parameter
-         */
-        window.addEventListener('message', function (event) {
-
-            if (event.origin !== endpoints.domain) {
-                failure(_, 'Your connection to CERN servers might have been compromised. Please contact Support');
-            } else {
-                that._token = event.data;
+        // Retrieve the user oauth token from jupyterhub
+        $.get( base_url + 'api/swanshare?origin=' + window.location.origin)
+            .done(function(data) {
+                that._token = data;
                 func(that._token.authtoken, config, success, failure);
-                frame.remove();
-            }
-        });
-
-        frame.attr("src", endpoints.domain + endpoints.base + endpoints.authentication + '?Origin=' + window.location.origin);
-        $("body").append(frame);
-
+            })
+            .fail(function() {
+                failure(_, 'Error contacting CERNBox');
+            });
     },
 
     /**
