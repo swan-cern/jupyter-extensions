@@ -64,7 +64,7 @@ class TokenRefresher(threading.Thread):
                 f.write(content.format(token = token))
 
             # renew one minute before expiration, but use the time of the token that will expire sooner
-            token_decoded = jwt.decode(token, verify=False, algorithms='RS256')
+            token_decoded = jwt.decode(token, options={"verify_signature": False}, algorithms='RS256')
             token_ttl = token_decoded['exp'] - time.time() - 60
 
             if ttl == -1 or token_ttl < ttl:
