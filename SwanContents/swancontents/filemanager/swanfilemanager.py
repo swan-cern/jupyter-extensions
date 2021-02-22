@@ -456,6 +456,8 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
             if file_name.endswith('.zip'):
                 with zipfile.ZipFile(io.BytesIO(r.content)) as nb_zip:
                     nb_zip.extractall(tmp_dir_name)
+                    # Change to the notebook file to allow the redirection to open it
+                    file_name = file_name.replace('.zip', '.ipynb')
 
             else:
                 nb_path = os.path.join(tmp_dir_name, file_name)
