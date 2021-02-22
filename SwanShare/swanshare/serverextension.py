@@ -35,7 +35,7 @@ class SwanShareHandler(APIHandler):
 
         with open(self.config.token_file, 'r') as f:
             token = f.read()
-            token_decoded = jwt.decode(token, verify=False, algorithms='RS256')
+            token_decoded = jwt.decode(token, options={"verify_signature": False}, algorithms='RS256')
             
             if token_decoded['exp'] < time.time():
                 raise web.HTTPError(400, u'Token expired')
