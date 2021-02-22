@@ -1,6 +1,6 @@
 {
     "name": "swanshare",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "description": "Jupyter Notebook extension to share Projects through CERNBox",
     "keywords": [
         "Jupyter",
