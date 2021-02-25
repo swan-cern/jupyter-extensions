@@ -15,6 +15,12 @@ div#header, div#site {
 {% endblock %}
 
 {% block extra_buttons %}
+{% if voila %}
+    <button id="voila-button" role="presentation" class="btn btn-default btn-xs"
+            onclick="javascript: window.location = '{{base_url | urlencode}}voila/render/{{path | urlencode}}'"  title="Voilà">
+        <i class="fa fa-desktop" aria-hidden="true"></i>
+    </button>
+{% endif %}
 {% if clonable %}
     <button id="clone-button" role="presentation" class="btn btn-default btn-xs"
             onclick="javascript: window.location = '{{base_url | urlencode}}download?projurl=local:{{clone_url | urlencode}}'"  title="Clone and edit">
