@@ -7,6 +7,13 @@ from traitlets.config import Config
 from nbconvert import HTMLExporter
 import logging
 
+has_voila = False
+try:
+    import voila
+    has_voila = True
+except:
+    pass
+
 def get_NotebookViewerHandler(show_clone=False, content_manager=None):
 
     class NotebookViewerHandlerClass(IPythonHandler):
@@ -45,6 +52,7 @@ def get_NotebookViewerHandler(show_clone=False, content_manager=None):
 
             name = path.rsplit('/', 1)[-1]
 
+            original_path = path
             if 'clone_url' in model:
                 path = model['clone_url']
                 if model['clone_url'] and self.get_argument("clone_folder", False):
@@ -54,9 +62,11 @@ def get_NotebookViewerHandler(show_clone=False, content_manager=None):
 
             self.write(self.render_template('notebook_view.html',
                 notebook_name=name,
+                path=original_path,
                 notebook=body,
                 resources=resources,
                 clonable=show_clone,
+                voila=has_voila,
                 clone_url=path,
                 base_url=self.base_url
                 )
