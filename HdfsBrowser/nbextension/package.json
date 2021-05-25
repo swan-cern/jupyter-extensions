@@ -11,19 +11,20 @@
     ],
     "author": "SWAN Admins",
     "devDependencies": {
-        "babel-core": "^6.25.0",
-        "babel-loader": "^7.1.1",
-        "babel-plugin-add-module-exports": "^0.2.1",
-        "babel-preset-env": "^1.6.0",
-        "css-loader": "^0.28.4",
-        "style-loader": "^0.18.2",
-        "webpack": "^3.3.0",
-        "rimraf": "^2.6.1"
+        "@babel/core": "^7.14.3",
+        "@babel/preset-env": "^7.14.2",
+        "babel-loader": "^8.2.2",
+        "babel-plugin-add-module-exports": "^1.0.4",
+        "css-loader": "^5.2.6",
+        "rimraf": "^3.0.2",
+        "style-loader": "^2.0.0",
+        "webpack": "^5.37.1",
+        "webpack-cli": "^4.7.0"
     },
     "scripts": {
         "build": "yarn webpack",
-        "webpack": "webpack -p --config webpack.config.js",
-        "dev": "webpack --watch --config webpack.config.js",
+        "webpack": "webpack --config webpack.config.js",
+        "dev": "webpack --mode development --watch --config webpack.config.js",
         "clean": "rimraf ../hdfsbrowser/nbextension"
     },
     "dependencies": {}
