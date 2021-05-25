@@ -1,6 +1,7 @@
 var path = require('path');
 
 module.exports = {
+    mode: 'production',
     entry: './src/extension.js',
     output: {
         path: path.resolve(__dirname, '../hdfsbrowser/nbextension'),
@@ -15,8 +16,8 @@ module.exports = {
                 loader: 'babel-loader',
                 options: {
                     cacheDirectory: true,
-                    presets: ["env"],
-                    "babelrc": false,
+                    presets: ["@babel/preset-env"],
+                    babelrc: false,
                 }
             }
         },
