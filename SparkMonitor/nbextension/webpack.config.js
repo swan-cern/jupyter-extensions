@@ -1,6 +1,7 @@
 var path = require('path');
 
 module.exports = {
+    mode: 'production',
     entry: {
         extension: './src/extension.js',
         timeline: './src/Timeline.js',
@@ -17,7 +18,12 @@ module.exports = {
     module: {
         rules: [{
                 test: /d3\.js$/,
-                use: "imports-loader?define=>false"
+                use: [{
+                    loader: 'imports-loader',
+                    options: {
+                        additionalCode: 'var define=false;'
+                    }
+                }]
             },
             {
                 test: /\.js$/,
@@ -25,7 +31,7 @@ module.exports = {
                 use: {
                     loader: 'babel-loader',
                     options: {
-                        presets: ['env'],
+                        presets: ['@babel/preset-env'],
 
                         plugins: [
                             "add-module-exports"
@@ -52,7 +58,14 @@ module.exports = {
                 use: {
                     loader: 'html-loader',
                     options: {
-                        attrs: [':data-src']
+                        sources: {
+                            list: [
+                                {
+                                    attribute: 'data-src',
+                                    type: 'src'
+                                }
+                            ]
+                        }
                     }
                 }
             },
@@ -62,8 +75,8 @@ module.exports = {
                     loader: 'babel-loader',
                     options: {
                         cacheDirectory: true,
-                        presets: ["env"],
-                        "babelrc": false,
+                        presets: ["@babel/preset-env"],
+                        babelrc: false,
                         // plugins: [
                         //     "transform-es3-property-literals",
                         //     "transform-es3-member-expression-literals",
