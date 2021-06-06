@@ -1,0 +1,13 @@
+name: swan-extensions-binder
+channels:
+  - conda-forge
+dependencies:
+  - python=3
+  - jupyterlab=3
+  - yarn
+  - nodejs
+  - openjdk
+  - pip:
+    - pyspark
+    
+

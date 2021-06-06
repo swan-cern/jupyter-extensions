@@ -1,17 +1,70 @@
 import {
+  ILabShell,
+  ILayoutRestorer,
   JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  JupyterFrontEndPlugin,
 } from '@jupyterlab/application';
+import { INotebookTracker } from '@jupyterlab/notebook';
+import { ReactWidget, IThemeManager } from '@jupyterlab/apputils';
+import React from 'react';
+
+import { store } from './store';
+import { SparkConnectorPanel } from './components/panel';
+import { JupyterLabConnector } from './labconnector';
 
 /**
- * Initialization data for the testextensions extension.
+ * Initialization data for the sparkconnector extension.
  */
-const extension: JupyterFrontEndPlugin<void> = {
+const plugin: JupyterFrontEndPlugin<void> = {
   id: 'sparkconnector',
+  requires: [ILabShell, INotebookTracker, ILayoutRestorer],
+  optional: [IThemeManager],
+  activate: activate,
   autoStart: true,
-  activate: (app: JupyterFrontEnd) => {
-    console.log('JupyterLab extension sparkconnector is activated!');
-  }
 };
 
-export default extension;
+export default plugin;
+
+/**
+ * Activate the running plugin.
+ */
+function activate(
+  app: JupyterFrontEnd,
+  labShell: ILabShell,
+  notebooks: INotebookTracker,
+  restorer: ILayoutRestorer,
+  themeManager: IThemeManager
+): void {
+  const appConnector = new JupyterLabConnector(app, notebooks);
+  store.setAppConnector(appConnector);
+
+  const panelWidget = ReactWidget.create(
+    React.createElement(SparkConnectorPanel)
+  );
+
+  panelWidget.id = 'spark-connector';
+  panelWidget.title.caption = 'Apache Spark';
+  panelWidget.title.iconClass = 'jp-SparkConnector-icon jp-SideBar-tabIcon';
+  labShell.add(panelWidget, 'right', {
+    rank: 700,
+  });
+
+  if (themeManager) {
+    if (themeManager.theme && themeManager.isLight(themeManager.theme)) {
+      store.colorTheme = 'light';
+    } else {
+      store.colorTheme = 'dark';
+    }
+    themeManager.themeChanged.connect((_, args) => {
+      if (themeManager.isLight(args.newValue)) {
+        store.colorTheme = 'light';
+      } else {
+        store.colorTheme = 'dark';
+      }
+    });
+  }
+  // TODO Restore Layout
+  // TODO Add command/menubar/toolbar entries
+
+  console.log('SparkConnector: Jupyter Lab extension is activated!');
+}

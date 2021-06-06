@@ -6,16 +6,13 @@ import os
 
 from jupyter_packaging import (
     create_cmdclass, install_npm, ensure_targets,
-    combine_commands, ensure_python, get_version,
+    combine_commands, get_version,
 )
 import setuptools
 
 name="sparkconnector"
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-NBEXTENSION = os.path.join(HERE, "nbextension")
-
-ensure_python(">=3.5")
 
 # Get our version
 version = get_version(os.path.join(name, "_version.py"))
@@ -36,7 +33,7 @@ package_data_spec = {
 }
 
 data_files_spec = [
-    ("share/jupyter/lab/extensions", lab_path, "*.tgz"),
+    ("share/jupyter/labextensions/@swan-cern/sparkconnector", lab_path, "**"),
     ("etc/jupyter/jupyter_notebook_config.d",
      "jupyter-config", "sparkconnector.json"),
 ]
@@ -47,8 +44,7 @@ cmdclass = create_cmdclass("jsdeps",
 )
 
 cmdclass["jsdeps"] = combine_commands(
-    install_npm(HERE, build_cmd="build:labextension", npm=["jlpm"]),
-    install_npm(NBEXTENSION, build_cmd="webpack"),
+    install_npm(HERE, build_cmd="build:prod", npm=["jlpm"]),
     ensure_targets(jstargets),
 )
 
@@ -66,11 +62,12 @@ setup_args = dict(
     cmdclass= cmdclass,
     packages=setuptools.find_packages(),
     install_requires=[
-        "jupyterlab~=2.0",
+        "jupyterlab~=3.0",
         "bs4",
     ],
     zip_safe=False,
     include_package_data=True,
+    python_requires=">=3.5",
     license="AGPL-3.0",
     platforms="Linux",
     keywords=["Jupyter", "JupyterLab", "SWAN", "CERN"],
