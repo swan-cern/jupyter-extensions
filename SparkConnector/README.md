@@ -8,7 +8,7 @@ for the JupyterLab extension.
 
 ## Requirements
 
-* JupyterLab >= 2.0
+* JupyterLab >= 3.0
 
 ## Install
 

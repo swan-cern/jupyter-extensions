@@ -14,3 +14,9 @@ def _jupyter_nbextension_paths():
                 dest="sparkconnector",
                 require="sparkconnector/extension"),
             ]
+
+def _jupyter_labextension_paths():
+    return [{
+        "src": "labextension",
+        "dest": "@swan-cern/sparkconnector"
+    }]

@@ -6,7 +6,7 @@ include jupyter-config/sparkconnector.json
 
 include package.json
 include ts*.json
-include sparkconnector/labextension/*.tgz
+graft sparkconnector/labextension
 include sparkconnector/nbextension/*.js
 
 # Javascript files

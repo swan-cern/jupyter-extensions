@@ -1,0 +1,4 @@
+# Configure SparkConnector
+(cd SparkConnector/nbextension && yarn install)
+pip install ./SparkConnector
+echo "c.InteractiveShellApp.extensions.append('sparkconnector.connector')" >>  $(ipython profile locate default)/ipython_kernel_config.py

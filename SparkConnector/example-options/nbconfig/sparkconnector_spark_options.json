@@ -1,0 +1,2002 @@
+{
+    "spark_options": [
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.app.name"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.driver.cores"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.driver.maxResultSize"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.driver.memory"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.driver.memoryOverhead"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.executor.memory"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.executor.pyspark.memory"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.executor.memoryOverhead"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.extraListeners"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.local.dir"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.logConf"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.master"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.submit.deployMode"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.log.callerContext"
+        }, 
+        {
+            "data": {
+                "category": "Application Properties"
+            }, 
+            "value": "spark.driver.supervise"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.driver.extraClassPath"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.driver.extraJavaOptions"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.driver.extraLibraryPath"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.driver.userClassPathFirst"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.executor.extraClassPath"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.executor.extraJavaOptions"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.executor.extraLibraryPath"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.executor.logs.rolling.maxRetainedFiles"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.executor.logs.rolling.enableCompression"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.executor.logs.rolling.maxSize"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.executor.logs.rolling.strategy"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.executor.logs.rolling.time.interval"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.executor.userClassPathFirst"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.executorEnv.[EnvironmentVariableName]"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.redaction.regex"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.python.profile"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.python.profile.dump"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.python.worker.memory"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.python.worker.reuse"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.files"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.submit.pyFiles"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.jars"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.jars.packages"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.jars.excludes"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.jars.ivy"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.jars.ivySettings"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.jars.repositories"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.pyspark.driver.python"
+        }, 
+        {
+            "data": {
+                "category": "Runtime Environment"
+            }, 
+            "value": "spark.pyspark.python"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.reducer.maxSizeInFlight"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.reducer.maxReqsInFlight"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.reducer.maxBlocksInFlightPerAddress"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.maxRemoteBlockSizeFetchToMem"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.compress"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.file.buffer"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.io.maxRetries"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.io.numConnectionsPerPeer"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.io.preferDirectBufs"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.io.retryWait"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.service.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.service.port"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.service.index.cache.size"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.maxChunksBeingTransferred"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.sort.bypassMergeThreshold"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.spill.compress"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.accurateBlockThreshold"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.registration.timeout"
+        }, 
+        {
+            "data": {
+                "category": "Shuffle Behavior"
+            }, 
+            "value": "spark.shuffle.registration.maxAttempts"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.eventLog.logBlockUpdates.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.eventLog.longForm.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.eventLog.compress"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.eventLog.dir"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.eventLog.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.eventLog.overwrite"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.eventLog.buffer.kb"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.ui.dagGraph.retainedRootRDDs"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.ui.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.ui.killEnabled"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.ui.liveUpdate.period"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.ui.port"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.ui.retainedJobs"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.ui.retainedStages"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.ui.retainedTasks"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.ui.reverseProxy"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.ui.reverseProxyUrl"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.ui.showConsoleProgress"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.worker.ui.retainedExecutors"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.worker.ui.retainedDrivers"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.sql.ui.retainedExecutions"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.streaming.ui.retainedBatches"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.ui.retainedDeadExecutors"
+        }, 
+        {
+            "data": {
+                "category": "Spark UI"
+            }, 
+            "value": "spark.ui.filters"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.broadcast.compress"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.io.compression.codec"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.io.compression.lz4.blockSize"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.io.compression.snappy.blockSize"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.io.compression.zstd.level"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.io.compression.zstd.bufferSize"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.kryo.classesToRegister"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.kryo.referenceTracking"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.kryo.registrationRequired"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.kryo.registrator"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.kryo.unsafe"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.kryoserializer.buffer.max"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.kryoserializer.buffer"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.rdd.compress"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.serializer"
+        }, 
+        {
+            "data": {
+                "category": "Compression and Serialization"
+            }, 
+            "value": "spark.serializer.objectStreamReset"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.memory.fraction"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.memory.storageFraction"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.memory.offHeap.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.memory.offHeap.size"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.memory.useLegacyMode"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.shuffle.memoryFraction"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.storage.memoryFraction"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.storage.unrollFraction"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.storage.replication.proactive"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.cleaner.periodicGC.interval"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.cleaner.referenceTracking"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.cleaner.referenceTracking.blocking"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.cleaner.referenceTracking.blocking.shuffle"
+        }, 
+        {
+            "data": {
+                "category": "Memory Management"
+            }, 
+            "value": "spark.cleaner.referenceTracking.cleanCheckpoints"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.broadcast.blockSize"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.broadcast.checksum"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.executor.cores"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.default.parallelism"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.executor.heartbeatInterval"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.files.fetchTimeout"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.files.useFetchCache"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.files.overwrite"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.files.maxPartitionBytes"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.files.openCostInBytes"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.hadoop.cloneConf"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.hadoop.validateOutputSpecs"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.storage.memoryMapThreshold"
+        }, 
+        {
+            "data": {
+                "category": "Execution Behavior"
+            }, 
+            "value": "spark.hadoop.mapreduce.fileoutputcommitter.algorithm.version"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.rpc.message.maxSize"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.blockManager.port"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.driver.blockManager.port"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.driver.bindAddress"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.driver.host"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.driver.port"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.network.timeout"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.port.maxRetries"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.rpc.numRetries"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.rpc.retry.wait"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.rpc.askTimeout"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.network.timeout"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.rpc.lookupTimeout"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.core.connection.ack.wait.timeout"
+        }, 
+        {
+            "data": {
+                "category": "Networking"
+            }, 
+            "value": "spark.network.timeout"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.cores.max"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.locality.wait"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.locality.wait.node"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.locality.wait.process"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.locality.wait.rack"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.scheduler.maxRegisteredResourcesWaitingTime"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.scheduler.minRegisteredResourcesRatio"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.scheduler.mode"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.scheduler.revive.interval"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.scheduler.listenerbus.eventqueue.capacity"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.blacklist.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.blacklist.timeout"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.blacklist.task.maxTaskAttemptsPerExecutor"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.blacklist.task.maxTaskAttemptsPerNode"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.blacklist.stage.maxFailedTasksPerExecutor"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.blacklist.stage.maxFailedExecutorsPerNode"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.blacklist.application.maxFailedTasksPerExecutor"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.blacklist.application.maxFailedExecutorsPerNode"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.blacklist.killBlacklistedExecutors"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.blacklist.application.fetchFailure.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.speculation"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.speculation.interval"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.speculation.multiplier"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.speculation.quantile"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.task.cpus"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.task.maxFailures"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.task.reaper.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.task.reaper.pollingInterval"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.task.reaper.threadDump"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.task.reaper.killTimeout"
+        }, 
+        {
+            "data": {
+                "category": "Scheduling"
+            }, 
+            "value": "spark.stage.maxConsecutiveAttempts"
+        }, 
+        {
+            "data": {
+                "category": "Dynamic Allocation"
+            }, 
+            "value": "spark.dynamicAllocation.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Dynamic Allocation"
+            }, 
+            "value": "spark.dynamicAllocation.executorIdleTimeout"
+        }, 
+        {
+            "data": {
+                "category": "Dynamic Allocation"
+            }, 
+            "value": "spark.dynamicAllocation.cachedExecutorIdleTimeout"
+        }, 
+        {
+            "data": {
+                "category": "Dynamic Allocation"
+            }, 
+            "value": "spark.dynamicAllocation.initialExecutors"
+        }, 
+        {
+            "data": {
+                "category": "Dynamic Allocation"
+            }, 
+            "value": "spark.dynamicAllocation.minExecutors"
+        }, 
+        {
+            "data": {
+                "category": "Dynamic Allocation"
+            }, 
+            "value": "spark.dynamicAllocation.maxExecutors"
+        }, 
+        {
+            "data": {
+                "category": "Dynamic Allocation"
+            }, 
+            "value": "spark.dynamicAllocation.minExecutors"
+        }, 
+        {
+            "data": {
+                "category": "Dynamic Allocation"
+            }, 
+            "value": "spark.dynamicAllocation.executorAllocationRatio"
+        }, 
+        {
+            "data": {
+                "category": "Dynamic Allocation"
+            }, 
+            "value": "spark.dynamicAllocation.schedulerBacklogTimeout"
+        }, 
+        {
+            "data": {
+                "category": "Dynamic Allocation"
+            }, 
+            "value": "spark.dynamicAllocation.sustainedSchedulerBacklogTimeout"
+        }, 
+        {
+            "data": {
+                "category": "Spark Streaming"
+            }, 
+            "value": "spark.streaming.backpressure.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Spark Streaming"
+            }, 
+            "value": "spark.streaming.backpressure.initialRate"
+        }, 
+        {
+            "data": {
+                "category": "Spark Streaming"
+            }, 
+            "value": "spark.streaming.blockInterval"
+        }, 
+        {
+            "data": {
+                "category": "Spark Streaming"
+            }, 
+            "value": "spark.streaming.receiver.maxRate"
+        }, 
+        {
+            "data": {
+                "category": "Spark Streaming"
+            }, 
+            "value": "spark.streaming.receiver.writeAheadLog.enable"
+        }, 
+        {
+            "data": {
+                "category": "Spark Streaming"
+            }, 
+            "value": "spark.streaming.unpersist"
+        }, 
+        {
+            "data": {
+                "category": "Spark Streaming"
+            }, 
+            "value": "spark.streaming.stopGracefullyOnShutdown"
+        }, 
+        {
+            "data": {
+                "category": "Spark Streaming"
+            }, 
+            "value": "spark.streaming.kafka.maxRatePerPartition"
+        }, 
+        {
+            "data": {
+                "category": "Spark Streaming"
+            }, 
+            "value": "spark.streaming.kafka.minRatePerPartition"
+        }, 
+        {
+            "data": {
+                "category": "Spark Streaming"
+            }, 
+            "value": "spark.streaming.kafka.maxRetries"
+        }, 
+        {
+            "data": {
+                "category": "Spark Streaming"
+            }, 
+            "value": "spark.streaming.ui.retainedBatches"
+        }, 
+        {
+            "data": {
+                "category": "Spark Streaming"
+            }, 
+            "value": "spark.streaming.driver.writeAheadLog.closeFileAfterWrite"
+        }, 
+        {
+            "data": {
+                "category": "Spark Streaming"
+            }, 
+            "value": "spark.streaming.receiver.writeAheadLog.closeFileAfterWrite"
+        }, 
+        {
+            "data": {
+                "category": "SparkR"
+            }, 
+            "value": "spark.r.numRBackendThreads"
+        }, 
+        {
+            "data": {
+                "category": "SparkR"
+            }, 
+            "value": "spark.r.command"
+        }, 
+        {
+            "data": {
+                "category": "SparkR"
+            }, 
+            "value": "spark.r.driver.command"
+        }, 
+        {
+            "data": {
+                "category": "SparkR"
+            }, 
+            "value": "spark.r.shell.command"
+        }, 
+        {
+            "data": {
+                "category": "SparkR"
+            }, 
+            "value": "spark.r.backendConnectionTimeout"
+        }, 
+        {
+            "data": {
+                "category": "SparkR"
+            }, 
+            "value": "spark.r.heartBeatInterval"
+        }, 
+        {
+            "data": {
+                "category": "GraphX"
+            }, 
+            "value": "spark.graphx.pregel.checkpointInterval"
+        }, 
+        {
+            "data": {
+                "category": "Deploy"
+            }, 
+            "value": "spark.deploy.recoveryMode"
+        }, 
+        {
+            "data": {
+                "category": "Deploy"
+            }, 
+            "value": "spark.deploy.zookeeper.url"
+        }, 
+        {
+            "data": {
+                "category": "Deploy"
+            }, 
+            "value": "spark.deploy.zookeeper.dir"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.am.memory"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.am.cores"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.am.waitTime"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.submit.file.replication"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.stagingDir"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.preserve.staging.files"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.scheduler.heartbeat.interval-ms"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.scheduler.initial-allocation.interval"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.max.executor.failures"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.historyServer.address"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.dist.archives"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.dist.files"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.dist.jars"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.dist.forceDownloadSchemes"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.executor.instances"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.am.memoryOverhead"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.queue"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.jars"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.archive"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.appMasterEnv.[EnvironmentVariableName]"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.containerLauncherMaxThreads"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.am.extraJavaOptions"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.am.extraLibraryPath"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.maxAppAttempts"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.am.attemptFailuresValidityInterval"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.executor.failuresValidityInterval"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.submit.waitAppCompletion"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.am.nodeLabelExpression"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.executor.nodeLabelExpression"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.tags"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.config.gatewayPath"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.config.replacementPath"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.rolledLog.includePattern"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.rolledLog.excludePattern"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.blacklist.executor.launch.blacklisting.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.yarn.metrics.namespace"
+        }, 
+        {
+            "data": {
+                "category": "YARN-specific Kerberos Configuration"
+            }, 
+            "value": "spark.yarn.keytab"
+        }, 
+        {
+            "data": {
+                "category": "YARN-specific Kerberos Configuration"
+            }, 
+            "value": "spark.yarn.principal"
+        }, 
+        {
+            "data": {
+                "category": "YARN-specific Kerberos Configuration"
+            }, 
+            "value": "spark.yarn.access.hadoopFileSystems"
+        }, 
+        {
+            "data": {
+                "category": "YARN-specific Kerberos Configuration"
+            }, 
+            "value": "spark.yarn.kerberos.relogin.period"
+        }, 
+        {
+            "data": {
+                "category": "Configuring the External Shuffle Service"
+            }, 
+            "value": "spark.yarn.shuffle.stopOnFailure"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.namespace"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.container.image"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.driver.container.image"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.executor.container.image"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.container.image.pullPolicy"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.container.image.pullSecrets"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.allocation.batch.size"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.allocation.batch.delay"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.submission.caCertFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.submission.clientKeyFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.submission.clientCertFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.submission.oauthToken"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.submission.oauthTokenFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.driver.caCertFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.driver.clientKeyFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.driver.clientCertFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.driver.oauthToken"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.driver.oauthTokenFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.driver.mounted.caCertFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.driver.mounted.clientKeyFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.driver.mounted.clientCertFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.driver.mounted.oauthTokenFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.driver.serviceAccountName"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.caCertFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.clientKeyFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.clientCertFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.oauthToken"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.authenticate.oauthTokenFile"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.driver.label.[LabelName]"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.driver.annotation.[AnnotationName]"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.executor.label.[LabelName]"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.executor.annotation.[AnnotationName]"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.driver.pod.name"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.executor.lostCheck.maxAttempts"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.submission.waitAppCompletion"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.report.interval"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.driver.limit.cores"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.executor.request.cores"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.executor.limit.cores"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.node.selector.[labelKey]"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.driverEnv.[EnvironmentVariableName]"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.driver.secrets.[SecretName]"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.executor.secrets.[SecretName]"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.driver.secretKeyRef.[EnvName]"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.executor.secretKeyRef.[EnvName]"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.driver.volumes.[VolumeType].[VolumeName].mount.path"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.driver.volumes.[VolumeType].[VolumeName].mount.readOnly"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.driver.volumes.[VolumeType].[VolumeName].options.[OptionName]"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.executor.volumes.[VolumeType].[VolumeName].mount.path"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.executor.volumes.[VolumeType].[VolumeName].mount.readOnly"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.executor.volumes.[VolumeType].[VolumeName].options.[OptionName]"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.memoryOverheadFactor"
+        }, 
+        {
+            "data": {
+                "category": "Spark Properties"
+            }, 
+            "value": "spark.kubernetes.pyspark.pythonVersion"
+        }, 
+        {
+            "data": {
+                "category": "Authentication"
+            }, 
+            "value": "spark.authenticate"
+        }, 
+        {
+            "data": {
+                "category": "Authentication"
+            }, 
+            "value": "spark.authenticate.secret"
+        }, 
+        {
+            "data": {
+                "category": "Encryption"
+            }, 
+            "value": "spark.network.crypto.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Encryption"
+            }, 
+            "value": "spark.network.crypto.keyLength"
+        }, 
+        {
+            "data": {
+                "category": "Encryption"
+            }, 
+            "value": "spark.network.crypto.keyFactoryAlgorithm"
+        }, 
+        {
+            "data": {
+                "category": "Encryption"
+            }, 
+            "value": "spark.network.crypto.config.*"
+        }, 
+        {
+            "data": {
+                "category": "Encryption"
+            }, 
+            "value": "spark.network.crypto.saslFallback"
+        }, 
+        {
+            "data": {
+                "category": "Encryption"
+            }, 
+            "value": "spark.authenticate.enableSaslEncryption"
+        }, 
+        {
+            "data": {
+                "category": "Encryption"
+            }, 
+            "value": "spark.network.sasl.serverAlwaysEncrypt"
+        }, 
+        {
+            "data": {
+                "category": "Local Storage Encryption"
+            }, 
+            "value": "spark.io.encryption.enabled"
+        }, 
+        {
+            "data": {
+                "category": "Local Storage Encryption"
+            }, 
+            "value": "spark.io.encryption.keySizeBits"
+        }, 
+        {
+            "data": {
+                "category": "Local Storage Encryption"
+            }, 
+            "value": "spark.io.encryption.keygen.algorithm"
+        }, 
+        {
+            "data": {
+                "category": "Local Storage Encryption"
+            }, 
+            "value": "spark.io.encryption.commons.config.*"
+        }, 
+        {
+            "data": {
+                "category": "Authentication and Authorization"
+            }, 
+            "value": "spark.ui.filters"
+        }, 
+        {
+            "data": {
+                "category": "Authentication and Authorization"
+            }, 
+            "value": "spark.acls.enable"
+        }, 
+        {
+            "data": {
+                "category": "Authentication and Authorization"
+            }, 
+            "value": "spark.admin.acls"
+        }, 
+        {
+            "data": {
+                "category": "Authentication and Authorization"
+            }, 
+            "value": "spark.admin.acls.groups"
+        }, 
+        {
+            "data": {
+                "category": "Authentication and Authorization"
+            }, 
+            "value": "spark.modify.acls"
+        }, 
+        {
+            "data": {
+                "category": "Authentication and Authorization"
+            }, 
+            "value": "spark.modify.acls.groups"
+        }, 
+        {
+            "data": {
+                "category": "Authentication and Authorization"
+            }, 
+            "value": "spark.ui.view.acls"
+        }, 
+        {
+            "data": {
+                "category": "Authentication and Authorization"
+            }, 
+            "value": "spark.ui.view.acls.groups"
+        }, 
+        {
+            "data": {
+                "category": "Authentication and Authorization"
+            }, 
+            "value": "spark.user.groups.mapping"
+        }, 
+        {
+            "data": {
+                "category": "Spark History Server ACLs"
+            }, 
+            "value": "spark.history.ui.acls.enable"
+        }, 
+        {
+            "data": {
+                "category": "Spark History Server ACLs"
+            }, 
+            "value": "spark.history.ui.admin.acls"
+        }, 
+        {
+            "data": {
+                "category": "Spark History Server ACLs"
+            }, 
+            "value": "spark.history.ui.admin.acls.groups"
+        }, 
+        {
+            "data": {
+                "category": "HTTP Security Headers"
+            }, 
+            "value": "spark.ui.xXssProtection"
+        }, 
+        {
+            "data": {
+                "category": "HTTP Security Headers"
+            }, 
+            "value": "spark.ui.xContentTypeOptions.enabled"
+        }, 
+        {
+            "data": {
+                "category": "HTTP Security Headers"
+            }, 
+            "value": "spark.ui.strictTransportSecurity"
+        }, 
+        {
+            "data": {
+                "category": "Kerberos"
+            }, 
+            "value": "spark.security.credentials.${service}.enabled"
+        }
+    ]
+}

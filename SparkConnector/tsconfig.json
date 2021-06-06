@@ -1,6 +1,7 @@
 {
   "compilerOptions": {
     "allowSyntheticDefaultImports": true,
+    "useDefineForClassFields": true,
     "composite": true,
     "declaration": true,
     "esModuleInterop": true,
@@ -16,9 +17,10 @@
     "outDir": "lib",
     "rootDir": "src",
     "strict": true,
-    "strictNullChecks": false,
+    "strictNullChecks": true,
     "target": "es2017",
-    "types": []
+    "types": [],
+    "lib": ["ESNext", "DOM", "ES2018.AsyncIterable"]
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*"],
 }
