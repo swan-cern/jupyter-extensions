@@ -9,7 +9,7 @@ import { ReactWidget, IThemeManager } from '@jupyterlab/apputils';
 import React from 'react';
 
 import { store } from './store';
-import { SparkConnectorPanel } from './components/panel';
+import { LazySparkConnectorPanel } from './components/lazy-panel';
 import { JupyterLabConnector } from './labconnector';
 
 /**
@@ -39,7 +39,7 @@ function activate(
   store.setAppConnector(appConnector);
 
   const panelWidget = ReactWidget.create(
-    React.createElement(SparkConnectorPanel)
+    React.createElement(LazySparkConnectorPanel)
   );
 
   panelWidget.id = 'spark-connector';
@@ -63,8 +63,5 @@ function activate(
       }
     });
   }
-  // TODO Restore Layout
-  // TODO Add command/menubar/toolbar entries
-
   console.log('SparkConnector: Jupyter Lab extension is activated!');
 }
