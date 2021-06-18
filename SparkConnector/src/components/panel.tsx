@@ -11,7 +11,7 @@ import { Connecting } from './connecting';
 import { Loading } from './loading';
 import { NotAttached } from './not-attached';
 
-export const SparkConnectorPanel = observer(() => {
+const SparkConnectorPanel = observer(() => {
   let page: JSX.Element = <div />;
   if (!store.currentNotebook) {
     return <NotAttached />;
@@ -42,3 +42,5 @@ export const SparkConnectorPanel = observer(() => {
 
   return <ThemeProvider>{page}</ThemeProvider>;
 });
+
+export default SparkConnectorPanel;
