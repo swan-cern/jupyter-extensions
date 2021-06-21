@@ -8,6 +8,7 @@
         "Notebook"
     ],
     "author": "SWAN Admins",
+    "license": "AGPL-3.0",
     "devDependencies": {
         "@babel/core": "^7.14.3",
         "@babel/preset-env": "^7.14.2",
