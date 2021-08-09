@@ -5,7 +5,7 @@
   color: var(--jp-ui-font-color1);
   font-size: var(--jp-ui-font-size0);
   height: 100%;
-  overflow: scroll;
+  overflow: auto;
 }
 
 .jp-SparkConnector-scrollable {
@@ -89,7 +89,7 @@
   color: var(--md-grey-700);
   background-color: var(--md-grey-100);
   border-color: var(--md-grey-300);
-  overflow: scroll;
+  overflow: auto;
   word-wrap: break-word;
   flex-grow: 1;
 }
