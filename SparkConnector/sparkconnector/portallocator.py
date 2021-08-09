@@ -319,4 +319,5 @@ def load_jupyter_server_extension(nb_server_app):
     log.info("Loading Server Extension")
 
     thread = PortsAllocator(log)
+    thread.setDaemon(True)
     thread.start()
