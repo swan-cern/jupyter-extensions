@@ -34,8 +34,10 @@ package_data_spec = {
 
 data_files_spec = [
     ("share/jupyter/labextensions/@swan-cern/sparkconnector", lab_path, "**"),
-    ("etc/jupyter/jupyter_notebook_config.d",
-     "jupyter-config", "sparkconnector.json"),
+    ("etc/jupyter/jupyter_server_config.d",
+     "jupyter-config/jupyter_server_config.d", "sparkconnector.json"),
+     ("etc/jupyter/jupyter_notebook_config.d",
+     "jupyter-config/jupyter_notebook_config.d", "sparkconnector.json"),
 ]
 
 cmdclass = create_cmdclass("jsdeps", 
