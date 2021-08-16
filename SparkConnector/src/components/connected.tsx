@@ -6,7 +6,7 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import AssessmentIcon from '@material-ui/icons/Assessment';
-import HistoryIcon from '@material-ui/icons/History';
+import WebAssetIcon from '@material-ui/icons/WebAsset';
 import LinkOffIcon from '@material-ui/icons/LinkOff';
 import Button from '@material-ui/core/Button';
 import Alert from '@material-ui/lab/Alert';
@@ -70,9 +70,9 @@ export const Connected = observer(() => {
             }}
           >
             <ListItemIcon>
-              <HistoryIcon />
+              <WebAssetIcon />
             </ListItemIcon>
-            <ListItemText primary="Spark History Server" />
+            <ListItemText primary="Spark Web UI" />
           </ListItem>
           <ListItem
             onClick={() => {
