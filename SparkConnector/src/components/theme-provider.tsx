@@ -6,6 +6,9 @@ import {
 import { observer } from 'mobx-react-lite';
 import { store } from '../store';
 
+const brandColor1 = getComputedStyle(document.body)
+  .getPropertyValue('--jp-brand-color1')
+  .trim();
 const createTheme = (color: 'light' | 'dark') => {
   return createMuiTheme({
     shadows: Array(25).fill('none') as any,
@@ -30,7 +33,7 @@ const createTheme = (color: 'light' | 'dark') => {
     palette: {
       type: color || 'light',
       primary: {
-        main: '#2196f3',
+        main: brandColor1,
       },
     },
   });
