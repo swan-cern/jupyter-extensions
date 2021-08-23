@@ -178,11 +178,10 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
         os_path_proj = self._get_os_path(os.path.join(path, self.swan_default_file))
 
-        if os.path.isdir(os_path) and os.path.isfile(os_path_proj):
+        if os.path.isdir(os_path) and os.path.isfile(os_path_proj) and self._is_swan_root_folder(os_path):
             if type not in (None, 'project', 'directory'):
                 raise web.HTTPError(400,
                                 u'%s is a project, not a %s' % (path, type), reason='bad type')
-
             model = self._proj_model(path, content=content)
 
         else:
