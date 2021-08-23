@@ -24,6 +24,8 @@ nb_path = os.path.join(HERE, name, "nbextension")
 jstargets = [
     os.path.join(HERE, "lib", "index.js"),
     os.path.join(nb_path, "extension.js"),
+    os.path.join(lab_path, "package.json"),
+    os.path.join(lab_path, "static/style.js"),
 ]
 
 package_data_spec = {

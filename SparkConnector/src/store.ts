@@ -107,8 +107,11 @@ class SparkConnectorStore {
     this.notebooks[notebookPanelId].selectedConfigurations = [];
     this.notebooks[notebookPanelId].selectedBundles = [];
     options?.savedConfig?.bundled_options.forEach((bundleName: string) => {
-      // Ignore any bundles not in our current version
-      if (this.allAvailableBundles[bundleName]) {
+      // Ignore any bundles not in our current configuration and not available for the selected cluster/session
+      if (
+        this.allAvailableBundles[bundleName] &&
+        this.notebooks[notebookPanelId].filteredAvailableBundles[bundleName]
+      ) {
         this.notebooks[notebookPanelId].selectedBundles.push(bundleName);
       }
     });
