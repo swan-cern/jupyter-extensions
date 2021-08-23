@@ -2,7 +2,7 @@ include LICENSE
 include README.md
 include pyproject.toml
 
-include jupyter-config/hdfsbrowser.json
+graft jupyter-config
 
 include package.json
 include ts*.json

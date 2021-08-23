@@ -5,16 +5,13 @@ import os
 
 from jupyter_packaging import (
     create_cmdclass, install_npm, ensure_targets,
-    combine_commands, ensure_python, get_version,
+    combine_commands, get_version,
 )
 import setuptools
 
 name="hdfsbrowser"
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-NBEXTENSION = os.path.join(HERE, "nbextension")
-
-ensure_python(">=3.5")
 
 # Get our version
 version = get_version(os.path.join(name, "_version.py"))
@@ -26,6 +23,8 @@ nb_path = os.path.join(HERE, name, "nbextension")
 jstargets = [
     os.path.join(HERE, "lib", "index.js"),
     os.path.join(nb_path, "extension.js"),
+    os.path.join(lab_path, "package.json"),
+    os.path.join(lab_path, "static/style.js"),
 ]
 
 package_data_spec = {
@@ -35,9 +34,11 @@ package_data_spec = {
 }
 
 data_files_spec = [
-    ("share/jupyter/lab/extensions", lab_path, "*.tgz"),
-    ("etc/jupyter/jupyter_notebook_config.d",
-     "jupyter-config", "hdfsbrowser.json"),
+    ("share/jupyter/labextensions/@swan-cern/hdfsbrowser", lab_path, "**"),
+    ("etc/jupyter/jupyter_server_config.d",
+     "jupyter-config/jupyter_server_config.d", "hdfsbrowser.json"),
+     ("etc/jupyter/jupyter_notebook_config.d",
+     "jupyter-config/jupyter_notebook_config.d", "hdfsbrowser.json"),
 ]
 
 cmdclass = create_cmdclass("jsdeps", 
@@ -46,8 +47,8 @@ cmdclass = create_cmdclass("jsdeps",
 )
 
 cmdclass["jsdeps"] = combine_commands(
-    install_npm(HERE, build_cmd="build:labextension", npm=["jlpm"]),
-    install_npm(NBEXTENSION, build_cmd="webpack"),
+    install_npm(HERE, build_cmd="install:all", npm=["jlpm"]),
+    install_npm(HERE, build_cmd="build:prod", npm=["jlpm"]),
     ensure_targets(jstargets),
 )
 
@@ -65,11 +66,12 @@ setup_args = dict(
     cmdclass= cmdclass,
     packages=setuptools.find_packages(),
     install_requires=[
-        "jupyterlab~=2.0",
+        "jupyterlab~=3.0",
         "bs4",
     ],
     zip_safe=False,
     include_package_data=True,
+    python_requires=">=3.6",
     license="AGPL-3.0",
     platforms="Linux",
     keywords=["Jupyter", "JupyterLab", "SWAN", "CERN"],
