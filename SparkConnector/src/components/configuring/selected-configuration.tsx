@@ -48,7 +48,7 @@ const SelectedBundleItem = observer((props: { bundleName: string }) => {
   const [expanded, setExpanded] = React.useState(true);
   const configList = store.currentNotebook.filteredAvailableBundles[
     props.bundleName
-  ].options?.map((config, index) => (
+  ]?.options?.map((config, index) => (
     <ListItem dense key={index}>
       <ListItemIcon>
         <SettingsIcon />
