@@ -41,7 +41,7 @@ setup_args = dict(
     cmdclass= cmdclass,
     packages=setuptools.find_packages(),
     install_requires=[
-          'notebook==6.1.*',
+          'notebook==6.4.*',
           'tornado',
           'jupyter_core',
           'requests'
