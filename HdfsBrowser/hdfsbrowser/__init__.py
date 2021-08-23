@@ -23,6 +23,11 @@ def _jupyter_server_extension_paths():
     """
     return [{"module": "hdfsbrowser"}]
 
+def _jupyter_labextension_paths():
+    return [{
+        "src": "labextension",
+        "dest": "@swan-cern/hdfsbrowser"
+    }]
 
 def load_jupyter_server_extension(nbapp):
     """Load the Jupyter server extension.
