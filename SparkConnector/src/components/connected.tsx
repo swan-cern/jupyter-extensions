@@ -61,13 +61,11 @@ export const Connected = observer(() => {
         <List dense>
           <ListItem
             button
-            onClick={() => {
-              window.open(
-                store.currentNotebook?.connectionResources
-                  ?.sparkHistoryServerUrl,
-                '_blank'
-              );
-            }}
+            component="a"
+            target="_blank"
+            href={
+              store.currentNotebook?.connectionResources?.sparkHistoryServerUrl
+            }
           >
             <ListItemIcon>
               <WebAssetIcon />
@@ -75,13 +73,10 @@ export const Connected = observer(() => {
             <ListItemText primary="Spark Web UI" />
           </ListItem>
           <ListItem
-            onClick={() => {
-              window.open(
-                store.currentNotebook.connectionResources?.sparkMetricsUrl,
-                '_blank'
-              );
-            }}
             button
+            component="a"
+            target="_blank"
+            href={store.currentNotebook.connectionResources?.sparkMetricsUrl}
             disabled={
               !store.currentNotebook.connectionResources?.sparkMetricsUrl
             }

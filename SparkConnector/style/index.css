@@ -20,10 +20,6 @@
   font-size: var(--jp-ui-font-size1);
 }
 
-.jp-SparkConnector-details a {
-  color: var(--jp-info-color0);
-}
-
 .jp-SparkConnector-section-header {
   flex: 0 0 auto;
   font-weight: 600;
@@ -44,7 +40,7 @@
 .jp-SparkConnector-panel {
   display: flex;
   flex-direction: row;
-  color: var(--jp-layout-color3);
+  color: var(--jp-ui-font-color3);
   height: 24px;
   line-height: 24px;
   border-bottom: var(--jp-border-width) solid var(--jp-border-color2);
@@ -86,30 +82,13 @@
 }
 
 .jp-SparkConnector-confDetailsContainer-sparkLogs.info {
-  color: var(--md-grey-700);
-  background-color: var(--md-grey-100);
+  color: var(--jp-ui-font-color1);
+  background-color: var(--jp-layout-color2);
   border-color: var(--md-grey-300);
   overflow: auto;
   word-wrap: break-word;
   flex-grow: 1;
 }
-
-.jp-SparkConnector-confDetailsContainer-sparkLogs.alert {
-  color: var(--jp-error-color0);
-  background-color: var(--jp-error-color3);
-  border-color: var(--jp-error-color2);
-}
-
-[data-jp-theme-light='true'] .jp-SparkConnector-icon {
-  fill: #3f6078;
-  background-image: url(apachespark.svg);
-}
-
-[data-jp-theme-light='false'] .jp-SparkConnector-icon {
-  fill: #3f6078;
-  background-image: url(apachespark.svg);
-}
-
 
 .jp-SparkConnector-logo {
   background-image: url('Apache_Spark_logo.png');
@@ -171,6 +150,7 @@
 
 .jp-SparkConnector-logrefresh {
   height: 10px;
+  width: 10px;
   margin: 0;
   padding: 0;
   float: right;
