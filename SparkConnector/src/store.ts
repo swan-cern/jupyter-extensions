@@ -268,7 +268,7 @@ class NotebookStateStore {
             } //else we don't add it
           } else {
             //we create the new option
-            options[bundleOption['name']] = options[bundleOption['value']];
+            options[bundleOption['name']] = bundleOption['value'];
           }
         }
       );
