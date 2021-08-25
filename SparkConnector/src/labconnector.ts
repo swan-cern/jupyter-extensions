@@ -98,7 +98,17 @@ export class JupyterLabConnector {
     // Ensure the state of the jupyterlab kernel/session object is synced with API
     await notebookPanel.sessionContext.ready;
 
-    // The connect is no-op if already connected.
+    // Connect to kernel on first page load
+    if (!this.comms.has(notebookPanel.id)) {
+      try {
+        this.createComm(notebookPanel);
+      } catch (e) {
+        console.error('SparkConnector: Error creating comm');
+      }
+    }
+
+    // Connect to kernel when a restarting etc.
+    // The statusChanged.connect is no-op if already connected.
     notebookPanel.sessionContext.statusChanged.connect((_, status) => {
       switch (status) {
         case 'restarting':
@@ -111,7 +121,7 @@ export class JupyterLabConnector {
             store.notebooks[notebookPanel.id].status = 'notattached';
           });
           break;
-        case 'idle':
+        case 'starting':
           if (!this.comms.has(notebookPanel.id)) {
             try {
               this.createComm(notebookPanel);
