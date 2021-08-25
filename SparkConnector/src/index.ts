@@ -6,11 +6,13 @@ import {
 } from '@jupyterlab/application';
 import { INotebookTracker } from '@jupyterlab/notebook';
 import { ReactWidget, IThemeManager } from '@jupyterlab/apputils';
+import { LabIcon } from '@jupyterlab/ui-components';
 import React from 'react';
 
 import { store } from './store';
 import { LazySparkConnectorPanel } from './components/lazy-panel';
 import { JupyterLabConnector } from './labconnector';
+import SparkIcon from '../style/apachespark.svg';
 
 /**
  * Initialization data for the sparkconnector extension.
@@ -44,7 +46,11 @@ function activate(
 
   panelWidget.id = 'spark-connector';
   panelWidget.title.caption = 'Apache Spark';
-  panelWidget.title.iconClass = 'jp-SparkConnector-icon jp-SideBar-tabIcon';
+  panelWidget.title.icon = new LabIcon({
+    name: 'sparkconnector:sparkicon',
+    svgstr: SparkIcon,
+  });
+
   labShell.add(panelWidget, 'right', {
     rank: 700,
   });
