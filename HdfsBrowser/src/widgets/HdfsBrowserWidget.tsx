@@ -1,4 +1,5 @@
 import { IFrame } from '@jupyterlab/apputils';
+import { ServerConnection } from '@jupyterlab/services';
 
 /**
  * A class that exposes the git plugin Widget.
@@ -15,6 +16,7 @@ export class HdfsBrowserWidget extends IFrame {
             'allow-same-origin',
             'allow-scripts'
         ];
-        this.url = "/hdfsbrowser/explorer.html";
+        
+        this.url = ServerConnection.makeSettings().baseUrl + "hdfsbrowser/explorer.html";
     }
 }
