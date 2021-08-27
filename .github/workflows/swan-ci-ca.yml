@@ -60,7 +60,7 @@ jobs:
     - name: Install dependencies 
       run: |
         cd $PACKAGE_NAME
-        pip install setuptools wheel twine jupyter_packaging jupyterlab~=2.0
+        pip install setuptools wheel twine jupyter_packaging jupyterlab~=3.0
 
     - name: Build wheel
       run: |
