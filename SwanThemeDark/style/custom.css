@@ -1,0 +1,36 @@
+:root {
+  --jp-brand-color1: #0153a1;
+  --jp-layout-color3: var(--jp-layout-color2);
+  --jp-layout-color0: #2b2b2b;
+}
+
+#jp-top-panel,
+#jp-menu-panel,
+#jp-header-panel {
+  --jp-layout-color0: #0153a1;
+  --jp-layout-color1: #09263c;
+  --jp-layout-color2: #09263c;
+
+  --jp-inverse-layout-color1: #dadada;
+  --jp-inverse-layout-color2: #b8b8b8;
+  --jp-inverse-layout-color3: #b8b8b8;
+
+  --jp-ui-font-color0: #eee;
+  --jp-ui-font-color1: #dadada;
+}
+
+#jp-bottom-panel {
+  border-top: var(--jp-border-width) solid var(--jp-border-color0);
+}
+
+#jp-MainLogo {
+  background-image: url('./swan_cloud.png');
+  background-repeat: no-repeat;
+  background-size: 100%;
+  background-position: center center;
+  margin: 0 8px;
+}
+
+#jp-MainLogo > svg {
+  display: none;
+}
