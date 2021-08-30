@@ -34,10 +34,6 @@ jobs:
           echo "PACKAGE_JAVA=$(echo 1)" >> $GITHUB_ENV
         fi
 
-        if [ -f 'package.json' ] && [ ! "$PACKAGE_NAME" == "SwanShare" ]; then
-          echo "PUBLISH_NPM=$(echo 1)"  >> $GITHUB_ENV
-        fi
-
     - name: Install Python
       uses: actions/setup-python@v1
       with:
@@ -74,27 +70,6 @@ jobs:
       run: |
         cd $PACKAGE_NAME
         twine upload --repository pypi dist/*
-
-#     - name: Publish distribution to NPM
-#       if: ${{env.PUBLISH_NPM}}
-#       run: |
-#         cd $PACKAGE_NAME
-
-#         #The next variables are requried to build the path to the pre-created npm package
-#         #the package is already created by setup.py and it's not required to build it again.
-
-#         #The name should be lower case
-#         NPM_PKG_NAME=$(echo $PACKAGE_NAME | tr "[:upper:]" "[:lower:]")
-
-#         #Version without v
-#         NPM_PKG_VERSION=$(echo $PACKAGE_VERSION | sed -e 's/v//g')
-
-#         #Full path with package name, version and organization
-#         NPM_PKG_PATH=build/lib/$NPM_PKG_NAME/labextension/swan-cern-$NPM_PKG_NAME-$NPM_PKG_VERSION.tgz
-
-#         npm publish $NPM_PKG_PATH --access public --dry-run
-#       env:
-#         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
     - name: Create Release
       id: create_release
