@@ -1,0 +1,33 @@
+#!/bin/bash -i
+#Author Omar.Zapata@cern.ch 2021
+
+clear
+if ! [ -x "$(command -v jq)" ]; then
+  echo 'Error: jq is not installed.' >&2
+  sleep 60
+  exit 1
+fi
+if [[ $# -gt 0 ]] ; then
+    PROJECT=$1
+    PROJECT_PATH="$HOME/SWAN_projects/$PROJECT"
+    PROJECT_FILE="$PROJECT_PATH/.swanproject"
+    
+    if [ -d "$PROJECT_PATH" ]
+    then
+      STACK=`jq '.stack' $PROJECT_FILE`
+      RELEASE=`jq '.release' $PROJECT_FILE`
+      PLATFORM=`jq '.platform' $PROJECT_FILE`
+      USER_SCRIPT="$PROJECT_PATH/.userscript"
+      env -i HOME=$HOME OAUTH2_FILE=$OAUTH2_FILE \
+             OAUTH2_TOKEN=$OAUTH2_TOKEN \
+             OAUTH_INSPECTION_ENDPOINT=$OAUTH_INSPECTION_ENDPOINT \
+             PROJECT=$PROJECT \
+             PROJECT_PATH=$PROJECT_PATH PS1="$PS1" \
+             PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:$HOME/.local/bin/" \
+             bash -c "swan_env $PROJECT $PROJECT_PATH  bash --rcfile  <(echo 'PS1=\"($PROJECT) $PS1 \"') " 
+    else
+      echo "Error: project $PROJECT_PATH doesn't exists" >&2
+      sleep 60
+      exit 1
+    fi
+fi

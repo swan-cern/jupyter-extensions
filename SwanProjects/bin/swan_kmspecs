@@ -1,0 +1,130 @@
+#!/usr/bin/env python
+import argparse
+import json
+import os
+import pprint
+import subprocess
+import sys
+from distutils.spawn import find_executable
+from shutil import rmtree
+
+def _checkipykernel(project_path,python_interpreter,python_version):
+    python_code='import ipykernel'
+    command =  [python_interpreter,"-c",python_code]
+    proc = subprocess.Popen(command, stdout = subprocess.PIPE)
+    proc.wait()
+    data = proc.stdout.read().decode("utf-8")
+    print(data)
+    proc.communicate()
+    if proc.returncode !=0 :
+        print("Error ipykernel not found for {} in project {}".format(python_version,project_path))
+    return proc.returncode
+
+def check_native_kernel(project_path):
+    project_file = project_path+os.path.sep+".swanproject"
+    f = open(project_file,"r+")
+    project_data = f.read() 
+    if project_data.strip() == "":
+        project_data = {}
+    else:
+        project_data = json.loads(project_data)
+    print(project_data)
+    f.seek(0)
+    python2 = find_executable("python2")
+    if python2 is not None:
+        print("python2 found = "+python2)
+        project_data["python2"]={"found":True,"path":python2}
+        rcode = _checkipykernel(project_path,python2,"python2")
+        if rcode == 0:
+            project_data["python2"]["ipykernel"] = True
+        else:
+            project_data["python2"]["ipykernel"] = False
+    else:
+            project_data["python2"]["found"] = False
+ 
+    python3 = find_executable("python3")
+    if python3 is not None:
+        print("python3 found = "+python3)
+        project_data["python3"]={"found":True,"path":python3}
+        rcode = _checkipykernel(project_path,python3,"python3")
+        if rcode == 0:
+            project_data["python3"]["ipykernel"] = True
+        else:
+            project_data["python3"]["ipykernel"] = False
+    else:
+            project_data["python3"]["found"] = False
+    
+    f.seek(0)
+    f.truncate()
+    json.dump(project_data,f,indent=4)
+    f.close()
+
+def save_kernel_paths(project_path):
+    from jupyter_core.paths import jupyter_path
+    kernels_blacklist_paths = [os.environ["HOME"]+os.sep+'.local/share/jupyter/kernels','/usr/local/share/jupyter/kernels','/usr/share/jupyter/kernels']
+    tmp_paths = jupyter_path('kernels')
+    paths = []
+    for path in tmp_paths:
+        found=False
+        for bl_path in kernels_blacklist_paths:
+            if bl_path in path:
+                found=True
+        if not found:
+            paths.append(path)
+    project_file = project_path+os.path.sep+".swanproject"
+    
+    with open(project_file,"r+") as f:
+        project_data = f.read()
+        if project_data == "":
+            project_data = {}
+        else:
+            project_data = json.loads(project_data)
+        f.seek(0)
+        f.truncate()
+        if "kernel_dirs" in list(project_data.keys()):
+            project_data["kernel_dirs"] = project_data["kernel_dirs"] + paths
+        else:
+            project_data["kernel_dirs"] = paths
+        json.dump(project_data,f,indent=4)
+
+def generate_ksminfo(project_path):
+    check_native_kernel(project_path)
+    save_kernel_paths(project_path)
+
+def swan_kmspecs(project_name):
+    command = ["env","-i","HOME=%s"%os.environ["HOME"]]
+    #checking if we are on EOS to add the env variables
+    #we required this to read/write in a isolate environment with EOS
+    if "OAUTH2_FILE" in os.environ:
+        command.append("OAUTH2_FILE=%s"%os.environ["OAUTH2_FILE"])
+    if "OAUTH2_TOKEN" in os.environ:
+        command.append("OAUTH2_TOKEN=%s"%os.environ["OAUTH2_TOKEN"])
+    if "OAUTH_INSPECTION_ENDPOINT" in os.environ:
+        command.append("OAUTH_INSPECTION_ENDPOINT=%s"%os.environ["OAUTH_INSPECTION_ENDPOINT"])
+    
+    #special case when the package was not installed like root, useful for development
+    command.append("PATH=/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:{}/.local/bin/".format(os.environ["HOME"])) 
+    command += ["/bin/bash","swan_env",project_name, ".","python",__file__,"--generate_ksminfo","--project_name",project_name]    
+    print(" ".join(command))
+    proc = subprocess.Popen(command, stdout = subprocess.PIPE)
+    proc.wait()
+    data = proc.stdout.read().decode("utf-8")
+    proc.communicate()
+    if proc.returncode !=0 :
+        print("Error creating navite kernel for project {}".format(project_name))
+
+    return proc.returncode
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Swan Enviroment Kernel Manager CMD options.')
+    parser.add_argument('--project_name', type=str,required=True, help='Project name')
+    parser.add_argument('--generate_ksminfo', action='store_true',default=None, help='Generates Kernel Spec Manager info')
+    args         = parser.parse_args()
+    project_name = args.project_name
+
+    project_path = os.environ["HOME"]+"/SWAN_projects/"+project_name
+    if args.generate_ksminfo:
+        generate_ksminfo(project_path)
+    else:
+        rcode = swan_kmspecs(project_name)
+        sys.exit(rcode)

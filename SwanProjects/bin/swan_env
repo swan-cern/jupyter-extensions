@@ -1,0 +1,83 @@
+#!/bin/bash
+#DEFINITIONS:
+# STACK: LCG/CMSSW
+# RELEASE: version of the stack ex (LCG_99)
+# PLATFORM:  usually os and compiler version
+# USER_SCRIPT: customized bash script provided by the user
+# CWD: working directory path
+PARAMETERS=($@) #WARNING: empty options disappear
+
+#Checking if jq is installed
+if ! [ -x "$(command -v jq)" ]; then
+  echo 'Error: jq is not installed.' >&2
+  sleep 60
+  exit 1
+fi
+
+#Checking if we have more that 2 parameters
+if [[ $# -lt 2 ]] ; then
+  echo 'Error: project name and commands required.' >&2
+  echo 'Example: swan_env myproject  python --version' >&2
+  sleep 60
+  exit 1
+fi
+
+PROJECT=$1
+PROJECT_PATH="$HOME/SWAN_projects/$PROJECT"
+PROJECT_FILE="$PROJECT_PATH/.swanproject"
+STACK=`jq -r '.stack' $PROJECT_FILE`
+RELEASE=`jq -r '.release' $PROJECT_FILE`
+PLATFORM=`jq -r '.platform' $PROJECT_FILE`
+USER_SCRIPT="$PROJECT_PATH/.userscript"
+
+CWD="$2"
+
+i=0
+if [ "$CWD" != "" ]; then
+    i=$((i+1))
+fi
+
+for j in $(seq 0 1 $((i)));do
+    unset PARAMETERS[$j]
+done
+
+COMMAND=${PARAMETERS[@]}
+
+if [[ $STACK == "LCG" ]]; then 
+    #example: swan_env SFT LCG_96 x86_64-centos7-gcc8-opt "" $PWD  which python
+    CVMFS_PATH="/cvmfs/sft.cern.ch/lcg/views/$RELEASE/$PLATFORM/setup.sh"
+    if [ "$SWAN_ENV_SILENCE" != "1" ]; then
+        echo "Loading $RELEASE with plafortm $PLATFORM "
+    fi
+    source $CVMFS_PATH
+fi
+
+if [[ $STACK == "CMSSW" ]]; then
+    #example: swan_env CMS CMSSW_10_6_19 slc7_amd64_gcc820 ipython kernelspec list
+    source /cvmfs/cms.cern.ch/cmsset_default.sh
+    if [ "$SWAN_ENV_SILENCE" != "1" ]; then
+        echo "Loading $RELEASE with plafortm $PLATFORM "
+    fi
+    CMS_BASEDIR=/cvmfs/cms.cern.ch
+    CMSSW=$RELEASE
+    SCRAM=$PLATFORM
+
+    export PATH=${CMS_BASEDIR}/common:$PATH
+    #by default I will load the environment in the cvmfs path in read only
+    cd /cvmfs/cms.cern.ch/$SCRAM/cms/cmssw/$CMSSW
+    eval `scramv1 runtime -sh`
+    #requires to prepend the lib and bin paths
+    export LD_LIBRARY_PATH=/cvmfs/cms.cern.ch/$SCRAM/cms/cmssw/$CMSSW/external/$SCRAM/lib/:$LD_LIBRARY_PATH
+    export PATH=/cvmfs/cms.cern.ch/$SCRAM/cms/cmssw/$CMSSW/external/$SCRAM/bin/:$PATH
+
+fi
+export SWAN_STACK="$RELEASE($PLATFORM)"
+export SWAN_PROJECT_NAME=$PROJECT
+export SWAN_PROJECT_PATH=$PROJECT_PATH
+
+if [ "$USER_SCRIPT" != "" ] && [ -f "$USER_SCRIPT" ]; then
+    . ${USER_SCRIPT}
+fi
+cd $CWD
+$COMMAND
+

@@ -1,0 +1,50 @@
+{
+  "LCG":{
+      "LCG_99": [
+      "x86_64-centos7-gcc8-opt",
+      "x86_64-centos7-gcc10-opt",
+      "x86_64-ubuntu2004-gcc9-opt"
+      ],
+      "LCG_99python2": [
+        "x86_64-centos7-gcc8-opt",
+        "x86_64-centos7-gcc9-opt"
+      ],
+      "LCG_97a": [
+        "x86_64-centos7-gcc8-opt"
+      ],
+      "LCG_97apython3": [
+        "x86_64-centos7-gcc8-opt"
+      ],
+      "LCG_96": [
+        "x86_64-centos7-gcc8-opt"
+      ],
+      "LCG_96python3": [
+        "x86_64-centos7-gcc8-opt"
+      ],
+      "LCG_95a": [
+        "x86_64-centos7-gcc8-opt"
+      ],
+      "LCG_95apython3": [
+        "x86_64-centos7-gcc8-opt"
+      ],
+      "LCG_95apython3_nxcals": [
+        "x86_64-centos7-gcc7-opt"
+      ]},
+  "CMSSW":{
+      "CMSSW_11_1_1": [
+        "slc7_amd64_gcc820"
+      ],
+      "CMSSW_11_1_2": [
+        "slc7_amd64_gcc820"
+      ],
+      "CMSSW_11_1_3": [
+        "slc7_amd64_gcc820"
+      ],
+      "CMSSW_11_1_4": [
+        "slc7_amd64_gcc820"
+      ],
+      "CMSSW_11_1_5": [
+        "slc7_amd64_gcc820"
+      ]
+  }
+}

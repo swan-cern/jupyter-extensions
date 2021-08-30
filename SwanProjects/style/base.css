@@ -1,0 +1,108 @@
+/*-----------------------------------------------------------------------------
+| Copyright (c) 2021, SWAN Team.
+|
+| Distributed under the terms of the AGPL License.
+|----------------------------------------------------------------------------*/
+
+.sw-Dialog-content {
+  display: flex;
+  flex-direction: column;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 24px;
+  padding-bottom: 20px;
+  word-wrap: break-word;
+  resize: both;
+}
+.sw-Dialog-content > * + * {
+  margin-top: 20px;
+}
+
+.sw-Dialog-project-icon * {
+  display: flex;
+  width: 39px;
+}
+
+.sw-Dialog-project-name {
+  display: flex;
+  align-items: center;
+}
+
+.sw-Dialog-project-name-input {
+  flex-grow: 1;
+  margin-left: 16px !important;
+}
+
+.sw-Dialog-userscript {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+}
+.sw-Dialog-userscript textarea {
+  font-family: monospace;
+}
+
+.sw-Dialog-userscript-title {
+  display: flex;
+  padding-top: 5px;
+  padding-bottom: 5px;
+}
+.sw-Dialog-userscript-tooltip,
+.sw-Dialog-release-tooltip {
+  padding-left: 5px;
+}
+
+.sw-Dialog-body > .jp-select-wrapper {
+  width: 100%;
+}
+
+/* required to disable "new" notebook and console from the main menu */
+/* with the concept of project, notebook/console can be only created in the launcher, when kernel manager */
+/* have kernels available, otherwise the user will have a kernel error, becuase of kernels are not available*/
+li[data-command='notebook:create-new'] {
+  display: none;
+}
+
+li[data-command='console:create'] {
+  display: none;
+}
+li[data-command='terminal:create-new'] {
+  display: none;
+}
+
+.sw-Dialog-select-stack {
+  display: flex;
+}
+.sw-Dialog-select-stack .jp-LauncherCard:first-child {
+  margin-left: 0;
+}
+
+.sw-Dialog-stack-options {
+  display: flex;
+  align-items: flex-end;
+}
+.sw-Dialog-stack-options > * {
+  flex: 1 1 0;
+}
+.sw-Dialog-stack-options > * + * {
+  margin-left: 10px;
+}
+.sw-Dialog-stack-option-label {
+  display: flex;
+  margin-bottom: 4px;
+}
+
+.sw-Dialog-button-area {
+  display: flex;
+  padding: 8px 0px;
+  justify-content: flex-end;
+}
+.sw-Dialog-button-area > * + * {
+  margin-left: 8px !important;
+}
+
+.sw.jp-LauncherCard-icon > div {
+  height: 40px;
+  width: 40px;
+  margin: 4px 0 8px 0;
+}
