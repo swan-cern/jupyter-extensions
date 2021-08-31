@@ -1,0 +1,6 @@
+/* Styles that we override from upstream */
+
+/* Hide the original logo */
+#jp-MainLogo {
+  display: none;
+}
