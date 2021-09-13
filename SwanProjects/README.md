@@ -5,9 +5,9 @@ Server and Lab extension that provides:
   * Create and edit projects
   * Get project information
   * Get software stack information
-  * Customized Kernel Spec Manager  to handle kernel metadata.
+  * A customized Kernel Spec Manager to handle kernel metadata
 * In the Lab extension:
-  * React dialogs with a set of components that allows to create and edit projects
+  * React dialogs to create and edit projects
   * LabIcons required for the dialogs
 
 ## Requirements

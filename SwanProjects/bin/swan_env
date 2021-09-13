@@ -7,14 +7,14 @@
 # CWD: working directory path
 PARAMETERS=($@) #WARNING: empty options disappear
 
-#Checking if jq is installed
+# Check if jq is installed
 if ! [ -x "$(command -v jq)" ]; then
   echo 'Error: jq is not installed.' >&2
   sleep 60
   exit 1
 fi
 
-#Checking if we have more that 2 parameters
+# Check arguments
 if [[ $# -lt 2 ]] ; then
   echo 'Error: project name and commands required.' >&2
   echo 'Example: swan_env myproject  python --version' >&2

@@ -56,9 +56,9 @@
   width: 100%;
 }
 
-/* required to disable "new" notebook and console from the main menu */
-/* with the concept of project, notebook/console can be only created in the launcher, when kernel manager */
-/* have kernels available, otherwise the user will have a kernel error, becuase of kernels are not available*/
+/* Required to disable "new" notebook and console from the main menu. */
+/* Notebooks/consoles can be only created from within the launcher of a project, since kernels are only available */
+/* inside projects, i.e. kernels are provided by the software environment of a project. */
 li[data-command='notebook:create-new'] {
   display: none;
 }

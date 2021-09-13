@@ -251,7 +251,7 @@ class EditProjectHandler(APIHandler):
             self.log.info(f"swan_kmspecs return code: {proc.returncode}")
             if proc.returncode != 0:
                 data = {"status": False, "project_dir": f"SWAN_projects/{name}",
-                        "msg": f"Error editing stack, platform or relase for project {name},  traceback: {output}"}
+                        "msg": f"Error editing stack, platform or release for project {name},  traceback: {output}"}
                 self.finish(json.dumps(data))
                 return
         data = {"status": True, "project_dir": f"SWAN_projects/{name}",

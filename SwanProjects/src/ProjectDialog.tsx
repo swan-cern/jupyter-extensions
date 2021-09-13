@@ -84,12 +84,12 @@ export namespace ProjectDialog {
       if (dialogResult?.changesSaved && dialogResult?.newOptions) {
         options = dialogResult.newOptions;
         if (options.name?.trim() !== '') {
-          //check is project already exists
+          //check if project already exists
           if (create) {
             const content = await contentRequest(
               'SWAN_projects/' + options.name
             ).catch((): void => {
-              //not message here, it is not needed,
+             // No message here, it is not needed,
               //I am checking if the directory doesn't exist in order
               //to make valid the creation of the project folder.
             });
@@ -108,7 +108,7 @@ export namespace ProjectDialog {
               const content = await contentRequest(
                 'SWAN_projects/' + options.name
               ).catch(() => {
-                //not message here, it is not needed,
+                // No message here, it is not needed,
                 //I am checking if the directory doesn't exist in order
                 //to make valid the edition of the name of the project folder.
               });

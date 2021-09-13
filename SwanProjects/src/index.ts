@@ -116,7 +116,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       });
     }
 
-    // // Add the command to the palette
+    // Add the command to the palette
     if (palette) {
       palette.addItem({
         command: CommandIDs.projectDialog,
