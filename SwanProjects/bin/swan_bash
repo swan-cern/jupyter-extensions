@@ -1,5 +1,19 @@
 #!/bin/bash -i
 #Author Omar.Zapata@cern.ch 2021
+###
+# This script allows to start a bash interpreter inside a project environment.
+# This is called from the extension SwanTerminal and it requires like a parameter the project name to
+# build the path to the project with $HOME/SWAN_projects/$PROJECT to load the project environment.
+# When the bash session is started we modify the prompt indicating in which project the terminal is located.
+# Aditionally bash run completed isolated from other possible environments then we pass like parameters to the isolated environment some
+# required basic environment variables such as:
+#
+# * HOME with path to the user home
+# * PATH with default paths for the system
+# * OAUTH2_TOKEN and OAUTH_INSPECTION_ENDPOINT required by EOS storage
+#
+# swan_env will load the other variables from the stack, inside the isolated enviroment.
+###
 
 clear
 if ! [ -x "$(command -v jq)" ]; then
@@ -18,15 +32,17 @@ if [[ $# -gt 0 ]] ; then
       RELEASE=`jq '.release' $PROJECT_FILE`
       PLATFORM=`jq '.platform' $PROJECT_FILE`
       USER_SCRIPT="$PROJECT_PATH/.userscript"
+      # FIXME: this have to be removed when environment isolation is not needed anymore, it's only temporary
       env -i HOME=$HOME OAUTH2_FILE=$OAUTH2_FILE \
              OAUTH2_TOKEN=$OAUTH2_TOKEN \
              OAUTH_INSPECTION_ENDPOINT=$OAUTH_INSPECTION_ENDPOINT \
              PROJECT=$PROJECT \
              PROJECT_PATH=$PROJECT_PATH PS1="$PS1" \
-             PATH="/usr/local/bin:/usr/local/sbin:/usr/bin:/usr/sbin:/bin:/sbin:$HOME/.local/bin/" \
              bash -c "swan_env $PROJECT $PROJECT_PATH  bash --rcfile  <(echo 'PS1=\"($PROJECT) $PS1 \"') " 
     else
       echo "Error: project $PROJECT_PATH doesn't exist" >&2
+      # JupyterLab closes the terminal window immediately after the process ends
+      # this sleep is to allow the user to see the message
       sleep 60
       exit 1
     fi

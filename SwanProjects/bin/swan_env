@@ -1,27 +1,46 @@
 #!/bin/bash
-#DEFINITIONS:
-# STACK: LCG/CMSSW
-# RELEASE: version of the stack ex (LCG_99)
-# PLATFORM:  usually os and compiler version
-# USER_SCRIPT: customized bash script provided by the user
-# CWD: working directory path
-PARAMETERS=($@) #WARNING: empty options disappear
+#Author Omar.Zapata@cern.ch 2021
+###
+# This script allows to execute code inside the project environment.
+#
+# The parameters are:
+# * Project name: Name of the project.
+# * Cwd: Current working directory, where the command will be executed.
+# * Command: command to execute inside the project environment.
+#
+#
+# With the project name we search the project located at $HOME/SWAN_projects/
+# reading the configuration to load the environment and the bash script provided by the user.
+#
+# This command is called from SwanKernelSpecManager to start the kernel and swan_bash to start a bash session inside the project environment.
+##
+PARAMETERS=($@)
 
 # Check if jq is installed
 if ! [ -x "$(command -v jq)" ]; then
   echo 'Error: jq is not installed.' >&2
+  # JupyterLab closes the terminal window immediately after the process ends
+  # this sleep is to allow the user to see the message
   sleep 60
   exit 1
 fi
 
 # Check arguments
-if [[ $# -lt 2 ]] ; then
-  echo 'Error: project name and commands required.' >&2
-  echo 'Example: swan_env myproject  python --version' >&2
+if [[ $# -lt 3 ]] ; then
+  echo 'Error: project name, cwd and commands required.' >&2
+  echo 'Format is: swan_env myproject cwd command command_options' >&2
+  echo 'Example: swan_env myproject . python --version (shows version for the python inside the project environment)' >&2
+  # JupyterLab closes the terminal window immediately after the process ends
+  # this sleep is to allow the user to see the message
   sleep 60
   exit 1
 fi
 
+###
+# In the next block I made the path to the project to read the information from .swanproject file such as 
+# stack, release and platform.
+# I also create the path to use bash user script to source it.
+###
 PROJECT=$1
 PROJECT_PATH="$HOME/SWAN_projects/$PROJECT"
 PROJECT_FILE="$PROJECT_PATH/.swanproject"
@@ -30,47 +49,42 @@ RELEASE=`jq -r '.release' $PROJECT_FILE`
 PLATFORM=`jq -r '.platform' $PROJECT_FILE`
 USER_SCRIPT="$PROJECT_PATH/.userscript"
 
+# Working directory parameter
 CWD="$2"
-
 i=0
 if [ "$CWD" != "" ]; then
     i=$((i+1))
 fi
 
+
 for j in $(seq 0 1 $((i)));do
     unset PARAMETERS[$j]
 done
-
+# After project name and working directory the rest of the options passed to this script is the command to be execute inside the environment.
 COMMAND=${PARAMETERS[@]}
 
 if [[ $STACK == "LCG" ]]; then 
-    #example: swan_env SFT LCG_96 x86_64-centos7-gcc8-opt "" $PWD  which python
     CVMFS_PATH="/cvmfs/sft.cern.ch/lcg/views/$RELEASE/$PLATFORM/setup.sh"
-    if [ "$SWAN_ENV_SILENCE" != "1" ]; then
-        echo "Loading $RELEASE with plafortm $PLATFORM "
-    fi
+    echo "Loading $RELEASE with plafortm $PLATFORM "
     source $CVMFS_PATH
 fi
 
 if [[ $STACK == "CMSSW" ]]; then
-    #example: swan_env CMS CMSSW_10_6_19 slc7_amd64_gcc820 ipython kernelspec list
     source /cvmfs/cms.cern.ch/cmsset_default.sh
-    if [ "$SWAN_ENV_SILENCE" != "1" ]; then
-        echo "Loading $RELEASE with plafortm $PLATFORM "
-    fi
+    echo "Loading $RELEASE with plafortm $PLATFORM "
     CMS_BASEDIR=/cvmfs/cms.cern.ch
     CMSSW=$RELEASE
     SCRAM=$PLATFORM
 
     export PATH=${CMS_BASEDIR}/common:$PATH
-    #by default I will load the environment in the cvmfs path in read only
     cd /cvmfs/cms.cern.ch/$SCRAM/cms/cmssw/$CMSSW
     eval `scramv1 runtime -sh`
     #requires to prepend the lib and bin paths
     export LD_LIBRARY_PATH=/cvmfs/cms.cern.ch/$SCRAM/cms/cmssw/$CMSSW/external/$SCRAM/lib/:$LD_LIBRARY_PATH
     export PATH=/cvmfs/cms.cern.ch/$SCRAM/cms/cmssw/$CMSSW/external/$SCRAM/bin/:$PATH
-
 fi
+
+# The next variables allows the user to know in the environment basic information about the project such as stack, name and path.
 export SWAN_STACK="$RELEASE($PLATFORM)"
 export SWAN_PROJECT_NAME=$PROJECT
 export SWAN_PROJECT_PATH=$PROJECT_PATH
@@ -78,6 +92,8 @@ export SWAN_PROJECT_PATH=$PROJECT_PATH
 if [ "$USER_SCRIPT" != "" ] && [ -f "$USER_SCRIPT" ]; then
     . ${USER_SCRIPT}
 fi
+
+# The command is executed inside the $CWD folder.
+# if the command produces output it will be there.
 cd $CWD
 $COMMAND
-
