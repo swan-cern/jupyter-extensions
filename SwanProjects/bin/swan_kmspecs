@@ -180,7 +180,6 @@ def swan_kmspecs(project_name):
     """
     command = ["env", "-i", "HOME=%s" % os.environ["HOME"]]
     # FIXME: this have to be removed when environment isolation is not needed anymore, it's only temporary.
-    # checking if we are on EOS to add the env variables
     # we required this to read/write in a isolate environment with EOS
     if "OAUTH2_FILE" in os.environ:
         command.append("OAUTH2_FILE=%s" % os.environ["OAUTH2_FILE"])

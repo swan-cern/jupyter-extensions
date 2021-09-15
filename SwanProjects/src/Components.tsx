@@ -1,5 +1,12 @@
 // Copyright (c) SWAN Development Team.
 // Author: Omar.Zapata@cern.ch 2021
+
+/**
+ *  Some components needed for the react Dialogs,
+ *  such as ToolTip, to display information about the relase and platform in the project dialog
+ *  and Card, that is based in the code from launcher's Card in JupyetrLab wich is not exported to reuse it.
+ */
+
 import { classes, LabIcon } from '@jupyterlab/ui-components';
 import * as React from 'react';
 import ReactTooltip from 'react-tooltip';
@@ -15,18 +22,6 @@ export function HelpTooltip(props: {
 }): React.ReactElement<any> {
   return (
     <div className="sw-Component-tooltip">
-      <div
-        style={{
-          borderRadius: '50%',
-          padding: '5px',
-          width: '6px',
-          height: '6px',
-          backgroundColor: '#d5d5d5',
-          display: ' flex',
-          justifyContent: 'center',
-          alignItems: 'center'
-        }}
-      >
         <a data-for={props.id} data-tip={props.message}>
           ?
         </a>
@@ -36,7 +31,6 @@ export function HelpTooltip(props: {
           multiline={true}
           getContent={(dataTip): string => `${dataTip}`}
         />
-      </div>
     </div>
   );
 }
@@ -71,6 +65,8 @@ export function Card(props: {
   };
   return (
     <div
+      // this style can not be moved to the css file,
+      // because depends on the object props to check if the card is selected or not.
       style={{
         height: '75px',
         width: '75px',

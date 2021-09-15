@@ -106,3 +106,15 @@ li[data-command='terminal:create-new'] {
   width: 40px;
   margin: 4px 0 8px 0;
 }
+
+.sw-Component-tooltip
+{
+  border-radius: '50%';
+  padding: '5px';
+  width: '6px';
+  height: '6px';
+  background-color: '#d5d5d5';
+  display: ' flex';
+  justify-content: 'center';
+  align-items: 'center';
+}
