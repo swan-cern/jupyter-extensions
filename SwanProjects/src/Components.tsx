@@ -8,7 +8,7 @@
  */
 
 import { classes, LabIcon } from '@jupyterlab/ui-components';
-import * as React from 'react';
+import React from 'react';
 import ReactTooltip from 'react-tooltip';
 
 /**
