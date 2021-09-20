@@ -4,6 +4,13 @@
 | Distributed under the terms of the AGPL License.
 |----------------------------------------------------------------------------*/
 
+/**
+* css file for ProjectDialog and its components additionally
+* required  entries to disable "new" notebook and console from the main menu,
+* Notebooks/consoles can be only created from within the launcher of a project, since kernels are only available
+* inside projects, i.e. kernels are provided by the software environment of a project.
+*/
+
 .sw-Dialog-content {
   display: flex;
   flex-direction: column;
@@ -56,9 +63,6 @@
   width: 100%;
 }
 
-/* Required to disable "new" notebook and console from the main menu. */
-/* Notebooks/consoles can be only created from within the launcher of a project, since kernels are only available */
-/* inside projects, i.e. kernels are provided by the software environment of a project. */
 li[data-command='notebook:create-new'] {
   display: none;
 }
@@ -109,12 +113,12 @@ li[data-command='terminal:create-new'] {
 
 .sw-Component-tooltip
 {
-  border-radius: '50%';
-  padding: '5px';
-  width: '6px';
-  height: '6px';
-  background-color: '#d5d5d5';
-  display: ' flex';
-  justify-content: 'center';
-  align-items: 'center';
+  border-radius: 50%;
+  padding: 5px;
+  width: 6px;
+  height: 6px;
+  background-color: #d5d5d5;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }

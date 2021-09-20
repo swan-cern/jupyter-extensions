@@ -1,7 +1,12 @@
 // Copyright (c) SWAN Development Team.
 // Author: Omar.Zapata@cern.ch 2021
 
-import * as React from 'react';
+/**
+ * This is the file with the React widget that has the components and callbacks
+ * to capture the information for the project, such as name, stack, release, platform and bash user script. 
+ */
+
+import React from 'react';
 
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
@@ -15,6 +20,16 @@ import { swanProjectIcon, sftIcon, cmsIcon } from './icons';
 
 import { ProjectDialog } from './ProjectDialog';
 
+
+/**
+ * Functio to create the widget required for the modal dialog, it is basically a form,
+ * also it has the callbacks to handle the events.
+ *
+ * @param options - The dialog setup options.
+ * @param onSubmit - callback to execute on submit action
+ * @param onCancel - callback to execute on cancel action.
+ * @returns the DOM element with the form.
+ */
 export const ProjectWidget: React.FunctionComponent<{
   options: ProjectDialog.ISWANOptions;
   onSubmit: (selectedOptions: ProjectDialog.ISWANOptions) => void;

@@ -1,6 +1,15 @@
 // Copyright (c) SWAN Team.
 // Author: Omar Zapata CERN 2021
 
+/**
+ * ProjectDialog is a modal dialog that allows to create and edit projects,
+ * the dialog allows to select the stack, release, platform and write in a textbox
+ * a bash script to run inside the project.
+ *
+ * If the .swanproject file is corrupted for any reason, this dialog will appear
+ * for the user in order to recover the project with the right information provide by he/she.
+ */
+
 import { showErrorMessage } from '@jupyterlab/apputils';
 import { showDialog } from './dialog';
 import {
@@ -40,7 +49,7 @@ export namespace ProjectDialog {
    * @param create - true for a new project, false to modify.
    * @param commands - CommandRegistry object
    * @param theme - colors in the interface 'light' | 'dark'.
-   * @returns A promise that resolves with whether the dialog was accepted
+   * @returns A promise that resolves with the dialog results
    */
   // eslint-disable-next-line  no-inner-declarations
   export async function OpenModal(
@@ -128,8 +137,7 @@ export namespace ProjectDialog {
               valid = true;
               break;
             }
-
-            //verifying that options where changed, othewise I will not send the request
+            // verifying that options changed, otherwise I will not send the request
             if (JSON.stringify(old_options) !== JSON.stringify(options)) {
               valid = true;
             } else {
