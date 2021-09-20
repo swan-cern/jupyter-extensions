@@ -137,9 +137,7 @@ export const ProjectWidget: React.FunctionComponent<{
             <span className="sw-Dialog-release-tooltip">
               <HelpTooltip
                 id="release"
-                message="Software stack: TODO! <br/> \
-                                  No message yet.<br/> \
-                                  ;("
+                message="Software stack to use in this project."
               />
             </span>
           </div>
@@ -166,9 +164,7 @@ export const ProjectWidget: React.FunctionComponent<{
             <span className="sw-Dialog-release-tooltip">
               <HelpTooltip
                 id="release"
-                message="Platform: TODO! <br/> \
-                                  No message yet.<br/> \
-                                  ;("
+                message="OS, architecture and compiler version."
               />
             </span>
           </div>
