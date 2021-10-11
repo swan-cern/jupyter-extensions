@@ -359,6 +359,9 @@ class SparkYarnConfiguration(SparkConfiguration):
             extra_class_path = base_extra_class_path
         conf.set('spark.driver.extraClassPath', extra_class_path)
 
+        # Disable console progress as it would be printed in the notebook (since ipython 6)
+        conf.set('spark.ui.showConsoleProgress', 'false')
+
         return conf
 
     def get_spark_session_config(self):
