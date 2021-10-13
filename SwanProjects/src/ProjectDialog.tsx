@@ -23,6 +23,10 @@ import { CommandRegistry } from '@lumino/commands';
  * Namespace for project dialogs
  */
 export namespace ProjectDialog {
+  export interface ISWANStackNodeOptions{
+    releases:{ [release: string]: Array<string> },
+    logo:string
+  }
   export interface ISWANOptions {
     name?: string;
     stack?: string;
@@ -30,7 +34,7 @@ export namespace ProjectDialog {
     platform?: string;
     user_script?: string;
     corrupted?: boolean;
-    stacks_options?: { [stack: string]: { [release: string]: Array<string> } };
+    stacks_options?: { [stack: string]: ISWANStackNodeOptions };
   }
 
   /**

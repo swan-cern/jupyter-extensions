@@ -49,11 +49,17 @@ RELEASE=`jq -r '.release' $PROJECT_FILE`
 PLATFORM=`jq -r '.platform' $PROJECT_FILE`
 USER_SCRIPT="$PROJECT_PATH/.userscript"
 
+# Path to the stack where the setup.sh for this project is located.
+# The available stackas are provided in the extension with --SwanProjects.stacks_path
+STACKS_PATH="$2"
+STACK_PATH="$STACKS_PATH/$STACK"
+STACK_SETUP="$STACK_PATH/setup.sh"
+
 # Working directory parameter
-CWD="$2"
+CWD="$3"
 i=0
 if [ "$CWD" != "" ]; then
-    i=$((i+1))
+    i=$((i+2))
 fi
 
 
@@ -63,25 +69,18 @@ done
 # After project name and working directory the rest of the options passed to this script is the command to be execute inside the environment.
 COMMAND=${PARAMETERS[@]}
 
-if [[ $STACK == "LCG" ]]; then 
-    CVMFS_PATH="/cvmfs/sft.cern.ch/lcg/views/$RELEASE/$PLATFORM/setup.sh"
-    echo "Loading $RELEASE with plafortm $PLATFORM "
-    source $CVMFS_PATH
+if [ ! -d $STACK_PATH ]; then
+  echo "Error sourcing the environment, the stack $STACK was not found in stacks path $STACKS_PATH"
+  echo "project $PROJECT can not be loeaded."
+  exit 1
 fi
 
-if [[ $STACK == "CMSSW" ]]; then
-    source /cvmfs/cms.cern.ch/cmsset_default.sh
-    echo "Loading $RELEASE with plafortm $PLATFORM "
-    CMS_BASEDIR=/cvmfs/cms.cern.ch
-    CMSSW=$RELEASE
-    SCRAM=$PLATFORM
-
-    export PATH=${CMS_BASEDIR}/common:$PATH
-    cd /cvmfs/cms.cern.ch/$SCRAM/cms/cmssw/$CMSSW
-    eval `scramv1 runtime -sh`
-    #requires to prepend the lib and bin paths
-    export LD_LIBRARY_PATH=/cvmfs/cms.cern.ch/$SCRAM/cms/cmssw/$CMSSW/external/$SCRAM/lib/:$LD_LIBRARY_PATH
-    export PATH=/cvmfs/cms.cern.ch/$SCRAM/cms/cmssw/$CMSSW/external/$SCRAM/bin/:$PATH
+if [ -f $STACK_SETUP ]; then
+  echo "Loading $RELEASE with plafortm $PLATFORM "
+  . $STACK_SETUP
+else
+   echo "Error loading stack setup.sh on $STACK_SETUP, file doesn't exists."
+   exit 1
 fi
 
 # The next variables allows the user to know in the environment basic information about the project such as stack, name and path.

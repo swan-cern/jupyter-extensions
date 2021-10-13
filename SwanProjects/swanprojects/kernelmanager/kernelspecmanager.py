@@ -8,17 +8,8 @@ import shutil
 from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
 from swanprojects.utils import (get_project_info, get_project_name,
                                 get_project_path, get_env_isolated)
+from swanprojects.config import SwanConfig
 from traitlets import Unicode
-from traitlets.config import Configurable
-
-
-class SwanKSMConfig(Configurable):
-    kernel_resources = Unicode(
-        os.path.dirname(os.path.abspath(__file__)) + '/resources',
-        config=True,
-        help="The path to the folder containg the resources to add to the kernel"
-    )
-
 
 class SwanKernelSpecManager(KernelSpecManager):
     path = Unicode("", config=True, allow_none=True,
@@ -29,7 +20,7 @@ class SwanKernelSpecManager(KernelSpecManager):
         self.log.info("JupyterLab swankernelspecmanager is activated!")
         self.project = None
         self.kernel_dirs = []
-        self.ksmconfig = SwanKSMConfig(config=self.config)
+        self.swan_config = SwanConfig(config=self.config)
 
     def save_native_spec(self, kernel_dir, python_path, display_name):
         """
@@ -37,8 +28,8 @@ class SwanKernelSpecManager(KernelSpecManager):
         It's necessary for CMSSW stacks and those that don't provide a Python kernel as a JSON file.
         """
         self.log.info(
-            f"copying resources from {self.ksmconfig.kernel_resources} to {kernel_dir}")
-        shutil.copytree(self.ksmconfig.kernel_resources, kernel_dir)
+            f"copying resources from {self.swan_config.kernel_resources} to {kernel_dir}")
+        shutil.copytree(self.swan_config.kernel_resources, kernel_dir)
         spec = {"argv": [python_path,
                          "-m",
                          "ipykernel_launcher",
@@ -85,8 +76,8 @@ class SwanKernelSpecManager(KernelSpecManager):
     def wrap_kernel_specs(self, project_name, kspec):
 
         argv = get_env_isolated()
-        argv += ["/bin/bash", "-c", "swan_env {} {} ".format(
-            project_name, ".") + "'" + " ".join(kspec.argv) + "'"
+        argv += ["/bin/bash", "-c", "swan_env {} {} {} ".format(
+            project_name, self.swan_config.stacks_path, ".") + "'" + " ".join(kspec.argv) + "'"
         ]
 
         kspec.argv = argv

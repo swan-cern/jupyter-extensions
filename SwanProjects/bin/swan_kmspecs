@@ -162,13 +162,12 @@ def generate_ksminfo(project_path):
     ----------
     project_path : str
         path to the project we are trying to find the information about the kernels..
-
     """
     check_native_kernel(project_path)
     save_kernel_paths(project_path)
 
 
-def swan_kmspecs(project_name):
+def swan_kmspecs(project_name,stacks_path):
     """
     This functions launches a subprocess to find the information of the kernels inside the environment of the project.
 
@@ -176,6 +175,8 @@ def swan_kmspecs(project_name):
     ----------
     project_path : str
         path to the project we are trying to find the information about the kernels..
+    stacks_path : str
+        path to the stacks folder with the information aboud the stacks available.
 
     """
     command = ["env", "-i", "HOME=%s" % os.environ["HOME"]]
@@ -188,7 +189,7 @@ def swan_kmspecs(project_name):
     if "OAUTH_INSPECTION_ENDPOINT" in os.environ:
         command.append("OAUTH_INSPECTION_ENDPOINT=%s" %
                        os.environ["OAUTH_INSPECTION_ENDPOINT"])
-    command += ["/bin/bash", "swan_env", project_name, ".", "python",
+    command += ["/bin/bash", "swan_env", project_name,stacks_path, ".", "python",
                 __file__, "--generate_ksminfo", "--project_name", project_name]
 
     proc = subprocess.Popen(command, stdout=subprocess.PIPE)
@@ -219,6 +220,8 @@ if __name__ == '__main__':
         description='Swan Environment Kernel Manager CMD options.')
     parser.add_argument('--project_name', type=str,
                         required=True, help='Project name')
+    parser.add_argument('--stacks_path', type=str,
+                        help='Stacks path')
     parser.add_argument('--generate_ksminfo', action='store_true',
                         default=None, help='Generates Kernel Spec Manager info')
     args = parser.parse_args()
@@ -229,5 +232,5 @@ if __name__ == '__main__':
     if args.generate_ksminfo:
         generate_ksminfo(project_path)
     else:
-        rcode = swan_kmspecs(project_name)
+        rcode = swan_kmspecs(project_name, args.stacks_path)
         sys.exit(rcode)

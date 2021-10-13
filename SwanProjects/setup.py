@@ -10,8 +10,6 @@ import setuptools
 
 HERE = Path(__file__).parent.resolve()
 
-site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
-
 # The name of the project
 name = "swanprojects"
 

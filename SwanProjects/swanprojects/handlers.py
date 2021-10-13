@@ -4,24 +4,27 @@ import json
 import os
 import shutil
 import subprocess
+from glob import glob
 
 import tornado
 from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
 from tornado.web import StaticFileHandler
-from traitlets import Unicode
-from traitlets.config import Configurable
 
 from .utils import (get_project_info, get_project_path, get_project_readme,
                     get_user_script_content, get_env_isolated)
 
-class SwanProjects(Configurable):
-    stacks_path = Unicode(
-        os.path.dirname(os.path.abspath(__file__)) + '/stacks.json',
-        config=True,
-        help="The path to the JSON containing stack configuration")
+from swanprojects.config import SwanConfig
 
-class ProjectInfoHandler(APIHandler):
+
+class SwanAPIHandler(APIHandler):
+    swan_config = None
+
+    def initialize(self):
+        self.swan_config = SwanConfig(config=self.config)
+
+
+class ProjectInfoHandler(SwanAPIHandler):
     @tornado.web.authenticated
     def post(self):
         """
@@ -46,23 +49,29 @@ class ProjectInfoHandler(APIHandler):
         payload = {"project_data": project_data}
         self.finish(json.dumps(payload))
 
-class StacksInfoHandler(APIHandler):
 
-    swan_projects_config = None
-
-    def initialize(self):
-        self.swan_projects_config = SwanProjects(config=self.config)
-
+class StacksInfoHandler(SwanAPIHandler):
     @tornado.web.authenticated
     def get(self):
         """
         This endpoint is required for the project dialog, it's returning the information saved on stacks.json
         """
-        with open(self.swan_projects_config.stacks_path) as f:
-            stacks = json.loads(f.read())
+        stacks = {}
+        stacks["path"] = self.swan_config.stacks_path
+        for stack in glob(os.path.join(self.swan_config.stacks_path, "*")):
+            stack_name = stack.split(os.sep)[-1]
+            with open(os.path.join(stack, "config.json")) as f:
+                stack_info = json.loads(f.read())
+            with open(os.path.join(stack, "logo.svg")) as f:
+                stack_logo = f.read()
+            stacks[stack_name] = {}
+            stacks[stack_name]["logo"] = stack_logo
+            stacks[stack_name]["releases"] = stack_info["releases"]
+
         self.finish(json.dumps({"stacks": stacks}))
 
-class KernelSpecManagerPathHandler(APIHandler):
+
+class KernelSpecManagerPathHandler(SwanAPIHandler):
     @tornado.web.authenticated
     def post(self):
         """
@@ -84,7 +93,8 @@ class KernelSpecManagerPathHandler(APIHandler):
                     "msg": f"Error setting SWAN kernel spec manager to path: {path}"}
             self.finish(json.dumps(data))
 
-class CreateProjectHandler(APIHandler):
+
+class CreateProjectHandler(SwanAPIHandler):
     @tornado.web.authenticated
     def post(self):
         """
@@ -101,7 +111,7 @@ class CreateProjectHandler(APIHandler):
         release = input_data["release"]  # CMSSW_X_Y_Z/LCG_XYZ
         user_script = input_data["user_script"]
 
-        project_dir = os.environ["HOME"] + "/SWAN_projects/" + name
+        project_dir = os.path.join(os.environ["HOME"], "SWAN_projects", name)
         try:
             os.makedirs(project_dir)
         except Exception as msg:
@@ -109,7 +119,7 @@ class CreateProjectHandler(APIHandler):
                     "msg": f"Error creating folder for project {name}, traceback: {msg}"}
             self.finish(json.dumps(data))
             return
-        swan_project_file = project_dir + os.path.sep + '.swanproject'
+        swan_project_file = os.path.join(project_dir, '.swanproject')
         swan_project_content = {'stack': stack, 'release': release,
                                 'platform': platform}
         try:
@@ -135,7 +145,8 @@ class CreateProjectHandler(APIHandler):
             return
 
         command = get_env_isolated()
-        command += ["/bin/bash", "-c", "swan_kmspecs --project_name %s" % name]
+        command += ["/bin/bash", "-c",
+                    f"swan_kmspecs --project_name {name} --stacks_path {self.swan_config.stacks_path}"]
         self.log.info(f"running {command} ")
         proc = subprocess.Popen(command, stdout=subprocess.PIPE)
         proc.wait()
@@ -153,7 +164,8 @@ class CreateProjectHandler(APIHandler):
                 "msg": f"created project {name}"}
         self.finish(json.dumps(data))
 
-class EditProjectHandler(APIHandler):
+
+class EditProjectHandler(SwanAPIHandler):
 
     @tornado.web.authenticated
     def post(self):
@@ -241,7 +253,8 @@ class EditProjectHandler(APIHandler):
                         indent=4, sort_keys=True))
                 f.close()
             command = get_env_isolated()
-            command += ["swan_kmspecs", "--project_name", name]
+            command += ["swan_kmspecs", "--project_name", name,
+                        "--stacks_path", self.swan_config.stacks_path]
             self.log.info(f"running {command} ")
             proc = subprocess.Popen(command, stdout=subprocess.PIPE)
             proc.wait()
@@ -259,6 +272,8 @@ class EditProjectHandler(APIHandler):
         self.finish(json.dumps(data))
 
 # URL to handler mappings
+
+
 def setup_handlers(web_app, url_path):
     host_pattern = ".*$"
     base_url = web_app.settings["base_url"]

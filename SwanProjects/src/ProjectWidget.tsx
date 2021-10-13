@@ -16,7 +16,8 @@ import { Card, HelpTooltip } from './Components';
 export interface IStackOptions {
   visible: boolean;
 }
-import { swanProjectIcon, sftIcon, cmsIcon } from './icons';
+import { swanProjectIcon } from './icons';
+import { LabIcon } from '@jupyterlab/ui-components';
 
 import { ProjectDialog } from './ProjectDialog';
 
@@ -38,25 +39,36 @@ export const ProjectWidget: React.FunctionComponent<{
   const options = props.options;
   const [projectName, setProjectName] = React.useState(options.name || '');
 
-  const availableStacks = Object.keys(options.stacks_options);
+  const availableStacks = Object.keys(options.stacks_options).filter(function(e) { return e !== 'path' });
   const defaultStack = availableStacks.includes(options.stack)
     ? options.stack
     : availableStacks[0];
   const [stack, setStack] = React.useState(defaultStack);
 
-  const availableReleases = Object.keys(options.stacks_options[stack]);
+  const availableReleases = Object.keys(options.stacks_options[stack]['releases']);
   const defaultRelease = availableReleases.includes(options.release)
     ? options.release
     : availableReleases[0];
   const [release, setRelease] = React.useState(defaultRelease);
 
-  const availablePlatforms = options.stacks_options[stack][release];
+  const availablePlatforms = options.stacks_options[stack]['releases'][release];
   const defaultPlatform = availablePlatforms.includes(options.platform)
     ? options.platform
     : availablePlatforms[0];
   const [platform, setPlatform] = React.useState(defaultPlatform);
 
   const [userScript, setUserScript] = React.useState(options.user_script || '');
+  var stack_icons:{ [item: string]: LabIcon} = {}
+
+  const randomId = () => {
+    return Math.random().toString(36).substring(2, 15)
+  };
+
+  availableStacks.map(item => {
+    stack_icons[item] = new LabIcon({
+    name: 'jupyterlab_swan_stack:'+randomId(),
+    svgstr: options.stacks_options[item]['logo']
+  })})
 
   const onClickSubmit = () => {
     props.onSubmit({
@@ -65,7 +77,7 @@ export const ProjectWidget: React.FunctionComponent<{
       release,
       platform,
       user_script: userScript,
-      stacks_options: options.stacks_options // TODO remove this
+      stacks_options: options.stacks_options
     });
   };
 
@@ -79,16 +91,16 @@ export const ProjectWidget: React.FunctionComponent<{
 
   const onChangeStack = (newStack: string) => {
     setStack(newStack);
-    const newRelease = Object.keys(options.stacks_options[newStack])[0];
+    const newRelease = Object.keys(options.stacks_options[newStack]['releases'])[0];
     setRelease(newRelease);
-    const newPlatform = options.stacks_options[newStack][newRelease][0];
+    const newPlatform = options.stacks_options[newStack]['releases'][newRelease][0];
     setPlatform(newPlatform);
   };
 
   const onChangeRelease = (event: React.ChangeEvent<{ value: unknown }>) => {
     const newRelease = event.target.value as string;
     setRelease(newRelease);
-    const newPlatform = options.stacks_options[stack][newRelease][0];
+    const newPlatform = options.stacks_options[stack]['releases'][newRelease][0];
     setPlatform(newPlatform);
   };
 
@@ -117,18 +129,15 @@ export const ProjectWidget: React.FunctionComponent<{
         />
       </div>
       <div className="sw-Dialog-select-stack">
-        <Card
-          label="LCG"
-          icon={sftIcon}
-          updateCallback={() => onChangeStack('LCG')}
-          isSelected={stack === 'LCG'}
-        />
-        <Card
-          label="CMSSW"
-          icon={cmsIcon}
-          updateCallback={() => onChangeStack('CMSSW')}
-          isSelected={stack === 'CMSSW'}
-        />
+      {availableStacks.map(item => (
+       <Card
+        key={item}
+        label={item}
+        icon={stack_icons[item]}
+        updateCallback={() => onChangeStack(item)}
+        isSelected={stack === item}
+       />
+      ))}
       </div>
       <div className="sw-Dialog-stack-options">
         <div>
