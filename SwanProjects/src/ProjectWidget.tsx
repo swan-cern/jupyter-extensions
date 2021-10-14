@@ -77,7 +77,8 @@ export const ProjectWidget: React.FunctionComponent<{
       release,
       platform,
       user_script: userScript,
-      stacks_options: options.stacks_options
+      stacks_options: options.stacks_options,
+      corrupted: options.corrupted
     });
   };
 
