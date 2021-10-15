@@ -1,8 +1,10 @@
 */*/js/
 */*/nbextension/extension.js
 !SwanContents/swancontents/js/
-SparkMonitor/scalalistener/project/
+SparkMonitor/scalalistener/project/target
 SparkMonitor/scalalistener/target/
+SparkMonitor/scalalistener_v2/project/target
+SparkMonitor/scalalistener_v2/target/
 SparkMonitor/sparkmonitor/listener*.jar
 SparkMonitor/sparkmonitor/nbextension/*
 .idea/
