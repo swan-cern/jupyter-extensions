@@ -1,4 +1,5 @@
-import os, subprocess, shutil, sys, uuid, time, base64
+import os, subprocess, shutil, sys, uuid, time, base64, tempfile
+import requests
 
 from pyspark import SparkConf, SparkContext
 from string import Formatter
@@ -8,7 +9,6 @@ try:
     from kubernetes.client.rest import ApiException
 except ImportError:
     pass
-
 class SparkConfigurationFactory:
 
     def __init__(self, connector):
@@ -76,6 +76,32 @@ class SparkConfiguration(object):
                 value = value.format(**replaceable_values)
                 _options[name] = value
         return _options
+
+    def fetch_auth_delegation_tokens(self):
+        if self.get_spark_needs_auth():
+            # Do nothing if generating kerberos ticket prompting the password from user. (for nxcals)
+            return
+        cluster = self.get_cluster_name()
+        if not cluster or cluster == 'local':
+            return
+        jupyterhub_user_token = os.environ.get('JUPYTERHUB_API_TOKEN')
+        headers = {
+            'Authorization': f'token {jupyterhub_user_token}'
+        }
+        data = {
+            'cluster': cluster
+        }
+        self.connector.log.info(f'Fetching spark delegation token for {cluster}')
+        response = requests.post('http://hubspark:1111', headers=headers, json=data)
+        response.raise_for_status()
+
+        # Write the token to a temporary file
+        fd, path = tempfile.mkstemp()
+        with os.fdopen(fd, 'wb') as file:
+            file.write(response.content)
+        
+        os.environ['HADOOP_TOKEN_FILE_LOCATION'] = path
+        self.connector.log.info(f'Spark delegation token written to {path}')
 
     def configure(self, opts, ports):
         """ Initializes Spark configuration object """
