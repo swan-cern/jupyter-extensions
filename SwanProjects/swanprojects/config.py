@@ -37,6 +37,6 @@ class SwanConfig(Configurable):
         config=False,
         help="Projects folder name.")
     projects_folder_path = Unicode(
-        os.path.join(os.environ["HOME"],projects_folder_name.default_value),
+        os.path.join(os.environ["HOME"], projects_folder_name.default_value),
         config=False,
         help="Projects full path for SWAN_projects.")

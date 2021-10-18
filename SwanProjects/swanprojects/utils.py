@@ -25,7 +25,7 @@ def get_project_info(path):
 
 
 def get_project_path(cwd):
-    if cwd.startswith('/'):
+    if cwd.startswith(os.sep):
         cwd = cwd[1:]
 
     paths = cwd.split(os.path.sep)
@@ -63,7 +63,7 @@ def get_project_name(project_path):
     path = get_project_path(project_path)
     name = None
     if path is not None:
-        name = path.split('/')[-1]
+        name = path.split(os.sep)[-1]
     return name
 
 

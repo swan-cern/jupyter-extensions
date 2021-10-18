@@ -106,10 +106,10 @@ export function editProjectRequest(
   try {
     return request<any>('swan/project/edit', {
       body: JSON.stringify(dataToSend),
-      method: 'POST'
+      method: 'PUT'
     });
   } catch (reason) {
-    const msg = `Error on POST swan/project/edit ${options}.\n${reason}`;
+    const msg = `Error on PUT swan/project/edit ${options}.\n${reason}`;
     return { status: 'error', reason: reason, param: options, msg: msg };
   }
 }

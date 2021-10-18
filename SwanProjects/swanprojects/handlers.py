@@ -50,20 +50,20 @@ class SwanAPIHandler(APIHandler):
         proc.communicate()
         self.log.info(f"result stdout: {stdout} ")
         self.log.info(f"result stderr: {stderr} ")
-        return (stderr,proc.returncode)
+        return (stderr, proc.returncode)
 
 
 class ProjectInfoHandler(SwanAPIHandler):
     @tornado.web.authenticated
-    def post(self):
+    def get(self):
         """
-        Post request for the SwanLauncher/SwanFileBrowser,
+        Get request for the SwanLauncher/SwanFileBrowser,
         this endpoint returns project information such as stack, release, platform etc..
         if the path is not inside the project return and empty project data.
         """
-        input_data = self.get_json_body()
-        self.log.info(f"ProjectInfoHandler = {input_data}")
-        path = input_data["path"]
+        path = self.get_argument('path')
+        caller = self.get_argument('caller')
+        self.log.info(f"ProjectInfoHandler caller = {caller} path = {path}")
 
         project = get_project_path(path)
         project_data = {}
@@ -139,25 +139,22 @@ class CreateProjectHandler(SwanAPIHandler):
         platform = input_data["platform"]  # SCRAM/x86_64..centos7..gccX
         release = input_data["release"]  # CMSSW_X_Y_Z/LCG_XYZ
         user_script = input_data["user_script"]
-        project_dir = os.path.join(self.swan_config.projects_folder_path, name)
         project_relative_dir = os.path.join(
             self.swan_config.projects_folder_name, name)
         try:
-            os.makedirs(project_dir)
+            self.contents_manager.new({'type':'directory'},project_relative_dir)
         except Exception as msg:
             data = {"status": False, "project_dir": project_relative_dir,
                     "msg": f"Error creating folder for project {name}, traceback: {msg}"}
             self.finish(json.dumps(data))
             return
         swan_project_file = os.path.join(
-            project_dir, self.swan_config.project_file_name)
+            project_relative_dir, self.swan_config.project_file_name)
         swan_project_content = {'stack': stack, 'release': release,
                                 'platform': platform}
         try:
-            with open(swan_project_file, 'w+') as f:
-                f.write(json.dumps(swan_project_content,
-                        indent=4, sort_keys=True))
-                f.close()
+            self.contents_manager.new({'type':'file','content':json.dumps(swan_project_content,
+                        indent=4, sort_keys=True),'format':'text'},swan_project_file)
         except Exception as msg:
             data = {"status": False, "project_dir": project_relative_dir,
                     "msg": f"Error creating {self.swan_config.project_file_name} file for project {name}, traceback: {msg}"}
@@ -166,17 +163,15 @@ class CreateProjectHandler(SwanAPIHandler):
 
         try:
             swan_user_script_file = os.path.join(
-                project_dir, self.swan_config.userscript_file_name)
-            with open(swan_user_script_file, 'w') as f:
-                f.write(user_script)
-                f.close()
+                project_relative_dir, self.swan_config.userscript_file_name)
+            self.contents_manager.new({'type':'file','content':user_script,'format':'text'},swan_user_script_file)
         except Exception as msg:
             data = {"status": False, "project_dir": project_relative_dir,
                     "msg": f"Error creating {self.swan_config.userscript_file_name} file for project {name}, traceback: {msg}"}
             self.finish(json.dumps(data))
             return
         command = ["/bin/bash", "-c",
-                    f"swan_kmspecs --project_name {name} --stacks_path {self.swan_config.stacks_path}"]
+                   f"swan_kmspecs --project_name {name} --stacks_path {self.swan_config.stacks_path}"]
         stderr, returncode = self.subprocess(command)
         self.log.info(f"swan_kmspecs return code: {returncode}")
         if returncode != 0:
@@ -193,7 +188,7 @@ class CreateProjectHandler(SwanAPIHandler):
 class EditProjectHandler(SwanAPIHandler):
 
     @tornado.web.authenticated
-    def post(self):
+    def put(self):
         """
         This endpoint allows to edit project information, such as name, stack, platform etc..
         The project can be renamed from $HOME/SWAN_projects/old_name to $HOME/SWAN_projects/name
@@ -203,7 +198,7 @@ class EditProjectHandler(SwanAPIHandler):
         the edit project dialog will send the information again to this endpoint to fix the project information.
         """
         input_data = self.get_json_body()
-        print(f"EditProjectHandler = {input_data}")
+        self.log.info(f"EditProjectHandler = {input_data}")
 
         corrupted = input_data.get("corrupted")
         old_name = input_data.get("old_name")
@@ -218,14 +213,13 @@ class EditProjectHandler(SwanAPIHandler):
         release = input_data["release"]
         user_script = input_data["user_script"]
 
-        project_dir = os.path.join(self.swan_config.projects_folder_path, name)
         project_relative_dir = os.path.join(
             self.swan_config.projects_folder_name, name)
         if old_name != name:
             try:
                 old_project_dir = os.path.join(
-                    self.swan_config.projects_folder_path, old_name)
-                os.rename(old_project_dir, project_dir)
+                    self.swan_config.projects_folder_name, old_name)
+                self.contents_manager.rename(old_project_dir, project_relative_dir)
             except Exception as msg:
                 data = {"status": False, "project_dir": project_relative_dir,
                         "msg": f"Error editing project folder {old_name},  traceback: {msg}"}
@@ -234,12 +228,10 @@ class EditProjectHandler(SwanAPIHandler):
                 return
 
         if old_userscript != user_script:
-            swan_userscript_file = os.path.join(
-                project_dir, self.swan_config.userscript_file_name)
             try:
-                with open(swan_userscript_file, 'w') as f:
-                    f.write(user_script)
-                    f.close()
+                swan_user_script_file = os.path.join(
+                project_relative_dir, self.swan_config.userscript_file_name)
+                self.contents_manager.new({'type':'file','content':user_script,'format':'text'},swan_user_script_file)
             except Exception as msg:
                 data = {"status": False, "project_dir": project_relative_dir,
                         "msg": f"Error editing {self.swan_config.userscript_file_name} for project {name},  traceback: {msg}"}
@@ -248,24 +240,24 @@ class EditProjectHandler(SwanAPIHandler):
 
         if stack != old_stack or platform != old_platform or release != old_release or corrupted:
             swan_project_file = os.path.join(
-                project_dir, self.swan_config.project_file_name)
+                project_relative_dir, self.swan_config.project_file_name)
             swan_project_content = {'stack': stack, 'release': release,
                                     'platform': platform}
-            kernel_dir = project_dir + "/.local/share/jupyter/kernels"
+            kernel_dir = project_relative_dir + "/.local/share/jupyter/kernels"
+            kernel_dir_python2 = os.path.join(kernel_dir,'python2')
+            kernel_dir_python3 = os.path.join(kernel_dir,'python3')
 
             # removing old native kernels for python only(this is generated by us)
-            if os.path.exists(kernel_dir + "/python2"):
-                shutil.rmtree(kernel_dir + "/python2")
+            if os.path.exists(kernel_dir_python2):
+                shutil.rmtree(kernel_dir_python2)
 
-            if os.path.exists(kernel_dir + "/python3"):
-                shutil.rmtree(kernel_dir + "/python3")
+            if os.path.exists(kernel_dir_python3):
+                shutil.rmtree(kernel_dir_python3)
 
-            with open(swan_project_file, 'w+') as f:
-                f.write(json.dumps(swan_project_content,
-                        indent=4, sort_keys=True))
-                f.close()
+            self.contents_manager.new({'type':'file','content':json.dumps(swan_project_content,
+                        indent=4, sort_keys=True),'format':'text'},swan_project_file)
             command = ["swan_kmspecs", "--project_name", name,
-                        "--stacks_path", self.swan_config.stacks_path]
+                       "--stacks_path", self.swan_config.stacks_path]
             stderr, returncode = self.subprocess(command)
             self.log.info(f"swan_kmspecs return code: {returncode}")
             if returncode != 0:
@@ -278,6 +270,8 @@ class EditProjectHandler(SwanAPIHandler):
         self.finish(json.dumps(data))
 
 # URL to handler mappings
+
+
 def setup_handlers(web_app, url_path):
     host_pattern = ".*$"
     base_url = web_app.settings["base_url"]
