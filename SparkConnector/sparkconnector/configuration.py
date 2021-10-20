@@ -79,6 +79,7 @@ class SparkConfiguration(object):
 
     def fetch_auth_delegation_tokens(self):
         if self.get_spark_needs_auth():
+            self.log.info("Skipped fetching delegation tokens because SPARK_AUTH_REQUIRED")
             # Do nothing if generating kerberos ticket prompting the password from user. (for nxcals)
             return
         cluster = self.get_cluster_name()
@@ -96,7 +97,7 @@ class SparkConfiguration(object):
         response.raise_for_status()
 
         # Write the token to a temporary file
-        fd, path = tempfile.mkstemp()
+        fd, path = tempfile.mkstemp(prefix="hadoop_token_")
         with os.fdopen(fd, 'wb') as file:
             file.write(response.content)
         
