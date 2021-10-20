@@ -72,8 +72,11 @@ class SparkConnector:
                 # Ask port allocator to reserve and return 3 available ports
                 self.port_allocator.connect()
                 ports = self.port_allocator.get_ports(3)
-                self.spark_configuration.fetch_auth_delegation_tokens()
-                
+                if os.environ.get('SWAN_SPARKCONNECTOR_FETCH_DELEGATION_TOKENS','false') == 'true':
+                    self.spark_configuration.fetch_auth_delegation_tokens()
+                else:
+                    self.log.info("Skipped fetching delegation tokens.")
+
                 conf = self.spark_configuration.configure(
                     msg['content']['data'],
                     ports
