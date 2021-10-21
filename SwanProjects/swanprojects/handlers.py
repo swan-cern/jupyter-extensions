@@ -2,7 +2,6 @@
 # Author: Omar.Zapata@cern.ch 2021
 import json
 import os
-import shutil
 import subprocess
 from glob import glob
 
@@ -11,20 +10,24 @@ from notebook.base.handlers import APIHandler
 from notebook.utils import url_path_join
 from tornado.web import StaticFileHandler
 
-from .utils import (get_project_info, get_project_path, get_project_readme,
-                    get_user_script_content, get_env_isolated)
-
+from swanprojects.utils import SwanUtils
 from swanprojects.config import SwanConfig
+from traitlets import Any
 
 
 class SwanAPIHandler(APIHandler):
-    swan_config = None
+    """
+    Base class for all SwanProjects API handlers,
+    provides SwanUtils and SwanConfig object with command line and some other options.
+    """
 
     def initialize(self):
         """
         Initialization of the handler with the swan configuration object.
         """
         self.swan_config = SwanConfig(config=self.config)
+        self.swan_utils = SwanUtils(self.contents_manager)
+        self.kernel_spec_manager.set_swan_utils(self.swan_utils)
 
     def subprocess(self, command):
         """
@@ -40,7 +43,7 @@ class SwanAPIHandler(APIHandler):
         Popen
             object to get information from the executed process such as output and return code.
         """
-        command = get_env_isolated() + command
+        command = self.swan_utils.get_env_isolated() + command
         self.log.info(f"running {command} ")
         proc = subprocess.Popen(
             command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -65,16 +68,14 @@ class ProjectInfoHandler(SwanAPIHandler):
         caller = self.get_argument('caller')
         self.log.info(f"ProjectInfoHandler caller = {caller} path = {path}")
 
-        project = get_project_path(path)
+        project = self.swan_utils.get_project_path(path)
         project_data = {}
         if project is not None:
-            project_data = get_project_info(project)
+            project_data = self.swan_utils.get_project_info(project)
 
             project_data["name"] = project.split(os.path.sep)[-1]
-            readme = get_project_readme(project)
-            if readme is not None:
-                project_data["readme"] = readme
-            project_data["user_script"] = get_user_script_content(project)
+            project_data["user_script"] = self.swan_utils.get_user_script_content(
+                project)
         payload = {"project_data": project_data}
         self.finish(json.dumps(payload))
 
@@ -112,7 +113,7 @@ class KernelSpecManagerPathHandler(SwanAPIHandler):
 
         self.log.info(f"KernelSpecManagerPathHandler = {input_data}")
 
-        project = get_project_path(path)
+        project = self.swan_utils.get_project_path(path)
         if self.kernel_spec_manager.set_path(path):
             data = {"status": True, "is_project": project is not None,
                     "msg": f"SWAN kernel spec manager set to path: {path}"}
@@ -141,8 +142,10 @@ class CreateProjectHandler(SwanAPIHandler):
         user_script = input_data["user_script"]
         project_relative_dir = os.path.join(
             self.swan_config.projects_folder_name, name)
+
         try:
-            self.contents_manager.new({'type':'directory'},project_relative_dir)
+            self.contents_manager.new(
+                {'type': 'directory'}, project_relative_dir)
         except Exception as msg:
             data = {"status": False, "project_dir": project_relative_dir,
                     "msg": f"Error creating folder for project {name}, traceback: {msg}"}
@@ -153,8 +156,8 @@ class CreateProjectHandler(SwanAPIHandler):
         swan_project_content = {'stack': stack, 'release': release,
                                 'platform': platform}
         try:
-            self.contents_manager.new({'type':'file','content':json.dumps(swan_project_content,
-                        indent=4, sort_keys=True),'format':'text'},swan_project_file)
+            self.contents_manager.new({'type': 'file', 'content': json.dumps(swan_project_content,
+                                                                             indent=4, sort_keys=True), 'format': 'text'}, swan_project_file)
         except Exception as msg:
             data = {"status": False, "project_dir": project_relative_dir,
                     "msg": f"Error creating {self.swan_config.project_file_name} file for project {name}, traceback: {msg}"}
@@ -164,7 +167,8 @@ class CreateProjectHandler(SwanAPIHandler):
         try:
             swan_user_script_file = os.path.join(
                 project_relative_dir, self.swan_config.userscript_file_name)
-            self.contents_manager.new({'type':'file','content':user_script,'format':'text'},swan_user_script_file)
+            self.contents_manager.new(
+                {'type': 'file', 'content': user_script, 'format': 'text'}, swan_user_script_file)
         except Exception as msg:
             data = {"status": False, "project_dir": project_relative_dir,
                     "msg": f"Error creating {self.swan_config.userscript_file_name} file for project {name}, traceback: {msg}"}
@@ -219,7 +223,8 @@ class EditProjectHandler(SwanAPIHandler):
             try:
                 old_project_dir = os.path.join(
                     self.swan_config.projects_folder_name, old_name)
-                self.contents_manager.rename(old_project_dir, project_relative_dir)
+                self.contents_manager.rename(
+                    old_project_dir, project_relative_dir)
             except Exception as msg:
                 data = {"status": False, "project_dir": project_relative_dir,
                         "msg": f"Error editing project folder {old_name},  traceback: {msg}"}
@@ -230,8 +235,9 @@ class EditProjectHandler(SwanAPIHandler):
         if old_userscript != user_script:
             try:
                 swan_user_script_file = os.path.join(
-                project_relative_dir, self.swan_config.userscript_file_name)
-                self.contents_manager.new({'type':'file','content':user_script,'format':'text'},swan_user_script_file)
+                    project_relative_dir, self.swan_config.userscript_file_name)
+                self.contents_manager.new(
+                    {'type': 'file', 'content': user_script, 'format': 'text'}, swan_user_script_file)
             except Exception as msg:
                 data = {"status": False, "project_dir": project_relative_dir,
                         "msg": f"Error editing {self.swan_config.userscript_file_name} for project {name},  traceback: {msg}"}
@@ -243,19 +249,19 @@ class EditProjectHandler(SwanAPIHandler):
                 project_relative_dir, self.swan_config.project_file_name)
             swan_project_content = {'stack': stack, 'release': release,
                                     'platform': platform}
-            kernel_dir = project_relative_dir + "/.local/share/jupyter/kernels"
-            kernel_dir_python2 = os.path.join(kernel_dir,'python2')
-            kernel_dir_python3 = os.path.join(kernel_dir,'python3')
+            kernel_dir = os.path.join(project_relative_dir, self.swan_config.kernel_folder_path)
+            kernel_dir_python2 = os.path.join(kernel_dir, 'python2')
+            kernel_dir_python3 = os.path.join(kernel_dir, 'python3')
 
             # removing old native kernels for python only(this is generated by us)
-            if os.path.exists(kernel_dir_python2):
-                shutil.rmtree(kernel_dir_python2)
+            if self.contents_manager.dir_exists(kernel_dir_python2):
+                self.contents_manager.delete(kernel_dir_python2, True)
 
-            if os.path.exists(kernel_dir_python3):
-                shutil.rmtree(kernel_dir_python3)
+            if self.contents_manager.dir_exists(kernel_dir_python3):
+                self.contents_manager.delete(kernel_dir_python3, True)
 
-            self.contents_manager.new({'type':'file','content':json.dumps(swan_project_content,
-                        indent=4, sort_keys=True),'format':'text'},swan_project_file)
+            self.contents_manager.new({'type': 'file', 'content': json.dumps(swan_project_content,
+                                                                             indent=4, sort_keys=True), 'format': 'text'}, swan_project_file)
             command = ["swan_kmspecs", "--project_name", name,
                        "--stacks_path", self.swan_config.stacks_path]
             stderr, returncode = self.subprocess(command)

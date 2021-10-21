@@ -1,15 +1,18 @@
 # Copyright (c) SWAN Development Team.
 # Author: Omar.Zapata@cern.ch 2021
 
+"""
+Customized Kernel Spec Manager that allows handle kernels in multiple environments
+for different projects.
+"""
 import json
 import os
 import shutil
 
 from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
-from swanprojects.utils import (get_project_info, get_project_name,
-                                get_project_path, get_env_isolated)
 from swanprojects.config import SwanConfig
 from traitlets import Unicode
+
 
 class SwanKernelSpecManager(KernelSpecManager):
     path = Unicode("", config=True, allow_none=True,
@@ -21,6 +24,10 @@ class SwanKernelSpecManager(KernelSpecManager):
         self.project = None
         self.kernel_dirs = []
         self.swan_config = SwanConfig(config=self.config)
+        self.swan_utils = None
+
+    def set_swan_utils(self, swan_utils):
+        self.swan_utils = swan_utils
 
     def save_native_spec(self, kernel_dir, python_path, display_name):
         """
@@ -39,28 +46,28 @@ class SwanKernelSpecManager(KernelSpecManager):
                 "display_name": display_name,
                 "language": "python"
                 }
-        kernel_file = kernel_dir + "/kernel.json"
-        f = open(kernel_file, "w+")
-        json.dump(spec, f, indent=4)
-        f.close()
+        kernel_file = os.path.join(kernel_dir, "kernel.json")
+        self.swan_utils.contents_manager.new({'type': 'file', 'content': json.dumps(
+            spec, indent=4), 'format': 'text'}, kernel_file)
 
     def set_path(self, path):
         self.path = path
-        self.project = get_project_path(path)
+        self.project = self.swan_utils.get_project_path(path)
         if self.project is None:
             self.kernel_dirs = []
             return True
         else:
-            self.project_info = get_project_info(self.project)
-            self.project_name = get_project_name(self.project)
+            self.project_info = self.swan_utils.get_project_info(self.project)
+            self.project_name = self.swan_utils.get_project_name(self.project)
             if "kernel_dirs" in self.project_info:
                 self.kernel_dirs = self.project_info["kernel_dirs"]
-                local_kernels = self.project + "/.local/share/jupyter/kernels/"
+                local_kernels = os.path.join(
+                    self.project, self.swan_config.kernel_folder_path)
                 for version in ["2", "3"]:
                     python = "python" + version
                     if self.project_info[python]["found"] and self.project_info[python]["ipykernel"]:
-                        kerne_dir = local_kernels + python
-                        if not os.path.exists(kerne_dir):
+                        kerne_dir = os.path.join(local_kernels, python)
+                        if not self.swan_utils.contents_manager.dir_exists(kerne_dir):
                             self.save_native_spec(
                                 kerne_dir, self.project_info[python]["path"], "Python " + version)
                 self.kernel_dirs.append(local_kernels)
@@ -75,7 +82,7 @@ class SwanKernelSpecManager(KernelSpecManager):
 
     def wrap_kernel_specs(self, project_name, kspec):
 
-        argv = get_env_isolated()
+        argv = self.swan_utils.get_env_isolated()
         argv += ["/bin/bash", "-c", "swan_env {} {} {} ".format(
             project_name, self.swan_config.stacks_path, ".") + "'" + " ".join(kspec.argv) + "'"
         ]
