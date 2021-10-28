@@ -1,9 +1,16 @@
 # Copyright (c) SWAN Development Team.
 # Author: Omar.Zapata@cern.ch 2021
+
+"""
+File with the handlers for our API.
+The handlers allows to Create/Edit projects, get project info
+and set parameters to our Kernel Spec Manager.
+"""
 import json
 import os
 import subprocess
 from glob import glob
+from distutils.spawn import find_executable
 
 import tornado
 from notebook.base.handlers import APIHandler
@@ -40,8 +47,8 @@ class SwanAPIHandler(APIHandler):
 
         Returns
         -------
-        Popen
-            object to get information from the executed process such as output and return code.
+        (stdout, stderr, returncode): tuple
+            Output for stout, stderr and return code.
         """
         command = self.swan_utils.get_env_isolated() + command
         self.log.info(f"running {command} ")
@@ -51,9 +58,66 @@ class SwanAPIHandler(APIHandler):
         stdout = proc.stdout.read().decode("utf-8")
         stderr = proc.stderr.read().decode("utf-8")
         proc.communicate()
-        self.log.info(f"result stdout: {stdout} ")
-        self.log.info(f"result stderr: {stderr} ")
-        return (stderr, proc.returncode)
+        self.log.debug(f"result stdout: {stdout} ")
+        self.log.debug(f"result stderr: {stderr} ")
+        return (stdout, stderr, proc.returncode)
+
+    def save_project_file(self, project_dir, content):
+        """
+        Method to save contents in the project file.
+
+        Parameters
+        ----------
+        project_dir : str
+            Path to the project.
+
+        content:dict
+            Data to save in the project file.
+
+        Returns
+        -------
+        status:bool
+            True if the content was saved or False if any error.
+        """
+        project_file = os.path.join(
+            project_dir, self.swan_config.project_file_name)
+
+        try:
+            self.contents_manager.new({'type': 'file', 'content': json.dumps(content,
+                                                                             indent=4, sort_keys=True), 'format': 'text'}, project_file)
+            return True
+        except Exception as msg:
+            data = {"status": False, "project_dir": project_dir,
+                    "msg": f"Error saving {self.swan_config.project_file_name} file for the project, traceback: {msg}"}
+            self.finish(json.dumps(data))
+            return False
+
+    def get_kmanager_info(self, project_dir):
+        """
+        Retrieve kernel manager information executing swan_kmspecs inside the project's environment.
+
+        Parameters
+        ----------
+        project_dir : str
+            Path to the project.
+
+        Returns
+        -------
+        kinfo: dict
+            Kernel information such as kernei_dir and ipykernel for python2/3 in a dictionary.
+        """
+        name = project_dir.split(os.sep)[-1]
+        swan_kmspecs = find_executable("swan_kmspecs")
+        command = ["swan_env", name, self.swan_config.stacks_path,
+                   ".", "python", swan_kmspecs]
+        stdout, stderr, returncode = self.subprocess(command)
+        self.log.info(f"swan_kmspecs return code: {returncode}")
+        if returncode != 0:
+            data = {"status": False, "project_dir": project_dir,
+                    "msg": f"Error collecting the information from cvmfs for project {name},  traceback: {stderr}"}
+            self.finish(json.dumps(data))
+        kinfo = json.loads(stdout)
+        return kinfo
 
 
 class ProjectInfoHandler(SwanAPIHandler):
@@ -131,6 +195,10 @@ class CreateProjectHandler(SwanAPIHandler):
         Endpoint to create a project, receive project information such as name, stack, platform, release, user_script.
         The project is created at $HOME/SWAN_projects/project_name and a hidden json ".swanproject" file with the information
         project is set inside the project folder.
+
+        Using a subprocess inside the enviroment, we retrieve information for kernel spec manager
+        such as kernel dirs and ipykernel package availability for python2/3 and this
+        information is saved in the project file too.
         """
         input_data = self.get_json_body()
         self.log.info(f"creating project {input_data}")
@@ -144,24 +212,16 @@ class CreateProjectHandler(SwanAPIHandler):
             self.swan_config.projects_folder_name, name)
 
         try:
-            self.contents_manager.new(
-                {'type': 'directory'}, project_relative_dir)
+            self.contents_manager._save_project(project_relative_dir, None)
         except Exception as msg:
             data = {"status": False, "project_dir": project_relative_dir,
                     "msg": f"Error creating folder for project {name}, traceback: {msg}"}
             self.finish(json.dumps(data))
             return
-        swan_project_file = os.path.join(
-            project_relative_dir, self.swan_config.project_file_name)
         swan_project_content = {'stack': stack, 'release': release,
                                 'platform': platform}
-        try:
-            self.contents_manager.new({'type': 'file', 'content': json.dumps(swan_project_content,
-                                                                             indent=4, sort_keys=True), 'format': 'text'}, swan_project_file)
-        except Exception as msg:
-            data = {"status": False, "project_dir": project_relative_dir,
-                    "msg": f"Error creating {self.swan_config.project_file_name} file for project {name}, traceback: {msg}"}
-            self.finish(json.dumps(data))
+
+        if not self.save_project_file(project_relative_dir, swan_project_content):
             return
 
         try:
@@ -174,14 +234,11 @@ class CreateProjectHandler(SwanAPIHandler):
                     "msg": f"Error creating {self.swan_config.userscript_file_name} file for project {name}, traceback: {msg}"}
             self.finish(json.dumps(data))
             return
-        command = ["/bin/bash", "-c",
-                   f"swan_kmspecs --project_name {name} --stacks_path {self.swan_config.stacks_path}"]
-        stderr, returncode = self.subprocess(command)
-        self.log.info(f"swan_kmspecs return code: {returncode}")
-        if returncode != 0:
-            data = {"status": False, "project_dir": project_relative_dir,
-                    "msg": f"Error collecting the information from cvmfs for project {name},  traceback: {stderr}"}
-            self.finish(json.dumps(data))
+
+        km_info = self.get_kmanager_info(project_relative_dir)
+        swan_project_content.update(km_info)
+
+        if not self.save_project_file(project_relative_dir, swan_project_content):
             return
 
         data = {"status": True, "project_dir": project_relative_dir,
@@ -249,7 +306,10 @@ class EditProjectHandler(SwanAPIHandler):
                 project_relative_dir, self.swan_config.project_file_name)
             swan_project_content = {'stack': stack, 'release': release,
                                     'platform': platform}
-            kernel_dir = os.path.join(project_relative_dir, self.swan_config.kernel_folder_path)
+            if not self.save_project_file(project_relative_dir, swan_project_content):
+                return
+            kernel_dir = os.path.join(
+                project_relative_dir, self.swan_config.kernel_folder_path)
             kernel_dir_python2 = os.path.join(kernel_dir, 'python2')
             kernel_dir_python3 = os.path.join(kernel_dir, 'python3')
 
@@ -260,17 +320,11 @@ class EditProjectHandler(SwanAPIHandler):
             if self.contents_manager.dir_exists(kernel_dir_python3):
                 self.contents_manager.delete(kernel_dir_python3, True)
 
-            self.contents_manager.new({'type': 'file', 'content': json.dumps(swan_project_content,
-                                                                             indent=4, sort_keys=True), 'format': 'text'}, swan_project_file)
-            command = ["swan_kmspecs", "--project_name", name,
-                       "--stacks_path", self.swan_config.stacks_path]
-            stderr, returncode = self.subprocess(command)
-            self.log.info(f"swan_kmspecs return code: {returncode}")
-            if returncode != 0:
-                data = {"status": False, "project_dir": project_relative_dir,
-                        "msg": f"Error editing stack, platform or release for project {name},  traceback: {stderr}"}
-                self.finish(json.dumps(data))
+            km_info = self.get_kmanager_info(project_relative_dir)
+            swan_project_content.update(km_info)
+            if not self.save_project_file(project_relative_dir, swan_project_content):
                 return
+
         data = {"status": True, "project_dir": project_relative_dir,
                 "msg": f"edited project {name}"}
         self.finish(json.dumps(data))

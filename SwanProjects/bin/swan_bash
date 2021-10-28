@@ -34,10 +34,10 @@ if [[ $# -gt 1 ]] ; then
       RELEASE=`jq '.release' $PROJECT_FILE`
       PLATFORM=`jq '.platform' $PROJECT_FILE`
       USER_SCRIPT="$PROJECT_PATH/.userscript"
+      echo "Loading $RELEASE with plafortm $PLATFORM "
       # FIXME: this have to be removed when environment isolation is not needed anymore, it's only temporary
-      env -i HOME=$HOME OAUTH2_FILE=$OAUTH2_FILE \
+      env -i HOME=$HOME \
              OAUTH2_TOKEN=$OAUTH2_TOKEN \
-             OAUTH_INSPECTION_ENDPOINT=$OAUTH_INSPECTION_ENDPOINT \
              PROJECT=$PROJECT \
              PROJECT_PATH=$PROJECT_PATH PS1="$PS1" \
              bash -c "swan_env $PROJECT $STACKS_PATH $PROJECT_PATH  bash --rcfile  <(echo 'PS1=\"($PROJECT) $PS1 \"') " 

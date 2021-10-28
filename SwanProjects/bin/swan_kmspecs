@@ -6,8 +6,9 @@
 This script allows to find the kernels for python2/3 and kernel spec paths for our kernel spec manager.
 
 The script run a subprocess inside the project environment trying to find the package ipykernel
-and run jupyter_path('kernels') to get the list of available paths for the differents kernels inside the project environment as well.
+and run jupyter_path('kernels') to get the list of available paths for the differents kernels inside the environment as well.
 
+This is execute in the Create/Edit project handlers and the stdout is captured, getting the json information printed in the function generate_ksminfo()
 """
 import argparse
 import json
@@ -20,13 +21,14 @@ from shutil import rmtree
 try:
     from jupyter_core.paths import jupyter_path
 except ImportError:
-    print("Package jupyter_core not found in the environment, kernel paths can not be found.")
+    print("{'status':0, 'msg':'Package jupyter_core not found in the environment, kernel paths can not be found.'}")
     sys.exit(1)
+
 
 def checkipykernel(python_interpreter):
     """
     Checks if ipykernel is available for the given python interpreter,
-    this function is executed inside the project environment.
+    this function have to be executed inside the project environment.
 
     Parameters
     ----------
@@ -42,46 +44,34 @@ def checkipykernel(python_interpreter):
     command = [python_interpreter, "-c", python_code]
     proc = subprocess.Popen(command, stdout=subprocess.PIPE)
     proc.wait()
-    data = proc.stdout.read().decode("utf-8")
     proc.communicate()
     return proc.returncode
 
 
-def check_native_kernel(project_path):
+def check_native_kernel():
     """
     Checks if ipykernel is available for python2 and python3.
 
     This routine is called inside the project environment,
     It checks if python2/3 are available to check if the package ipykernel is installed,
-    if the package was found the results is saved in the .swanproject file.
+    if the package was found the results is saved in the dictionary with the results.
 
-    Why? kernel.json is not always available in the software stacks but the package ipykern is there,
+    Why? kernel.json is not always available in the software stacks but the package ipykernel is there,
     then we can create the json file locally in the project to put it work, because our kernel spec manager requires
     the kernel path with the kernel.json file.
 
-    Parameters
-    ----------
-    project_path : str
-        path to the project we are trying to find the ipykernel packages.
-
+    Returns
+    -------
+    dict
+        information about python version found and if ipykernel was found for the python version.
     """
-    project_file = os.path.join(project_path, ".swanproject")
-    f = open(project_file, "r+")
-    project_data = f.read()
-    if project_data.strip() == "":
-        project_data = {}
-    else:
-        project_data = json.loads(project_data)
-    f.seek(0)
+    project_data = {}
     # checking if python2 is found
     python2 = find_executable("python2")
     if python2 is not None:
-        print("python2 found = "+python2)
         project_data["python2"] = {"found": True, "path": python2}
         # checking is ipython is found for python2
         rcode = checkipykernel(python2)
-        if rcode != 0:
-            print("Error ipykernel not found for python2 in project " + project_path)
         if rcode == 0:
             project_data["python2"]["ipykernel"] = True
         else:
@@ -92,37 +82,26 @@ def check_native_kernel(project_path):
     # checking if python2 is found
     python3 = find_executable("python3")
     if python3 is not None:
-        print("python3 found = "+python3)
         project_data["python3"] = {"found": True, "path": python3}
         # checking is ipython is found for python3
         rcode = checkipykernel(python3)
-        if rcode != 0:
-            print("Error ipykernel not found for python3 in project " + project_path)
         if rcode == 0:
             project_data["python3"]["ipykernel"] = True
         else:
             project_data["python3"]["ipykernel"] = False
     else:
         project_data["python3"]["found"] = False
-
-    # removing the previuos information of the .swanproject file to put the new one.
-    f.seek(0)
-    f.truncate()
-    # Saving the results in the .swanproject file.
-    json.dump(project_data, f, indent=4)
-    f.close()
+    return project_data
 
 
-def save_kernel_paths(project_path):
+def get_kernel_paths():
     """
     Allows to find kernel paths inside the environment
-    and save then in the project config file.
 
-    Parameters
-    ----------
-    project_path : str
-        path to the project we are trying to find the kernel paths.
-
+    Returns
+    -------
+    list
+        kernel paths found inside the environment.
     """
     kernels_blacklist_paths = [os.path.join(
         os.environ["HOME"], '.local/share/jupyter/kernels'), '/usr/local/share/jupyter/kernels', '/usr/share/jupyter/kernels']
@@ -135,97 +114,21 @@ def save_kernel_paths(project_path):
                 found = True
         if not found:
             paths.append(path)
-    project_file = os.path.join(project_path, ".swanproject")
+    return paths
 
-    with open(project_file, "r+") as f:
-        project_data = f.read()
-        if project_data == "":
-            project_data = {}
-        else:
-            project_data = json.loads(project_data)
-        f.seek(0)
-        f.truncate()
-        if "kernel_dirs" in list(project_data.keys()):
-            project_data["kernel_dirs"] = project_data["kernel_dirs"] + paths
-        else:
-            project_data["kernel_dirs"] = paths
-        json.dump(project_data, f, indent=4)
 
-def generate_ksminfo(project_path):
+def generate_ksminfo():
     """
     Function to generated all the kernel spec manager info,
-    calling the function 'check_native_kernel' and to save the kernel paths calling the function save_kernel_paths.
-
-    This function is called inside the project environment.
-
-    Parameters
-    ----------
-    project_path : str
-        path to the project we are trying to find the information about the kernels..
+    calling the function check_native_kernel and  get_kernel_paths.
     """
-    check_native_kernel(project_path)
-    save_kernel_paths(project_path)
-
-
-def swan_kmspecs(project_name,stacks_path):
-    """
-    This functions launches a subprocess to find the information of the kernels inside the environment of the project.
-
-    Parameters
-    ----------
-    project_path : str
-        path to the project we are trying to find the information about the kernels..
-    stacks_path : str
-        path to the stacks folder with the information aboud the stacks available.
-
-    """
-    command = ["env", "-i", "HOME=%s" % os.environ["HOME"]]
-    # FIXME: this have to be removed when environment isolation is not needed anymore, it's only temporary.
-    # we required this to read/write in a isolate environment with EOS
-    if "OAUTH2_TOKEN" in os.environ:
-        command.append("OAUTH2_TOKEN=%s" % os.environ["OAUTH2_TOKEN"])
-    command += ["/bin/bash", "swan_env", project_name,stacks_path, ".", "python",
-                __file__, "--generate_ksminfo", "--project_name", project_name]
-
-    proc = subprocess.Popen(command, stdout=subprocess.PIPE)
-    proc.wait()
-    data = proc.stdout.read().decode("utf-8")
-    proc.communicate()
-    if proc.returncode != 0:
-        print("Error creating navite kernel and finding kernels paths for project{}".format(
-            project_name))
-
-    return proc.returncode
-
+    ksminfo = check_native_kernel()
+    ksminfo["kernel_dirs"] = get_kernel_paths()
+    ksminfo["status"] = 1
+    print(json.dumps(ksminfo, indent=4))
 
 if __name__ == '__main__':
     """
-    entry point to use this script, the parameter project name is required,
-    the other parameter is used when this script is executed inside the project environment.
-
-    Parameters
-    ----------
-    project_name : str
-        project name
-    generate_ksminfo: None
-        called by the subprocess inside the project environment to generated the kernel information.
-
+    Entry point to use this script, calls generate_ksminfo routine to generate the kernel info.
     """
-    parser = argparse.ArgumentParser(
-        description='Swan Environment Kernel Manager CMD options.')
-    parser.add_argument('--project_name', type=str,
-                        required=True, help='Project name')
-    parser.add_argument('--stacks_path', type=str,
-                        help='Stacks path')
-    parser.add_argument('--generate_ksminfo', action='store_true',
-                        default=None, help='Generates Kernel Spec Manager info')
-    args = parser.parse_args()
-    project_name = args.project_name
-
-    project_path = os.path.join(
-        os.environ["HOME"], "SWAN_projects", project_name)
-    if args.generate_ksminfo:
-        generate_ksminfo(project_path)
-    else:
-        rcode = swan_kmspecs(project_name, args.stacks_path)
-        sys.exit(rcode)
+    generate_ksminfo()

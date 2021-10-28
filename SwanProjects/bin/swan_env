@@ -70,16 +70,15 @@ done
 COMMAND=${PARAMETERS[@]}
 
 if [ ! -d $STACK_PATH ]; then
-  echo "Error sourcing the environment, the stack $STACK was not found in stacks path $STACKS_PATH"
-  echo "project $PROJECT can not be loeaded."
+  echo "Error sourcing the environment, the stack $STACK was not found in stacks path $STACKS_PATH" >&2
+  echo "project $PROJECT can not be loeaded." >&2
   exit 1
 fi
 
 if [ -f $STACK_SETUP ]; then
-  echo "Loading $RELEASE with plafortm $PLATFORM "
   . $STACK_SETUP
 else
-   echo "Error loading stack setup.sh on $STACK_SETUP, file doesn't exists."
+   echo "Error loading stack setup.sh on $STACK_SETUP, file doesn't exists." >&2
    exit 1
 fi
 
