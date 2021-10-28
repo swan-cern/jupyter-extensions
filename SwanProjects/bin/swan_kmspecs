@@ -19,7 +19,7 @@ import sys
 from distutils.spawn import find_executable
 from shutil import rmtree
 try:
-    from jupyter_core.paths import jupyter_path
+    from jupyter_core.paths import jupyter_path, get_home_dir
 except ImportError:
     print("{'status':0, 'msg':'Package jupyter_core not found in the environment, kernel paths can not be found.'}")
     sys.exit(1)
@@ -104,7 +104,7 @@ def get_kernel_paths():
         kernel paths found inside the environment.
     """
     kernels_blacklist_paths = [os.path.join(
-        os.environ["HOME"], '.local/share/jupyter/kernels'), '/usr/local/share/jupyter/kernels', '/usr/share/jupyter/kernels']
+        get_home_dir(), '.local/share/jupyter/kernels'), '/usr/local/share/jupyter/kernels', '/usr/share/jupyter/kernels']
     tmp_paths = jupyter_path('kernels')
     paths = []
     for path in tmp_paths:
