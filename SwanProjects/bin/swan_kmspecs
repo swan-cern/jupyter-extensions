@@ -106,6 +106,8 @@ def get_kernel_paths():
     kernels_blacklist_paths = [os.path.join(
         get_home_dir(), '.local/share/jupyter/kernels'), '/usr/local/share/jupyter/kernels', '/usr/share/jupyter/kernels']
     tmp_paths = jupyter_path('kernels')
+    if "kernels" in tmp_paths:
+        tmp_paths.remove("kernels")
     paths = []
     for path in tmp_paths:
         found = False
