@@ -70,7 +70,7 @@ class SwanKernelSpecManager(KernelSpecManager):
                         if not self.swan_utils.contents_manager.dir_exists(kerne_dir):
                             self.save_native_spec(
                                 kerne_dir, self.project_info[python]["path"], "Python " + version)
-                self.kernel_dirs.append(local_kernels)
+                self.kernel_dirs.append(os.path.join(self.swan_utils.contents_manager.root_dir,local_kernels))
                 self.log.debug(f"KERNEL DIRS = {self.kernel_dirs}")
                 self.log.debug(f"specs:\n {self.get_all_specs()}")
                 return True
