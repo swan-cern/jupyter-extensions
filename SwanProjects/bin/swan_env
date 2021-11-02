@@ -41,8 +41,8 @@ fi
 # stack, release and platform.
 # I also create the path to use bash user script to source it.
 ###
-PROJECT=$1
-PROJECT_PATH="$HOME/SWAN_projects/$PROJECT"
+PROJECT_PATH=$1
+PROJECT_NAME=`IFS='/'; ARR=($PROJECT_PATH);echo "${ARR[-1]}"`
 PROJECT_FILE="$PROJECT_PATH/.swanproject"
 STACK=`jq -r '.stack' $PROJECT_FILE`
 RELEASE=`jq -r '.release' $PROJECT_FILE`
@@ -71,7 +71,7 @@ COMMAND=${PARAMETERS[@]}
 
 if [ ! -d $STACK_PATH ]; then
   echo "Error sourcing the environment, the stack $STACK was not found in stacks path $STACKS_PATH" >&2
-  echo "project $PROJECT can not be loeaded." >&2
+  echo "project $PROJECT_NAME can not be loeaded." >&2
   exit 1
 fi
 
@@ -84,7 +84,7 @@ fi
 
 # The next variables allows the user to know in the environment basic information about the project such as stack, name and path.
 export SWAN_STACK="$RELEASE($PLATFORM)"
-export SWAN_PROJECT_NAME=$PROJECT
+export SWAN_PROJECT_NAME=$PROJECT_NAME
 export SWAN_PROJECT_PATH=$PROJECT_PATH
 
 if [ "$USER_SCRIPT" != "" ] && [ -f "$USER_SCRIPT" ]; then

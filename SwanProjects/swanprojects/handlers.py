@@ -19,7 +19,6 @@ from tornado.web import StaticFileHandler
 
 from swanprojects.utils import SwanUtils
 from swanprojects.config import SwanConfig
-from traitlets import Any
 
 
 class SwanAPIHandler(APIHandler):
@@ -83,8 +82,9 @@ class SwanAPIHandler(APIHandler):
             project_dir, self.swan_config.project_file_name)
 
         try:
-            self.contents_manager.new({'type': 'file', 'content': json.dumps(content,
-                                                                             indent=4, sort_keys=True), 'format': 'text'}, project_file)
+            self.contents_manager.new({'type': 'file',
+                                       'content': json.dumps(content,
+                                                             indent=4, sort_keys=True), 'format': 'text'}, project_file)
             return True
         except Exception as msg:
             data = {"status": False, "project_dir": project_dir,
@@ -108,7 +108,7 @@ class SwanAPIHandler(APIHandler):
         """
         name = project_dir.split(os.sep)[-1]
         swan_kmspecs = find_executable("swan_kmspecs")
-        command = ["swan_env", name, self.swan_config.stacks_path,
+        command = ["swan_env", project_dir, self.swan_config.stacks_path,
                    ".", "python", swan_kmspecs]
         stdout, stderr, returncode = self.subprocess(command)
         self.log.info(f"swan_kmspecs return code: {returncode}")
@@ -140,6 +140,9 @@ class ProjectInfoHandler(SwanAPIHandler):
             project_data["name"] = project.split(os.path.sep)[-1]
             project_data["user_script"] = self.swan_utils.get_user_script_content(
                 project)
+            project_data["full_path"] = os.path.join(
+                self.contents_manager.root_dir, project)
+
         payload = {"project_data": project_data}
         self.finish(json.dumps(payload))
 
@@ -302,8 +305,6 @@ class EditProjectHandler(SwanAPIHandler):
                 return
 
         if stack != old_stack or platform != old_platform or release != old_release or corrupted:
-            swan_project_file = os.path.join(
-                project_relative_dir, self.swan_config.project_file_name)
             swan_project_content = {'stack': stack, 'release': release,
                                     'platform': platform}
             if not self.save_project_file(project_relative_dir, swan_project_content):

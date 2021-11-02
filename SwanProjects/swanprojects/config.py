@@ -12,7 +12,7 @@ import os
 
 class SwanConfig(Configurable):
     """
-    Class to parse configuration options from command line. 
+    Class to parse configuration options from command line.
     """
     stacks_path = Unicode(
         os.path.dirname(os.path.abspath(__file__)) + '/stacks',

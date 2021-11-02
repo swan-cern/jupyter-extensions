@@ -10,7 +10,7 @@
 #
 # * HOME with path to the user home
 # * PATH with default paths for the system
-# * OAUTH2_TOKEN and OAUTH_INSPECTION_ENDPOINT required by EOS storage
+# * OAUTH2_TOKEN required by EOS storage
 #
 # swan_env will load the other variables from the stack, inside the isolated enviroment.
 ###
@@ -22,8 +22,8 @@ if ! [ -x "$(command -v jq)" ]; then
   exit 1
 fi
 if [[ $# -gt 1 ]] ; then
-    PROJECT=$1
-    PROJECT_PATH="$HOME/SWAN_projects/$PROJECT"
+    PROJECT_PATH=$1
+    PROJECT_NAME=`IFS='/'; ARR=($PROJECT_PATH);echo "${ARR[-1]}"`
     PROJECT_FILE="$PROJECT_PATH/.swanproject"
     
     STACKS_PATH="$2"
@@ -38,9 +38,9 @@ if [[ $# -gt 1 ]] ; then
       # FIXME: this have to be removed when environment isolation is not needed anymore, it's only temporary
       env -i HOME=$HOME \
              OAUTH2_TOKEN=$OAUTH2_TOKEN \
-             PROJECT=$PROJECT \
+             PROJECT=$PROJECT_NAME \
              PROJECT_PATH=$PROJECT_PATH PS1="$PS1" \
-             bash -c "swan_env $PROJECT $STACKS_PATH $PROJECT_PATH  bash --rcfile  <(echo 'PS1=\"($PROJECT) $PS1 \"') " 
+             bash -c "swan_env $PROJECT_PATH $STACKS_PATH $PROJECT_PATH  bash --rcfile  <(echo 'PS1=\"($PROJECT_NAME) $PS1 \"') " 
     else
       echo "Error: project $PROJECT_PATH doesn't exist" >&2
       # JupyterLab closes the terminal window immediately after the process ends

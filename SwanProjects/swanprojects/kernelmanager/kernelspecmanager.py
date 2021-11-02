@@ -11,12 +11,13 @@ import shutil
 
 from jupyter_client.kernelspec import KernelSpecManager, NoSuchKernel
 from swanprojects.config import SwanConfig
-from traitlets import Unicode
 
 
 class SwanKernelSpecManager(KernelSpecManager):
-    path = Unicode("", config=True, allow_none=True,
-                   help="SWAN Project path")
+    """
+    This class allows to wrap the kernels in the specs to run the kernel
+    in multiple environments.
+    """
 
     def __init__(self, **kwargs):
         super(SwanKernelSpecManager, self).__init__(**kwargs)
@@ -25,14 +26,36 @@ class SwanKernelSpecManager(KernelSpecManager):
         self.kernel_dirs = []
         self.swan_config = SwanConfig(config=self.config)
         self.swan_utils = None
+        self.path = ""
 
     def set_swan_utils(self, swan_utils):
+        """
+        Method to set the a SwanUtils class object.
+        The class SwanUtils is instatiated in the SwanAPIHandler because it
+        requires the contents manager and this class requires those methods to get information
+        about the projects.
+
+        Parameters
+        ----------
+        swan_utils : object
+            SwanUtils object required to get projects information.
+
+        """
         self.swan_utils = swan_utils
 
     def save_native_spec(self, kernel_dir, python_path, display_name):
         """
         This function creates a default kernel with the info from the stack.
-        It's necessary for CMSSW stacks and those that don't provide a Python kernel as a JSON file.
+        It's necessary for those stacks that don't provide a Python kernel as a JSON file.
+
+        Parameters
+        ----------
+        kernel_dir : string
+            Path to the folder to save the native kernel.
+        python_path : string
+            Path to the python required for this kernel.
+        display_name : string
+            Name for the kernel.
         """
         self.log.info(
             f"copying resources from {self.swan_config.kernel_resources} to {kernel_dir}")
@@ -51,6 +74,16 @@ class SwanKernelSpecManager(KernelSpecManager):
             spec, indent=4), 'format': 'text'}, kernel_file)
 
     def set_path(self, path):
+        """
+        This method get a path and check if we are inside the project, if so, then
+        the kernel paths for that project is set, otherwise kernel dirs is set to an empty
+        list and the kernel are no available anymore for the system.
+
+        Parameters
+        ----------
+        path : string
+            Path to a folder in the SwanFileBrowser.
+        """
         self.path = path
         self.project = self.swan_utils.get_project_path(path)
         if self.project is None:
@@ -70,7 +103,8 @@ class SwanKernelSpecManager(KernelSpecManager):
                         if not self.swan_utils.contents_manager.dir_exists(kerne_dir):
                             self.save_native_spec(
                                 kerne_dir, self.project_info[python]["path"], "Python " + version)
-                self.kernel_dirs.append(os.path.join(self.swan_utils.contents_manager.root_dir,local_kernels))
+                self.kernel_dirs.append(os.path.join(
+                    self.swan_utils.contents_manager.root_dir, local_kernels))
                 self.log.debug(f"KERNEL DIRS = {self.kernel_dirs}")
                 self.log.debug(f"specs:\n {self.get_all_specs()}")
                 return True
@@ -80,35 +114,53 @@ class SwanKernelSpecManager(KernelSpecManager):
                 self.kernel_dirs = []
                 return False
 
-    def wrap_kernel_specs(self, project_name, kspec):
+    def wrap_kernel_specs(self, project_path, kspec):
+        """
+        Helps to wrap the kernels with an extra command to run the kernel inside the project's environment.
 
+        Parameters
+        ----------
+        project_path : string
+            Peth to a project folder.
+        kspec : dict
+            Kernel spec to wrap
+
+        Returns
+        -------
+        kspec: dict
+            wrapped kernel spec with the required information to run inside the enviroment of the project.
+        """
+        print(f"project = {self.project}")
         argv = self.swan_utils.get_env_isolated()
         argv += ["/bin/bash", "-c", "swan_env {} {} {} ".format(
-            project_name, self.swan_config.stacks_path, ".") + "'" + " ".join(kspec.argv) + "'"
+            os.path.join(
+                self.swan_utils.contents_manager.root_dir, project_path),
+            self.swan_config.stacks_path, ".") + "'" + " ".join(kspec.argv) + "'"
         ]
 
         kspec.argv = argv
         return kspec
 
-    def find_kernel_specs(self, skip_base=True):
-        """ Returns a dict mapping kernel names to resource directories.
-            The update process also adds the resource dir for the SWAN
-            environments.
-        """
-        kspecs = super(SwanKernelSpecManager, self).find_kernel_specs()
-        return kspecs
-
     def get_kernel_spec(self, kernel_name):
         """ Returns a :class:`KernelSpec` instance for the given kernel_name.
             Also, SWAN kernelspecs are generated on the fly
               according to the detected environments.
+
+        Parameters
+        ----------
+        kernel_name : string
+            name of the kernel to check
+        Returns
+        -------
+        kspec: dict
+            Spec for the given kernel_name
         """
         kspec = super(SwanKernelSpecManager, self).get_kernel_spec(kernel_name)
         if self.project is None:
             return kspec
         else:
-            kspec = self.wrap_kernel_specs(self.project_name, kspec)
-            self.log.debug(f"ON get_kernel_spec = {kspec.argv}")
+            kspec = self.wrap_kernel_specs(self.project, kspec)
+            self.log.info(f"ON get_kernel_spec = {kspec.argv}")
 
         return kspec
 
