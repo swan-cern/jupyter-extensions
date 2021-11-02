@@ -10,20 +10,20 @@ import sftIconStr from '../style/sft.svg';
 
 export const swanProjectIcon = new LabIcon({
   name: 'jupyterlab_swan:project',
-  svgstr: swanProjectIconStr
+  svgstr: swanProjectIconStr,
 });
 
 export const swanReadmeIcon = new LabIcon({
   name: 'jupyterlab_swan:reame',
-  svgstr: swanReadmeIconStr
+  svgstr: swanReadmeIconStr,
 });
 
 export const cmsIcon = new LabIcon({
   name: 'jupyterlab_swan:cms',
-  svgstr: cmsIconStr
+  svgstr: cmsIconStr,
 });
 
 export const sftIcon = new LabIcon({
   name: 'jupyterlab_swan:sft',
-  svgstr: sftIconStr
+  svgstr: sftIconStr,
 });

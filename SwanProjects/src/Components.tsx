@@ -22,15 +22,15 @@ export function HelpTooltip(props: {
 }): React.ReactElement<any> {
   return (
     <div className="sw-Component-tooltip">
-        <a data-for={props.id} data-tip={props.message}>
-          ?
-        </a>
-        <ReactTooltip
-          html={true}
-          id={props.id}
-          multiline={true}
-          getContent={(dataTip): string => `${dataTip}`}
-        />
+      <a data-for={props.id} data-tip={props.message}>
+        ?
+      </a>
+      <ReactTooltip
+        html={true}
+        id={props.id}
+        multiline={true}
+        getContent={(dataTip): string => `${dataTip}`}
+      />
     </div>
   );
 }
@@ -70,7 +70,7 @@ export function Card(props: {
       style={{
         height: '75px',
         width: '75px',
-        border: props.isSelected ? '2px solid var(--jp-brand-color1)' : ''
+        border: props.isSelected ? '2px solid var(--jp-brand-color1)' : '',
       }}
       className="jp-LauncherCard"
       id={props.label}

@@ -46,7 +46,7 @@ export async function request<T>(
 export function contentRequest(cwd: string): any {
   try {
     return request<any>('api/contents/' + cwd, {
-      method: 'GET'
+      method: 'GET',
     });
   } catch (reason) {
     const msg = `Error on GET 'api/contents'+ ${cwd}.\n${reason}`;
@@ -61,17 +61,10 @@ export function contentRequest(cwd: string): any {
  * @returns  json object with the keys 'project_dir' and 'msg' or json object with the information of the error.
  */
 export function createProjectRequest(options: ProjectDialog.ISWANOptions): any {
-  const dataToSend = {
-    name: options.name,
-    stack: options.stack,
-    release: options.release,
-    platform: options.platform,
-    user_script: options.user_script
-  };
   try {
     return request<any>('swan/project/create', {
-      body: JSON.stringify(dataToSend),
-      method: 'POST'
+      body: JSON.stringify(options),
+      method: 'POST',
     });
   } catch (reason) {
     const msg = `Error on POST /swan/project/create ${options}.\n${reason}`;
@@ -96,17 +89,12 @@ export function editProjectRequest(
     old_release: old_options.release,
     old_platform: old_options.platform,
     old_userscript: old_options.user_script,
-    name: options.name,
-    stack: options.stack,
-    release: options.release,
-    platform: options.platform,
-    user_script: options.user_script,
-    corrupted: options.corrupted
+    ...options,
   };
   try {
     return request<any>('swan/project/edit', {
       body: JSON.stringify(dataToSend),
-      method: 'PUT'
+      method: 'PUT',
     });
   } catch (reason) {
     const msg = `Error on PUT swan/project/edit ${options}.\n${reason}`;
@@ -122,7 +110,7 @@ export function editProjectRequest(
 export function kernelsInfoRequest(): any {
   try {
     return request<any>('swan/stacks/info', {
-      method: 'GET'
+      method: 'GET',
     });
   } catch (reason) {
     console.error(`Error on GET 'swan/stacks/info'.\n${reason}`);

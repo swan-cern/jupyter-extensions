@@ -15,7 +15,7 @@ import { showDialog } from './dialog';
 import {
   contentRequest,
   createProjectRequest,
-  editProjectRequest
+  editProjectRequest,
 } from './request';
 import { Spinner } from '@jupyterlab/apputils';
 import { CommandRegistry } from '@lumino/commands';
@@ -23,10 +23,15 @@ import { CommandRegistry } from '@lumino/commands';
  * Namespace for project dialogs
  */
 export namespace ProjectDialog {
-  export interface ISWANStackNodeOptions{
-    releases:{ [release: string]: Array<string> },
-    logo:string
+  export interface ISWANStackNodeOptions {
+    releases: { [release: string]: Array<string> };
+    logo: string;
   }
+
+  export interface ISWANStackOptions {
+    stacks_options?: { [stack: string]: ISWANStackNodeOptions };
+  }
+
   export interface ISWANOptions {
     name?: string;
     stack?: string;
@@ -34,7 +39,6 @@ export namespace ProjectDialog {
     platform?: string;
     user_script?: string;
     corrupted?: boolean;
-    stacks_options?: { [stack: string]: ISWANStackNodeOptions };
   }
 
   /**
@@ -58,6 +62,7 @@ export namespace ProjectDialog {
   // eslint-disable-next-line  no-inner-declarations
   export async function OpenModal(
     options: ISWANOptions,
+    stacks: ISWANStackOptions,
     create: boolean,
     commands: CommandRegistry,
     theme: 'light' | 'dark'
@@ -90,10 +95,13 @@ export namespace ProjectDialog {
       newOptions?: ISWANOptions;
     } | null = null;
     do {
-      dialogResult = await showDialog({
-        ...options,
-        theme
-      });
+      dialogResult = await showDialog(
+        {
+          ...options,
+          theme,
+        },
+        { ...stacks }
+      );
       if (dialogResult?.changesSaved && dialogResult?.newOptions) {
         options = dialogResult.newOptions;
         if (options.name?.trim() !== '') {
@@ -102,7 +110,7 @@ export namespace ProjectDialog {
             const content = await contentRequest(
               'SWAN_projects/' + options.name
             ).catch((): void => {
-             // No message here, it is not needed,
+              // No message here, it is not needed,
               //I am checking if the directory doesn't exist in order
               //to make valid the creation of the project folder.
             });
@@ -169,7 +177,7 @@ export namespace ProjectDialog {
             if (res.status) {
               commands.execute('filebrowser:go-to-path', {
                 path: res.project_dir,
-                showBrowser: false
+                showBrowser: false,
               });
             } else {
               stopSpinner();
@@ -185,7 +193,7 @@ export namespace ProjectDialog {
         await commands
           .execute('filebrowser:go-to-path', {
             path: '/SWAN_projects',
-            showBrowser: false
+            showBrowser: false,
           })
           .then(async () => {
             await editProjectRequest(old_options, options)
@@ -194,7 +202,7 @@ export namespace ProjectDialog {
                   await commands
                     .execute('filebrowser:go-to-path', {
                       path: res.project_dir,
-                      showBrowser: false
+                      showBrowser: false,
                     })
                     .catch((msg: any) => {
                       stopSpinner();

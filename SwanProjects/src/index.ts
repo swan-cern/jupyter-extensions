@@ -3,7 +3,7 @@
 
 import {
   JupyterFrontEnd,
-  JupyterFrontEndPlugin
+  JupyterFrontEndPlugin,
 } from '@jupyterlab/application';
 
 import { ICommandPalette, IThemeManager } from '@jupyterlab/apputils';
@@ -65,7 +65,7 @@ const extension: JupyterFrontEndPlugin<void> = {
       icon: swanProjectIcon,
       label: 'New Project',
       caption: 'New Project',
-      execute: async args => {
+      execute: async (args) => {
         const stacks = await kernelsInfoRequest();
         ProjectDialog.OpenModal(
           {
@@ -74,20 +74,22 @@ const extension: JupyterFrontEndPlugin<void> = {
             release: '',
             platform: '',
             user_script: '',
-            stacks_options: stacks['stacks']
+          },
+          {
+            stacks_options: stacks['stacks'],
           },
           true,
           commands,
           theme
         );
-      }
+      },
     });
 
     commands.addCommand(CommandIDs.projectDialogEdit, {
       icon: swanProjectIcon,
       label: 'Edit',
       caption: 'Edit',
-      execute: async args => {
+      execute: async (args) => {
         const stacks = await kernelsInfoRequest();
         ProjectDialog.OpenModal(
           {
@@ -96,14 +98,16 @@ const extension: JupyterFrontEndPlugin<void> = {
             release: args.release as string,
             platform: args.platform as string,
             user_script: args.user_script as string,
+            corrupted: args.corrupted as boolean,
+          },
+          {
             stacks_options: stacks['stacks'],
-            corrupted: args.corrupted as boolean
           },
           false,
           commands,
           theme
         );
-      }
+      },
     });
 
     // Add the command to the launcher
@@ -112,7 +116,7 @@ const extension: JupyterFrontEndPlugin<void> = {
         command: CommandIDs.projectDialog,
         category: PALETTE_CATEGORY,
         rank: 1,
-        kernelIconUrl: ''
+        kernelIconUrl: '',
       });
     }
 
@@ -121,20 +125,25 @@ const extension: JupyterFrontEndPlugin<void> = {
       palette.addItem({
         command: CommandIDs.projectDialog,
         args: { isPalette: true },
-        category: PALETTE_CATEGORY
+        category: PALETTE_CATEGORY,
       });
     }
+
+    // Add the command to context menu in the file browser,
+    // when you press right click a entry in the menu is available
+    // to create a new project.
     const command = CommandIDs.projectDialog;
     app.contextMenu.addItem({
       command: command,
       rank: 0,
-      selector: '.jp-DirListing-content'
+      selector: '.jp-DirListing-content',
     });
 
+    // Add the command to the main menu, when you click File->New->New Project
     if (mainMenu) {
       mainMenu.fileMenu.newMenu.addGroup([{ command: command }], 0);
     }
-  }
+  },
 };
 
 export default extension;

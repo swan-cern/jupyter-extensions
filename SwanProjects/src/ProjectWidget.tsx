@@ -3,7 +3,7 @@
 
 /**
  * This is the file with the React widget that has the components and callbacks
- * to capture the information for the project, such as name, stack, release, platform and bash user script. 
+ * to capture the information for the project, such as name, stack, release, platform and bash user script.
  */
 
 import React from 'react';
@@ -21,54 +21,61 @@ import { LabIcon } from '@jupyterlab/ui-components';
 
 import { ProjectDialog } from './ProjectDialog';
 
-
 /**
  * Functio to create the widget required for the modal dialog, it is basically a form,
  * also it has the callbacks to handle the events.
  *
  * @param options - The dialog setup options.
+ * @param stacks - Available stack options.
  * @param onSubmit - callback to execute on submit action
  * @param onCancel - callback to execute on cancel action.
  * @returns the DOM element with the form.
  */
 export const ProjectWidget: React.FunctionComponent<{
   options: ProjectDialog.ISWANOptions;
+  stacks: ProjectDialog.ISWANStackOptions;
   onSubmit: (selectedOptions: ProjectDialog.ISWANOptions) => void;
   onCancel: () => void;
-}> = props => {
+}> = (props) => {
   const options = props.options;
+  const stacks = props.stacks;
   const [projectName, setProjectName] = React.useState(options.name || '');
 
-  const availableStacks = Object.keys(options.stacks_options).filter(function(e) { return e !== 'path' });
+  const availableStacks = Object.keys(stacks.stacks_options).filter((e) => {
+    return e !== "path";
+  });
   const defaultStack = availableStacks.includes(options.stack)
     ? options.stack
     : availableStacks[0];
   const [stack, setStack] = React.useState(defaultStack);
 
-  const availableReleases = Object.keys(options.stacks_options[stack]['releases']);
+  const availableReleases = Object.keys(
+    stacks.stacks_options[stack]['releases']
+  );
   const defaultRelease = availableReleases.includes(options.release)
     ? options.release
     : availableReleases[0];
   const [release, setRelease] = React.useState(defaultRelease);
 
-  const availablePlatforms = options.stacks_options[stack]['releases'][release];
+  const availablePlatforms = stacks.stacks_options[stack]['releases'][release];
   const defaultPlatform = availablePlatforms.includes(options.platform)
     ? options.platform
     : availablePlatforms[0];
   const [platform, setPlatform] = React.useState(defaultPlatform);
 
   const [userScript, setUserScript] = React.useState(options.user_script || '');
-  var stack_icons:{ [item: string]: LabIcon} = {}
+  const stack_icons: { [item: string]: LabIcon } = {};
 
   const randomId = () => {
-    return Math.random().toString(36).substring(2, 15)
+    return Math.random().toString(36).substring(2, 15);
   };
 
-  availableStacks.map(item => {
+  availableStacks.map((item) => {
     stack_icons[item] = new LabIcon({
-    name: 'jupyterlab_swan_stack:'+randomId(),
-    svgstr: options.stacks_options[item]['logo']
-  })})
+      name: 'jupyterlab_swan_stack:' + randomId(),
+      svgstr: stacks.stacks_options[item]['logo'],
+    });
+  });
 
   const onClickSubmit = () => {
     props.onSubmit({
@@ -77,8 +84,7 @@ export const ProjectWidget: React.FunctionComponent<{
       release,
       platform,
       user_script: userScript,
-      stacks_options: options.stacks_options,
-      corrupted: options.corrupted
+      corrupted: options.corrupted,
     });
   };
 
@@ -92,16 +98,19 @@ export const ProjectWidget: React.FunctionComponent<{
 
   const onChangeStack = (newStack: string) => {
     setStack(newStack);
-    const newRelease = Object.keys(options.stacks_options[newStack]['releases'])[0];
+    const newRelease = Object.keys(
+      stacks.stacks_options[newStack]['releases']
+    )[0];
     setRelease(newRelease);
-    const newPlatform = options.stacks_options[newStack]['releases'][newRelease][0];
+    const newPlatform =
+      stacks.stacks_options[newStack]['releases'][newRelease][0];
     setPlatform(newPlatform);
   };
 
   const onChangeRelease = (event: React.ChangeEvent<{ value: unknown }>) => {
     const newRelease = event.target.value as string;
     setRelease(newRelease);
-    const newPlatform = options.stacks_options[stack]['releases'][newRelease][0];
+    const newPlatform = stacks.stacks_options[stack]['releases'][newRelease][0];
     setPlatform(newPlatform);
   };
 
@@ -130,15 +139,15 @@ export const ProjectWidget: React.FunctionComponent<{
         />
       </div>
       <div className="sw-Dialog-select-stack">
-      {availableStacks.map(item => (
-       <Card
-        key={item}
-        label={item}
-        icon={stack_icons[item]}
-        updateCallback={() => onChangeStack(item)}
-        isSelected={stack === item}
-       />
-      ))}
+        {availableStacks.map((item) => (
+          <Card
+            key={item}
+            label={item}
+            icon={stack_icons[item]}
+            updateCallback={() => onChangeStack(item)}
+            isSelected={stack === item}
+          />
+        ))}
       </div>
       <div className="sw-Dialog-stack-options">
         <div>
