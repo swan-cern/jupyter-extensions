@@ -130,7 +130,6 @@ class SwanKernelSpecManager(KernelSpecManager):
         kspec: dict
             wrapped kernel spec with the required information to run inside the enviroment of the project.
         """
-        print(f"project = {self.project}")
         argv = self.swan_utils.get_env_isolated()
         argv += ["/bin/bash", "-c", "swan_env {} {} {} ".format(
             os.path.join(

@@ -89,6 +89,32 @@ export namespace ProjectDialog {
       _spinner.hide();
     }
 
+    /**
+     * Check if the name of the project is valid,
+     * to create a new one or when you want to edit the name.
+     */
+    async function isValidProjectName(project_name: string): Promise<boolean> {
+      let valid = false;
+      try {
+        // FIXME: requires full path to the project when porject can be anywhere
+        const content = await contentRequest('SWAN_projects/' + options.name);
+        if (content === undefined) {
+          valid = true;
+        }
+      } catch (error) {
+        // No message here, it is not needed,
+        //I am checking if the directory doesn't exist in order
+        //to make valid the creation of the project folder.
+      }
+      if (!valid) {
+        await showErrorMessage(
+          'Invalid project name',
+          'File or directory already exists with the same name.'
+        );
+      }
+      return valid;
+    }
+
     let valid = false;
     let dialogResult: {
       changesSaved: boolean;
@@ -107,44 +133,15 @@ export namespace ProjectDialog {
         if (options.name?.trim() !== '') {
           //check if project already exists
           if (isNewProject) {
-            const content = await contentRequest(
-              'SWAN_projects/' + options.name
-            ).catch((): void => {
-              // No message here, it is not needed,
-              //I am checking if the directory doesn't exist in order
-              //to make valid the creation of the project folder.
-            });
-            if (content === undefined) {
-              valid = true;
-            } else {
-              await showErrorMessage(
-                'Invalid project name',
-                'Project already exists.'
-              );
-              valid = false;
-            }
+            valid = await isValidProjectName(options.name);
           } else {
             //this is a special case for editing because I need to check that the new name of the project doesn't exists.
             if (old_options.name !== options.name) {
-              const content = await contentRequest(
-                'SWAN_projects/' + options.name
-              ).catch(() => {
-                // No message here, it is not needed,
-                //I am checking if the directory doesn't exist in order
-                //to make valid the edition of the name of the project folder.
-              });
-              if (content === undefined) {
-                valid = true; //folder doesn't exists, then I can to raname the project.
-              } else {
-                await showErrorMessage(
-                  'Invalid project name',
-                  'Project already exists.'
-                );
-                valid = false;
+              valid = await isValidProjectName(options.name);
+              if (!valid) {
                 continue;
               }
             }
-
             if (options.corrupted) {
               valid = true;
               break;
@@ -157,7 +154,6 @@ export namespace ProjectDialog {
             }
           }
         }
-
         if (options.name?.trim() === '') {
           await showErrorMessage(
             'Invalid project name',
