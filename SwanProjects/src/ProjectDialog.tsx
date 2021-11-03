@@ -54,7 +54,7 @@ export namespace ProjectDialog {
    * Create and show a modal dialog to create or modify projects.
    *
    * @param options - The dialog setup options.
-   * @param create - true for a new project, false to modify.
+   * @param isNewProject - true for a new project, false to modify.
    * @param commands - CommandRegistry object
    * @param theme - colors in the interface 'light' | 'dark'.
    * @returns A promise that resolves with the dialog results
@@ -63,7 +63,7 @@ export namespace ProjectDialog {
   export async function OpenModal(
     options: ISWANOptions,
     stacks: ISWANStackOptions,
-    create: boolean,
+    isNewProject: boolean,
     commands: CommandRegistry,
     theme: 'light' | 'dark'
   ): Promise<any> {
@@ -106,7 +106,7 @@ export namespace ProjectDialog {
         options = dialogResult.newOptions;
         if (options.name?.trim() !== '') {
           //check if project already exists
-          if (create) {
+          if (isNewProject) {
             const content = await contentRequest(
               'SWAN_projects/' + options.name
             ).catch((): void => {
@@ -171,7 +171,7 @@ export namespace ProjectDialog {
     } while (!valid);
     if (dialogResult.changesSaved) {
       startSpinner();
-      if (create) {
+      if (isNewProject) {
         await createProjectRequest(options)
           .then((res: ISWANReqResponse) => {
             if (res.status) {

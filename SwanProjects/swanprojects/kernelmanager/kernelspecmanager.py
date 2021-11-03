@@ -160,7 +160,7 @@ class SwanKernelSpecManager(KernelSpecManager):
             return kspec
         else:
             kspec = self.wrap_kernel_specs(self.project, kspec)
-            self.log.info(f"ON get_kernel_spec = {kspec.argv}")
+            self.log.debug(f"ON get_kernel_spec = {kspec.argv}")
 
         return kspec
 
