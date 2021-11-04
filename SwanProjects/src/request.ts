@@ -49,8 +49,10 @@ export function contentRequest(cwd: string): any {
       method: 'GET',
     });
   } catch (reason) {
-    const msg = `Error on GET 'api/contents'+ ${cwd}.\n${reason}`;
-    return { status: 'error', reason: reason, param: cwd, msg: msg };
+    const msg = `Error gettig information for ${cwd}`;
+    const req = { status: false, reason: reason, param: cwd, msg: msg };
+    console.log(req);
+    return req;
   }
 }
 
@@ -67,8 +69,10 @@ export function createProjectRequest(options: ProjectDialog.ISWANOptions): any {
       method: 'POST',
     });
   } catch (reason) {
-    const msg = `Error on POST /swan/project/create ${options}.\n${reason}`;
-    return { status: 'error', reason: reason, param: options, msg: msg };
+    const msg = "It was not possible to create the project.";
+    const req = { status: false, reason: reason, param: options, msg: msg };
+    console.log(req);
+    return req;
   }
 }
 
@@ -97,8 +101,10 @@ export function editProjectRequest(
       method: 'PUT',
     });
   } catch (reason) {
-    const msg = `Error on PUT swan/project/edit ${options}.\n${reason}`;
-    return { status: 'error', reason: reason, param: options, msg: msg };
+    const msg = "It was not possible to edit the project.";
+    const req = { status: false, reason: reason, param: options, msg: msg };
+    console.log(req);
+    return req;
   }
 }
 

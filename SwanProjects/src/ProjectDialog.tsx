@@ -132,7 +132,6 @@ export namespace ProjectDialog {
           //check if project already exists
           if (isNewProject) {
             valid = await isValidProjectName(options.name);
-            console.log(valid);
           } else {
             //this is a special case for editing because I need to check that the new name of the project doesn't exists.
             if (old_options.name !== options.name) {
