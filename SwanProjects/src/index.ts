@@ -6,7 +6,11 @@ import {
   JupyterFrontEndPlugin,
 } from '@jupyterlab/application';
 
-import { ICommandPalette, IThemeManager } from '@jupyterlab/apputils';
+import {
+  ICommandPalette,
+  IThemeManager,
+  showErrorMessage,
+} from '@jupyterlab/apputils';
 import { swanProjectIcon } from './icons';
 
 const PALETTE_CATEGORY = 'Project';
@@ -67,6 +71,10 @@ const extension: JupyterFrontEndPlugin<void> = {
       caption: 'New Project',
       execute: async (args) => {
         const stacks = await kernelsInfoRequest();
+        if (!stacks.status) {
+          showErrorMessage("Error getting stacks information: ", stacks.msg);
+          return;
+        }
         ProjectDialog.OpenModal(
           {
             name: '',
@@ -76,7 +84,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             user_script: '',
           },
           {
-            stacks_options: stacks['stacks'],
+            stacks_options: stacks['content']['stacks'],
           },
           true,
           commands,
@@ -91,6 +99,10 @@ const extension: JupyterFrontEndPlugin<void> = {
       caption: 'Edit',
       execute: async (args) => {
         const stacks = await kernelsInfoRequest();
+        if (!stacks.status) {
+          showErrorMessage("Error getting stacks information: ", stacks.msg);
+          return;
+        }
         ProjectDialog.OpenModal(
           {
             name: args.name as string,
@@ -101,7 +113,7 @@ const extension: JupyterFrontEndPlugin<void> = {
             corrupted: args.corrupted as boolean,
           },
           {
-            stacks_options: stacks['stacks'],
+            stacks_options: stacks['content']['stacks'],
           },
           false,
           commands,

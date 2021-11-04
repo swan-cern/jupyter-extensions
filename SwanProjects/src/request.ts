@@ -107,12 +107,16 @@ export function editProjectRequest(
  *
  * @returns json with the software stack names, releases, platform, etc..
  */
-export function kernelsInfoRequest(): any {
+export async function kernelsInfoRequest(): Promise<any> {
   try {
-    return request<any>('swan/stacks/info', {
+    const content = await request<any>('swan/stacks/info', {
       method: 'GET',
     });
+    return { status: true, content: content };
   } catch (reason) {
-    console.error(`Error on GET 'swan/stacks/info'.\n${reason}`);
+    const msg = "It was not possible to obtain the information of the stacks.";
+    const req = { status: false, reason: reason, param: {}, msg: msg };
+    console.log(req);
+    return req;
   }
 }

@@ -94,25 +94,23 @@ export namespace ProjectDialog {
      * to create a new one or when you want to edit the name.
      */
     async function isValidProjectName(project_name: string): Promise<boolean> {
-      let valid = false;
+      let content = undefined;
       try {
         // FIXME: requires full path to the project when porject can be anywhere
-        const content = await contentRequest('SWAN_projects/' + options.name);
-        if (content === undefined) {
-          valid = true;
-        }
+        content = await contentRequest('SWAN_projects/' + project_name);
       } catch (error) {
         // No message here, it is not needed,
         //I am checking if the directory doesn't exist in order
         //to make valid the creation of the project folder.
       }
-      if (!valid) {
-        await showErrorMessage(
-          'Invalid project name',
-          'File or directory already exists with the same name.'
-        );
+      if (content === undefined) {
+        return true;
       }
-      return valid;
+      await showErrorMessage(
+        'Invalid project name',
+        'File or directory already exists with the same name.'
+      );
+      return false;
     }
 
     let valid = false;
@@ -134,6 +132,7 @@ export namespace ProjectDialog {
           //check if project already exists
           if (isNewProject) {
             valid = await isValidProjectName(options.name);
+            console.log(valid);
           } else {
             //this is a special case for editing because I need to check that the new name of the project doesn't exists.
             if (old_options.name !== options.name) {
@@ -202,9 +201,7 @@ export namespace ProjectDialog {
                     })
                     .catch((msg: any) => {
                       stopSpinner();
-                      console.log(
-                        'Error moving from edited project  ' + old_options.name
-                      );
+                      console.log('Error opening project  ' + old_options.name);
                       console.log(msg);
                     });
                 } else {
