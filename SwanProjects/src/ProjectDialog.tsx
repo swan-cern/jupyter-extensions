@@ -12,11 +12,7 @@
 
 import { showErrorMessage } from '@jupyterlab/apputils';
 import { showDialog } from './dialog';
-import {
-  contentRequest,
-  createProjectRequest,
-  editProjectRequest,
-} from './request';
+import { createProjectRequest, editProjectRequest } from './request';
 import { Spinner } from '@jupyterlab/apputils';
 import { CommandRegistry } from '@lumino/commands';
 /**
@@ -89,80 +85,20 @@ export namespace ProjectDialog {
       _spinner.hide();
     }
 
-    /**
-     * Check if the name of the project is valid,
-     * to create a new one or when you want to edit the name.
-     */
-    async function isValidProjectName(project_name: string): Promise<boolean> {
-      let content = undefined;
-      try {
-        // FIXME: requires full path to the project when porject can be anywhere
-        content = await contentRequest('SWAN_projects/' + project_name);
-      } catch (error) {
-        // No message here, it is not needed,
-        //I am checking if the directory doesn't exist in order
-        //to make valid the creation of the project folder.
-      }
-      if (content === undefined) {
-        return true;
-      }
-      await showErrorMessage(
-        'Invalid project name',
-        'File or directory already exists with the same name.'
-      );
-      return false;
-    }
-
-    let valid = false;
     let dialogResult: {
       changesSaved: boolean;
       newOptions?: ISWANOptions;
     } | null = null;
-    do {
-      dialogResult = await showDialog(
-        {
-          ...options,
-          theme,
-        },
-        { ...stacks }
-      );
-      if (dialogResult?.changesSaved && dialogResult?.newOptions) {
-        options = dialogResult.newOptions;
-        if (options.name?.trim() !== '') {
-          //check if project already exists
-          if (isNewProject) {
-            valid = await isValidProjectName(options.name);
-          } else {
-            //this is a special case for editing because I need to check that the new name of the project doesn't exists.
-            if (old_options.name !== options.name) {
-              valid = await isValidProjectName(options.name);
-              if (!valid) {
-                continue;
-              }
-            }
-            if (options.corrupted) {
-              valid = true;
-              break;
-            }
-            // verifying that options changed, otherwise I will not send the request
-            if (JSON.stringify(old_options) !== JSON.stringify(options)) {
-              valid = true;
-            } else {
-              valid = false;
-            }
-          }
-        }
-        if (options.name?.trim() === '') {
-          await showErrorMessage(
-            'Invalid project name',
-            'Select a valid (non-empty) project name.'
-          );
-          valid = false;
-        }
-      } else {
-        valid = true;
-      }
-    } while (!valid);
+    dialogResult = await showDialog(
+      {
+        ...options,
+        theme,
+      },
+      { ...stacks }
+    );
+    if (dialogResult?.changesSaved && dialogResult?.newOptions) {
+      options = dialogResult.newOptions;
+    }
     if (dialogResult.changesSaved) {
       startSpinner();
       if (isNewProject) {

@@ -21,6 +21,8 @@ import { LabIcon } from '@jupyterlab/ui-components';
 
 import { ProjectDialog } from './ProjectDialog';
 
+import { contentRequest } from './request';
+
 /**
  * Functio to create the widget required for the modal dialog, it is basically a form,
  * also it has the callbacks to handle the events.
@@ -40,6 +42,7 @@ export const ProjectWidget: React.FunctionComponent<{
   const options = props.options;
   const stacks = props.stacks;
   const [projectName, setProjectName] = React.useState(options.name || '');
+  const [helperText, setHelperText] = React.useState('');
 
   const availableStacks = Object.keys(stacks.stacks_options).filter((e) => {
     return e !== "path";
@@ -77,14 +80,41 @@ export const ProjectWidget: React.FunctionComponent<{
     });
   });
 
+  async function checkProjectName(project_name: string): Promise<boolean> {
+    let content = undefined;
+    try {
+      // FIXME: requires full path to the project when porject can be anywhere
+      content = await contentRequest('SWAN_projects/' + project_name);
+    } catch (error) {
+      // No message here, it is not needed,
+      //I am checking if the directory doesn't exist in order
+      //to make valid the creation of the project folder.
+    }
+    if (content === undefined) {
+      return true;
+    }
+    return false;
+  }
+
   const onClickSubmit = () => {
-    props.onSubmit({
-      name: projectName,
-      stack,
-      release,
-      platform,
-      user_script: userScript,
-      corrupted: options.corrupted,
+    if (projectName.trim() === '') {
+      setHelperText('Select a valid (non-empty) project name.');
+      return;
+    }
+    checkProjectName(projectName).then((valid: boolean) => {
+      if (valid) {
+        props.onSubmit({
+          name: projectName,
+          stack,
+          release,
+          platform,
+          user_script: userScript,
+          corrupted: options.corrupted,
+        });
+      } else {
+        setHelperText('File or directory already exists with the same name.');
+        return;
+      }
     });
   };
 
@@ -129,6 +159,7 @@ export const ProjectWidget: React.FunctionComponent<{
       <div className="sw-Dialog-project-name">
         <swanProjectIcon.react className="sw-Dialog-project-icon" tag="span" />
         <TextField
+          helperText={helperText}
           label="Project Name"
           variant="outlined"
           onChange={onChangeProjectName}
