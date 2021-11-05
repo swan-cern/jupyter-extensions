@@ -42,7 +42,7 @@ export const ProjectWidget: React.FunctionComponent<{
   const options = props.options;
   const stacks = props.stacks;
   const [projectName, setProjectName] = React.useState(options.name || '');
-  const [helperText, setHelperText] = React.useState('');
+  const [helperText, setHelperText] = React.useState({helperText:'',error:false});
 
   const availableStacks = Object.keys(stacks.stacks_options).filter((e) => {
     return e !== "path";
@@ -98,7 +98,7 @@ export const ProjectWidget: React.FunctionComponent<{
 
   const onClickSubmit = () => {
     if (projectName.trim() === '') {
-      setHelperText('Select a valid (non-empty) project name.');
+      setHelperText({helperText:'Select a valid (non-empty) project name.', error:true});
       return;
     }
     checkProjectName(projectName).then((valid: boolean) => {
@@ -112,7 +112,7 @@ export const ProjectWidget: React.FunctionComponent<{
           corrupted: options.corrupted,
         });
       } else {
-        setHelperText('File or directory already exists with the same name.');
+        setHelperText({helperText:'File or directory already exists with the same name.', error:true});
         return;
       }
     });
@@ -159,7 +159,7 @@ export const ProjectWidget: React.FunctionComponent<{
       <div className="sw-Dialog-project-name">
         <swanProjectIcon.react className="sw-Dialog-project-icon" tag="span" />
         <TextField
-          helperText={helperText}
+          {...helperText}
           label="Project Name"
           variant="outlined"
           onChange={onChangeProjectName}

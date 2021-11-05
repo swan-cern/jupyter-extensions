@@ -30,6 +30,10 @@
   width: 39px;
 }
 
+.sw-Dialog-project-icon {
+  align-self: flex-start;
+}
+
 .sw-Dialog-project-name {
   display: flex;
   align-items: center;
