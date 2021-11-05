@@ -85,6 +85,46 @@ export namespace ProjectDialog {
       _spinner.hide();
     }
 
+    async function editProject(
+      old_options: ISWANOptions,
+      options: ISWANOptions
+    ): Promise<void> {
+      await editProjectRequest(old_options, options)
+        .then(async (res: ISWANReqResponse) => {
+          if (res.status) {
+            await commands
+              .execute('filebrowser:go-to-path', {
+                path: res.project_dir,
+                showBrowser: false,
+              })
+              .catch((msg: any) => {
+                stopSpinner();
+                showErrorMessage(
+                  'Error opening project: ' + old_options.name,
+                  'It is not prossible go to the edited project folder.'
+                );
+                console.log(msg);
+              });
+          } else {
+            stopSpinner();
+            showErrorMessage(
+              'Error editing project: ' + old_options.name,
+              'Internal error editing the project.'
+            );
+            console.log(res);
+          }
+          return res;
+        })
+        .catch((msg: any) => {
+          stopSpinner();
+          showErrorMessage(
+            'Error editing project' + old_options.name,
+            'Request to edit the project failed.'
+          );
+          console.log(msg);
+        });
+    }
+
     let dialogResult: {
       changesSaved: boolean;
       newOptions?: ISWANOptions;
@@ -111,54 +151,44 @@ export namespace ProjectDialog {
               });
             } else {
               stopSpinner();
-              showErrorMessage('Error creating project', res.msg);
+              showErrorMessage(
+                'Error creating project: ' + options.name,
+                'Internal error creating the project.'
+              );
+              console.log(res);
             }
             return res;
           })
           .catch((msg: any): void => {
             stopSpinner();
-            showErrorMessage('Error creating project', msg);
-          });
-      } else {
-        await commands
-          .execute('filebrowser:go-to-path', {
-            path: '/SWAN_projects',
-            showBrowser: false,
-          })
-          .then(async () => {
-            await editProjectRequest(old_options, options)
-              .then(async (res: ISWANReqResponse) => {
-                if (res.status) {
-                  await commands
-                    .execute('filebrowser:go-to-path', {
-                      path: res.project_dir,
-                      showBrowser: false,
-                    })
-                    .catch((msg: any) => {
-                      stopSpinner();
-                      console.log('Error opening project  ' + old_options.name);
-                      console.log(msg);
-                    });
-                } else {
-                  stopSpinner();
-                  showErrorMessage('Error editing project', res.msg);
-                }
-                return res;
-              })
-              .catch((msg: any) => {
-                stopSpinner();
-                console.log('Error editing project: ' + old_options.name);
-                console.log(msg);
-              });
-          })
-          .catch((msg: any) => {
-            stopSpinner();
-            console.log(
-              'Error moving to /SWAN_projects to edit the project: ' +
-                old_options.name
+            showErrorMessage(
+              'Error creating project',
+              'Request to create the project failed.'
             );
             console.log(msg);
           });
+      } else {
+        if (old_options.name != options.name) {
+          await commands
+            .execute('filebrowser:go-to-path', {
+              path: '/SWAN_projects',
+              showBrowser: false,
+            })
+            .then(async () => {
+              await editProject(old_options, options);
+            })
+            .catch((msg: any) => {
+              stopSpinner();
+              showErrorMessage(
+                'Error moving to /SWAN_projects to edit the project: ' +
+                  old_options.name,
+                msg
+              );
+              console.log(msg);
+            });
+        } else {
+          await editProject(old_options, options);
+        }
       }
       stopSpinner();
     }

@@ -42,7 +42,10 @@ export const ProjectWidget: React.FunctionComponent<{
   const options = props.options;
   const stacks = props.stacks;
   const [projectName, setProjectName] = React.useState(options.name || '');
-  const [helperText, setHelperText] = React.useState({helperText:'',error:false});
+  const [helperText, setHelperText] = React.useState({
+    helperText: '',
+    error: false,
+  });
 
   const availableStacks = Object.keys(stacks.stacks_options).filter((e) => {
     return e !== "path";
@@ -98,24 +101,41 @@ export const ProjectWidget: React.FunctionComponent<{
 
   const onClickSubmit = () => {
     if (projectName.trim() === '') {
-      setHelperText({helperText:'Select a valid (non-empty) project name.', error:true});
+      setHelperText({
+        helperText: 'Select a valid (non-empty) project name.',
+        error: true,
+      });
       return;
     }
-    checkProjectName(projectName).then((valid: boolean) => {
-      if (valid) {
-        props.onSubmit({
-          name: projectName,
-          stack,
-          release,
-          platform,
-          user_script: userScript,
-          corrupted: options.corrupted,
-        });
-      } else {
-        setHelperText({helperText:'File or directory already exists with the same name.', error:true});
-        return;
-      }
-    });
+    if (projectName != options.name) {
+      checkProjectName(projectName).then((valid: boolean) => {
+        if (valid) {
+          props.onSubmit({
+            name: projectName,
+            stack,
+            release,
+            platform,
+            user_script: userScript,
+            corrupted: options.corrupted,
+          });
+        } else {
+          setHelperText({
+            helperText: 'File or directory already exists with the same name.',
+            error: true,
+          });
+          return;
+        }
+      });
+    } else {
+      props.onSubmit({
+        name: projectName,
+        stack,
+        release,
+        platform,
+        user_script: userScript,
+        corrupted: options.corrupted,
+      });
+    }
   };
 
   const onClickCancel = () => {
