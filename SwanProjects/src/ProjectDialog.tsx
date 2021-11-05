@@ -129,13 +129,7 @@ export namespace ProjectDialog {
       changesSaved: boolean;
       newOptions?: ISWANOptions;
     } | null = null;
-    dialogResult = await showDialog(
-      {
-        ...options,
-        theme,
-      },
-      { ...stacks }
-    );
+    dialogResult = await showDialog(options, theme, stacks);
     if (dialogResult?.changesSaved && dialogResult?.newOptions) {
       options = dialogResult.newOptions;
     }

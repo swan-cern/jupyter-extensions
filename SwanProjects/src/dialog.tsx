@@ -29,7 +29,8 @@ import { ProjectDialog } from './ProjectDialog';
  */
 
 export async function showDialog(
-  options: ProjectDialog.ISWANOptions & { theme: 'light' | 'dark' },
+  options: ProjectDialog.ISWANOptions,
+  theme: 'light' | 'dark',
   stacks: ProjectDialog.ISWANStackOptions
 ): Promise<{
   changesSaved: boolean;
@@ -37,7 +38,7 @@ export async function showDialog(
 }> {
   return new Promise((resolve) => {
     const widget = ReactWidget.create(
-      <ThemeProvider theme={options.theme || 'light'}>
+      <ThemeProvider theme={theme || 'light'}>
         <Dialog open fullWidth maxWidth="sm">
           <DialogContent>
             <ProjectWidget

@@ -100,6 +100,15 @@ export const ProjectWidget: React.FunctionComponent<{
   }
 
   const onClickSubmit = () => {
+    const selectedOptions: ProjectDialog.ISWANOptions = {
+      name: projectName,
+      stack,
+      release,
+      platform,
+      user_script: userScript,
+      corrupted: options.corrupted,
+    };
+    // validating is not an empty name
     if (projectName.trim() === '') {
       setHelperText({
         helperText: 'Select a valid (non-empty) project name.',
@@ -107,17 +116,16 @@ export const ProjectWidget: React.FunctionComponent<{
       });
       return;
     }
+    // validating changes were made in any field, to avoid send the request
+    if (JSON.stringify(selectedOptions) === JSON.stringify(options)) {
+      return;
+    }
+
+    // if the name was changed, then I need to check it with the contents manager
     if (projectName != options.name) {
       checkProjectName(projectName).then((valid: boolean) => {
         if (valid) {
-          props.onSubmit({
-            name: projectName,
-            stack,
-            release,
-            platform,
-            user_script: userScript,
-            corrupted: options.corrupted,
-          });
+          props.onSubmit(selectedOptions);
         } else {
           setHelperText({
             helperText: 'File or directory already exists with the same name.',
