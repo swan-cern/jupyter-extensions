@@ -14,8 +14,7 @@
 #
 # This command is called from SwanKernelSpecManager to start the kernel and swan_bash to start a bash session inside the project environment.
 ##
-PARAMETERS=($@)
-
+PARAMETERS=("$@")
 # Check if jq is installed
 if ! [ -x "$(command -v jq)" ]; then
   echo 'Error: jq is not installed.' >&2
@@ -44,9 +43,9 @@ fi
 PROJECT_PATH=$1
 PROJECT_NAME=`IFS='/'; ARR=($PROJECT_PATH);echo "${ARR[-1]}"`
 PROJECT_FILE="$PROJECT_PATH/.swanproject"
-STACK=`jq -r '.stack' $PROJECT_FILE`
-RELEASE=`jq -r '.release' $PROJECT_FILE`
-PLATFORM=`jq -r '.platform' $PROJECT_FILE`
+STACK=`jq -r '.stack' "$PROJECT_FILE"`
+RELEASE=`jq -r '.release' "$PROJECT_FILE"`
+PLATFORM=`jq -r '.platform' "$PROJECT_FILE"`
 USER_SCRIPT="$PROJECT_PATH/.userscript"
 
 # Path to the stack where the setup.sh for this project is located.
@@ -57,11 +56,7 @@ STACK_SETUP="$STACK_PATH/setup.sh"
 
 # Working directory parameter
 CWD="$3"
-i=0
-if [ "$CWD" != "" ]; then
-    i=$((i+2))
-fi
-
+i=2
 
 for j in $(seq 0 1 $((i)));do
     unset PARAMETERS[$j]
@@ -88,10 +83,10 @@ export SWAN_PROJECT_NAME=$PROJECT_NAME
 export SWAN_PROJECT_PATH=$PROJECT_PATH
 
 if [ "$USER_SCRIPT" != "" ] && [ -f "$USER_SCRIPT" ]; then
-    . ${USER_SCRIPT}
+    . "${USER_SCRIPT}"
 fi
 
 # The command is executed inside the $CWD folder.
 # if the command produces output it will be there.
-cd $CWD
+cd "$CWD"
 $COMMAND

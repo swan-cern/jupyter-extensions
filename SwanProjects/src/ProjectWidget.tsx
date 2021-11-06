@@ -101,7 +101,7 @@ export const ProjectWidget: React.FunctionComponent<{
 
   const onClickSubmit = () => {
     const selectedOptions: ProjectDialog.ISWANOptions = {
-      name: projectName,
+      name: projectName.trim(),
       stack,
       release,
       platform,
@@ -117,7 +117,10 @@ export const ProjectWidget: React.FunctionComponent<{
       return;
     }
     // validating changes were made in any field, to avoid send the request
-    if (JSON.stringify(selectedOptions) === JSON.stringify(options)) {
+    if (
+      JSON.stringify(selectedOptions) === JSON.stringify(options) &&
+      !options.corrupted
+    ) {
       return;
     }
 

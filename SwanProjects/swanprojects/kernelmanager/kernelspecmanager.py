@@ -131,7 +131,7 @@ class SwanKernelSpecManager(KernelSpecManager):
             wrapped kernel spec with the required information to run inside the enviroment of the project.
         """
         argv = self.swan_utils.get_env_isolated()
-        argv += ["/bin/bash", "-c", "swan_env {} {} {} ".format(
+        argv += ["/bin/bash", "-c", "swan_env \"{}\" \"{}\" \"{}\" ".format(
             os.path.join(
                 self.swan_utils.contents_manager.root_dir, project_path),
             self.swan_config.stacks_path, ".") + "'" + " ".join(kspec.argv) + "'"

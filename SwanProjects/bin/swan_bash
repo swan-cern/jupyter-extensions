@@ -30,17 +30,17 @@ if [[ $# -gt 1 ]] ; then
 
     if [ -d "$PROJECT_PATH" ]
     then
-      STACK=`jq '.stack' $PROJECT_FILE`
-      RELEASE=`jq '.release' $PROJECT_FILE`
-      PLATFORM=`jq '.platform' $PROJECT_FILE`
+      STACK=`jq '.stack' "$PROJECT_FILE"`
+      RELEASE=`jq '.release' "$PROJECT_FILE"`
+      PLATFORM=`jq '.platform' "$PROJECT_FILE"`
       USER_SCRIPT="$PROJECT_PATH/.userscript"
       echo "Loading $RELEASE with plafortm $PLATFORM "
       # FIXME: this have to be removed when environment isolation is not needed anymore, it's only temporary
       env -i HOME=$HOME \
              OAUTH2_TOKEN=$OAUTH2_TOKEN \
-             PROJECT=$PROJECT_NAME \
-             PROJECT_PATH=$PROJECT_PATH PS1="$PS1" \
-             bash -c "swan_env $PROJECT_PATH $STACKS_PATH $PROJECT_PATH  bash --rcfile  <(echo 'PS1=\"($PROJECT_NAME) $PS1 \"') " 
+             PROJECT="$PROJECT_NAME" \
+             PROJECT_PATH="$PROJECT_PATH" PS1="$PS1" \
+             bash -c "swan_env \"$PROJECT_PATH\" \"$STACKS_PATH\" \"$PROJECT_PATH\" bash --rcfile  <(echo 'PS1=\"($PROJECT_NAME) $PS1 \"') "
     else
       echo "Error: project $PROJECT_PATH doesn't exist" >&2
       # JupyterLab closes the terminal window immediately after the process ends
