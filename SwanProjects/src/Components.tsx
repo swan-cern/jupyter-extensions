@@ -36,13 +36,13 @@ export function HelpTooltip(props: {
 }
 
 /**
- * A pure tsx component for a launcher card.
+ * A pure tsx component for a ProjectDialog card.
  *
  * @param label - Text for the Card
  * @param icon - Icon for the Card
  * @param isSelected - Helps to know the selected stack.
  * @param updateCallback - Callback to update stacks on other components
- * @returns a vdom `VirtualElement` for the launcher card.
+ * @returns a vdom `VirtualElement` for the ProjectDialog card.
  */
 export function Card(props: {
   label: string;
