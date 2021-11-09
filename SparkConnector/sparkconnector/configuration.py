@@ -78,22 +78,19 @@ class SparkConfiguration(object):
         return _options
 
     def fetch_auth_delegation_tokens(self):
-        if self.get_spark_needs_auth():
-            self.log.info("Skipped fetching delegation tokens because SPARK_AUTH_REQUIRED")
-            # Do nothing if generating kerberos ticket prompting the password from user. (for nxcals)
-            return
         cluster = self.get_cluster_name()
         if not cluster or cluster == 'local':
             return
         jupyterhub_user_token = os.environ.get('JUPYTERHUB_API_TOKEN')
+        url = os.environ.get('SWAN_HADOOP_TOKEN_GENERATOR_URL')
         headers = {
             'Authorization': f'token {jupyterhub_user_token}'
         }
         data = {
             'cluster': cluster
         }
-        self.connector.log.info(f'Fetching spark delegation token for {cluster}')
-        response = requests.post('http://hubspark:1111', headers=headers, json=data)
+        self.connector.log.info(f'Fetching hadoop delegation token for {cluster}')
+        response = requests.post(f'{url}/generate-delegation-token', headers=headers, json=data)
         response.raise_for_status()
 
         # Write the token to a temporary file
@@ -102,7 +99,7 @@ class SparkConfiguration(object):
             file.write(response.content)
         
         os.environ['HADOOP_TOKEN_FILE_LOCATION'] = path
-        self.connector.log.info(f'Spark delegation token written to {path}')
+        self.connector.log.info(f'Hadoop delegation token written to {path}')
 
     def configure(self, opts, ports):
         """ Initializes Spark configuration object """
