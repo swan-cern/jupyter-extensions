@@ -72,7 +72,12 @@ class SparkConnector:
                 # Ask port allocator to reserve and return 3 available ports
                 self.port_allocator.connect()
                 ports = self.port_allocator.get_ports(3)
-                if os.environ.get('SWAN_SPARKCONNECTOR_FETCH_DELEGATION_TOKENS','false') == 'true':
+
+                # Fetch delegation tokens from an external service
+                if self.spark_configuration.get_spark_needs_auth():
+                    # Do nothing if generating kerberos ticket prompting the password from user. (for nxcals)
+                    self.log.info("Skipped fetching delegation tokens because SPARK_AUTH_REQUIRED")
+                elif os.environ.get('SWAN_FETCH_HADOOP_TOKENS','false') == 'true':
                     self.spark_configuration.fetch_auth_delegation_tokens()
                 else:
                     self.log.info("Skipped fetching delegation tokens.")
