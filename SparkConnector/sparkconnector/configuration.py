@@ -350,15 +350,6 @@ class SparkYarnConfiguration(SparkConfiguration):
                archive_filename=user_archive
            conf.set('spark.submit.pyFiles', archive_filename)
 
-        # Ensure that driver has extra classpath required for running on YARN
-        base_extra_class_path = "/eos/project/s/swan/public/hadoop-mapreduce-client-core-2.6.0-cdh5.7.6.jar"
-        extra_class_path = conf.get('spark.driver.extraClassPath')
-        if extra_class_path:
-            extra_class_path = base_extra_class_path + ":" + extra_class_path
-        else:
-            extra_class_path = base_extra_class_path
-        conf.set('spark.driver.extraClassPath', extra_class_path)
-
         # Disable console progress as it would be printed in the notebook (since ipython 6)
         conf.set('spark.ui.showConsoleProgress', 'false')
 
