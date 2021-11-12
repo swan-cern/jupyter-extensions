@@ -3,7 +3,7 @@ import re
 import os
 import traceback
 
-from traitlets import Unicode, Long, Float
+from traitlets import Unicode, Long, Float, Bool
 from traitlets.config import Configurable
 
 from notebook.utils import url_path_join
@@ -53,6 +53,8 @@ class HDFSBrowserConfig(Configurable):
         2, config=True, help='Do not wait for connection longer than this value'
     )
 
+    validate_cert = Bool(True, config=True, help='Validate SSL or not')
+
 
 class HDFSBrowserProxy(IPythonHandler):
 
@@ -88,7 +90,11 @@ class HDFSBrowserProxy(IPythonHandler):
 
             try:
                 response = yield AsyncHTTPClient().fetch(
-                    HTTPRequest(nmd_active_url, connect_timeout=1),
+                    HTTPRequest(
+                        nmd_active_url, 
+                        connect_timeout=self.hdfs_browser_config.connection_timeout, 
+                        validate_cert=self.hdfs_browser_config.validate_cert
+                    ),
                     raise_error=False
                 )
             except Exception:
@@ -143,7 +149,8 @@ class HDFSBrowserProxy(IPythonHandler):
                                 header_callback=self.handle_webhdfs_stream_header,
                                 streaming_callback=self.handle_webhdfs_stream_chunk,
                                 request_timeout=self.hdfs_browser_config.webhdfs_response_timeout,
-                                connect_timeout=self.hdfs_browser_config.connection_timeout),
+                                connect_timeout=self.hdfs_browser_config.connection_timeout,
+                                validate_cert=self.hdfs_browser_config.validate_cert),
                     raise_error=False
                 )
                 self.handle_webhdfs_stream_finish()
@@ -152,7 +159,8 @@ class HDFSBrowserProxy(IPythonHandler):
                 explorer_response = yield AsyncHTTPClient().fetch(
                     HTTPRequest(
                         url=hdfs_browser_url,
-                        connect_timeout=self.hdfs_browser_config.connection_timeout)
+                        connect_timeout=self.hdfs_browser_config.connection_timeout,
+                        validate_cert=self.hdfs_browser_config.validate_cert)
                     ,
                     raise_error=False
                 )
