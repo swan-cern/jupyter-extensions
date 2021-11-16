@@ -6,8 +6,8 @@
  * the dialog allows to select the stack, release, platform and write in a textbox
  * a bash script to run inside the project.
  *
- * If the .swanproject file is corrupted for any reason, this dialog will appear
- * for the user in order to recover the project with the right information provide by he/she.
+ * If the .swanproject file is corrupted, this dialog will appear
+ * for the user to enter the right information about the project again.
  */
 
 import { showErrorMessage } from '@jupyterlab/apputils';
@@ -68,7 +68,7 @@ export namespace ProjectDialog {
 
     function startSpinner(): void {
       /**
-       * Function to start the spiner in the SwanLauncer, embed in the html tag with id jp-main-dock-panel.
+       * Function to start the spinner in the SwanLauncer, embed in the html tag with id jp-main-dock-panel.
        */
       const node = document.getElementById('jp-main-dock-panel');
       node?.appendChild(_spinner.node);
@@ -79,7 +79,7 @@ export namespace ProjectDialog {
     }
 
     /**
-     * hides the spiner from the component
+     * hides the spinner from the component
      */
     function stopSpinner(): void {
       _spinner.hide();

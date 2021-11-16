@@ -81,7 +81,6 @@ try:
     setup_args['data_files'] = get_data_files(data_files_spec)
 except ImportError as e:
     print(e)
-    pass
 
 if __name__ == "__main__":
     setuptools.setup(**setup_args)

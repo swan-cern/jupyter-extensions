@@ -3,8 +3,8 @@
 
 /**
  *  Some components needed for the react Dialogs,
- *  such as ToolTip, to display information about the relase and platform in the project dialog
- *  and Card, that is based in the code from launcher's Card in JupyetrLab wich is not exported to reuse it.
+ *  such as ToolTip, to display information about the release and platform in the project dialog
+ *  and Card, that is based in the code from launcher's Card in JupyterLab wich is not exported to reuse it.
  */
 
 import { classes, LabIcon } from '@jupyterlab/ui-components';

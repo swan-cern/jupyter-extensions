@@ -1,12 +1,11 @@
 #!/bin/bash -i
 #Author Omar.Zapata@cern.ch 2021
 ###
-# This script allows to start a bash interpreter inside a project environment.
-# This is called from the extension SwanTerminal and it requires like a parameter the project name to
-# build the path to the project with $HOME/SWAN_projects/$PROJECT to load the project environment.
+# This is called from the extension SwanTerminal and it requires the project path and stacks path as arguments.
+# The project path is used to read the .swanproject file and the stacks path is required to load the proper enviroment.
 # When the bash session is started we modify the prompt indicating in which project the terminal is located.
-# Aditionally bash run completed isolated from other possible environments then we pass like parameters to the isolated environment some
-# required basic environment variables such as:
+# Additionally, the bash session runs completely isolated from other possible environments,
+# so we need to define some basic environment variables such as:
 #
 # * HOME with path to the user home
 # * PATH with default paths for the system

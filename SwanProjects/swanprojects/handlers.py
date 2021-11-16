@@ -37,7 +37,7 @@ class SwanAPIHandler(APIHandler):
 
     def subprocess(self, command):
         """
-        Method to call a sub process in a isolated environment
+        Method to call a sub process in an isolated environment
 
         Parameters
         ----------
@@ -63,7 +63,7 @@ class SwanAPIHandler(APIHandler):
 
     def save_project_file(self, project_dir, content):
         """
-        Method to save contents in the project file.
+        Method to save contents into the project file.
 
         Parameters
         ----------
@@ -104,7 +104,7 @@ class SwanAPIHandler(APIHandler):
         Returns
         -------
         kinfo: dict
-            Kernel information such as kernei_dir and ipykernel for python2/3 in a dictionary.
+            Kernel information such as kernel_dir and ipykernel for python2/3 in a dictionary.
         """
         name = project_dir.split(os.sep)[-1]
         swan_kmspecs = find_executable("swan_kmspecs")
@@ -329,9 +329,6 @@ class EditProjectHandler(SwanAPIHandler):
         data = {"status": True, "project_dir": project_relative_dir,
                 "msg": f"edited project {name}"}
         self.finish(json.dumps(data))
-
-# URL to handler mappings
-
 
 def setup_handlers(web_app, url_path):
     host_pattern = ".*$"

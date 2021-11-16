@@ -5,10 +5,10 @@
 """
 This script allows to find the kernels for python2/3 and kernel spec paths for our kernel spec manager.
 
-The script run a subprocess inside the project environment trying to find the package ipykernel
+The script runs a subprocess inside the project environment trying to find the package ipykernel
 and run jupyter_path('kernels') to get the list of available paths for the differents kernels inside the environment as well.
 
-This is execute in the Create/Edit project handlers and the stdout is captured, getting the json information printed in the function generate_ksminfo()
+This is executed in the Create/Edit project handlers and the stdout is captured, getting the json information printed in the function generate_ksminfo()
 """
 import argparse
 import json
@@ -53,12 +53,12 @@ def check_native_kernel():
     Checks if ipykernel is available for python2 and python3.
 
     This routine is called inside the project environment,
-    It checks if python2/3 are available to check if the package ipykernel is installed,
-    if the package was found the results is saved in the dictionary with the results.
+    It checks if python2/3 are available and, if they are,
+    it checks if the package ipykernel is installed for them.
 
-    Why? kernel.json is not always available in the software stacks but the package ipykernel is there,
-    then we can create the json file locally in the project to put it work, because our kernel spec manager requires
-    the kernel path with the kernel.json file.
+    Why? A kernel.json might not be available but,
+    if the package ipykernel is, it will allow us to create the json file locally in the project.
+    We need to do so because our kernel spec manager requires a kernel path with the kernel.json file.
 
     Returns
     -------
@@ -79,7 +79,7 @@ def check_native_kernel():
     else:
         project_data["python2"]["found"] = False
 
-    # checking if python2 is found
+    # checking if python3 is found
     python3 = find_executable("python3")
     if python3 is not None:
         project_data["python3"] = {"found": True, "path": python3}
@@ -121,7 +121,7 @@ def get_kernel_paths():
 
 def generate_ksminfo():
     """
-    Function to generated all the kernel spec manager info,
+    Function to generate all the kernel spec manager info,
     calling the function check_native_kernel and  get_kernel_paths.
     """
     ksminfo = check_native_kernel()
