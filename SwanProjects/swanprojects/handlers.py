@@ -279,7 +279,7 @@ class EditProjectHandler(SwanAPIHandler):
 
         project_relative_dir = os.path.join(
             self.swan_config.projects_folder_name, name)
-        if old_name != name:
+        if old_name is not None and old_name != name:
             try:
                 old_project_dir = os.path.join(
                     self.swan_config.projects_folder_name, old_name)
