@@ -447,7 +447,9 @@ data-server-root="{{server_root}}"
 
 {% block script %}
     {{super()}}
+    <script src="{{ static_url("tree/js/main.min.js") }}" type="text/javascript" charset="utf-8"></script>
 
-
-<script src="{{ static_url("tree/js/main.min.js") }}" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+      $('#element').tooltip('enable')
+    </script>
 {% endblock %}
