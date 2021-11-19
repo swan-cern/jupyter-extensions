@@ -330,7 +330,7 @@ function start_notebook_view() {
 
                 $.get(folder_path, function (folder) {
 
-                    if (folder.type === 'project') {
+                    if (folder.is_project) {
                         modal.show_share_modal(folder.path);
                     } else if (folder.type === 'directory' && folder.project) {
                         modal.show_share_modal(folder.project);
