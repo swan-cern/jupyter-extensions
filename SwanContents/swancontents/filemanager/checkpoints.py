@@ -34,13 +34,16 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
             EOS creates automatically a version by using the atomic writing.
             So we just need to return the latest checkpoint created
         """
-        # To check if the version returned is new or already knows (an error might have occurred)
+        self.log.info(f"Creating checkpoint for {path}")
+        # To check if the version returned is new or already known (an error might have occurred)
         previous_recorded = self.latest_recorded[path] if path in self.latest_recorded else None
         checkpoints = self.list_checkpoints(path)
 
         if not checkpoints:
-            self.log.error("No checkpoint was created")
-            return None
+            self.log.warning("No checkpoint was created")
+            # Jupyterlab crashes opening a file if no checkpoint exists
+            # While this is not fixed upstream, we return a fake one
+            return self._get_mock_checkpoint(path)
 
         current_checkpoint = checkpoints[-1]
         
@@ -133,3 +136,12 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
             404,
             u'Checkpoint no longer exists: %s@%s' % (path, checkpoint_id)
         )
+
+    def _get_mock_checkpoint(self, path):
+        src_path = self._get_os_path(path=path)
+        mtime = os.path.getmtime(src_path)
+        ts = datetime.datetime.fromtimestamp(mtime)
+        return dict(
+                id = "0_0",
+                last_modified = ts.strftime('%Y-%m-%dT%H:%M:%S')
+            )
