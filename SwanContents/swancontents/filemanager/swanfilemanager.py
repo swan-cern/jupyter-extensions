@@ -83,9 +83,9 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         model = super(LargeFileManager, self)._dir_model(path, content)
         parent_project = self._get_project_path(path)
 
+        model['is_project'] = False
         if parent_project and not parent_project == 'invalid':
             model['project'] = parent_project
-            model['is_project'] = False
 
         return model
 
@@ -211,7 +211,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         self.run_pre_save_hook(model=model, path=path)
 
         try:
-            if model['type'] == 'project':
+            if 'is_project' in model and model['is_project']:
                 if not self._is_swan_root_folder(os_path):
                     raise web.HTTPError(400, "You can only create projects inside Swan Projects")
                 self._save_project(os_path, model, path)
@@ -298,16 +298,14 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         if type:
             model['type'] = type
 
-        model['is_project'] = False
-
         if ext == '.ipynb':
             model.setdefault('type', 'notebook')
         else:
             model.setdefault('type', 'file')
-
         insert = ''
         if model['type'] == 'directory':
             untitled = self.untitled_directory
+            model['is_project'] = False
             insert = ' '
 
         elif model['type'] == 'project':
