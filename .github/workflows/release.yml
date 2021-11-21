@@ -1,0 +1,39 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Release bump: major, minor or patch"
+        required: true
+        default: "patch"
+      extension:
+        description: "Extension name"
+        required: true
+        default: "HdfsBrowser"
+
+jobs:
+  bump-version:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - uses: BSFishy/pip-action@v1
+        with:
+          packages: |
+            bump2version
+      - name: Bump and tag
+        run: |
+          git config --local user.email "swan-admins@cern.ch"
+          git config --local user.name "swan-admins[bot]"
+          cd ${{ github.event.inputs.extension }}
+          bump2version ${{ github.event.inputs.bump }}
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.WORKFLOW_ACCESS_TOKEN }}
+          tags: true

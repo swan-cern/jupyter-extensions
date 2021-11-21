@@ -13,3 +13,9 @@ Repository that stores all the Jupyter extensions for SWAN.
 * [SwanNotifications](SwanNotifications) - Extension to display notifications to users
 * [SwanOauthRenew](SwanOauthRenew) - Extension that fetches the latest oAuth tokens from JupyterHub and writes to the file observed by EOS
 * [SwanShare](SwanShare) - Jupyter Notebooks/CERNBox sharing integration used by SwanContents
+
+### Development
+
+#### Create a release
+
+The creation of a new release in this repo is now automated. Just run the Github action "Release" manually, and specify the extension name and the increment type.
