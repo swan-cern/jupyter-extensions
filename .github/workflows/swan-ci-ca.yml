@@ -16,14 +16,17 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
 
     - name: Set environnment package name  and version
       run: |
-        PACKAGE_NAME=$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 1)
+        PACKAGE_TAG=${GITHUB_REF#refs/*/}
+        PACKAGE_NAME=$(echo $PACKAGE_TAG | cut -d / -f 1)
 
-        echo "PACKAGE_TAG=${GITHUB_REF#refs/*/}"  >> $GITHUB_ENV
+        echo "PACKAGE_TAG=$PACKAGE_TAG" >> $GITHUB_ENV
         echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_ENV
-        echo "PACKAGE_VERSION=$(echo  ${GITHUB_REF#refs/*/} | cut -d / -f 2)" >> $GITHUB_ENV
+        echo "PACKAGE_VERSION=$(echo $PACKAGE_TAG | cut -d / -f 2)" >> $GITHUB_ENV
 
         cd $PACKAGE_NAME
         if [ -f 'package.json' ]; then
@@ -33,6 +36,11 @@ jobs:
         if [ "$PACKAGE_NAME" == "SparkMonitor" ]; then
           echo "PACKAGE_JAVA=$(echo 1)" >> $GITHUB_ENV
         fi
+
+        PREV_TAG=$(git describe --tags --match "$PACKAGE_NAME*" --abbrev=0 --exclude "$PACKAGE_TAG")
+        EXT_LOWERCASE=$(echo $PACKAGE_NAME | tr '[:upper:]' '[:lower:]')
+        git --no-pager log $PREV_TAG..HEAD --pretty=format:"- %B" -- $PACKAGE_NAME | sed -r "s/($EXT_LOWERCASE|$PACKAGE_NAME): //g" | sed -r "s/\*/  \*/g" > /tmp/release_body.md
+
 
     - name: Install Python
       uses: actions/setup-python@v1
@@ -79,8 +87,7 @@ jobs:
       with:
         tag_name: ${{ github.ref }}
         release_name: ${{ github.ref }}
-        body: |
-          ${{github.event.head_commit.message}}
+        body_path: /tmp/release_body.md
         draft: false
         prerelease: false
 
