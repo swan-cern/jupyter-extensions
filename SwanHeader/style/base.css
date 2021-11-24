@@ -47,15 +47,15 @@
 .sw-header .sw-nav-item {
   box-sizing: border-box;
   height: 100%;
-  padding: 3px 12px;
+  padding: 2px 12px;
   transition: height 2s linear;
   display: flex;
   align-items: center;
 }
 
 .sw-header .sw-nav-item:hover, .sw-header .sw-nav-item-selected {
-  border-top: 3px solid transparent;
-  border-bottom: 3px solid transparent;
+  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
   padding: 0 12px;
   border-bottom-color: var(--swan-color-orange);
   background-color: var(--swan-color-dark-4);
@@ -78,6 +78,7 @@
 /* .sw-header-menu is not inside .sw-header */
 .sw-header-menu .MuiPaper-root {
   border: 1px solid #bdbdbd;
+  border-top: 0;
   color: black !important;
 }
 

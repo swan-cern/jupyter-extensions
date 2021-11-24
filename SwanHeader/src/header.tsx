@@ -16,7 +16,7 @@ export const Header = (props: {
   baseUrl: string;
 }): React.ReactElement => {
   const userName = props.hubUser || 'swanuser';
-  const shutdownUrl = (props.hubPrefix || props.baseUrl) + 'home?changeconfig';
+  const changeConfigurationUrl = props.hubPrefix + 'home?changeconfig';
 
   const [menuAnchorElement, setMenuAnchorElement] = React.useState(null);
   const isMenuOpen = Boolean(menuAnchorElement);
@@ -29,11 +29,11 @@ export const Header = (props: {
     setMenuAnchorElement(null);
   };
 
-  const onClickShutdown = async () => {
+  const onChangeConfiguration = async () => {
     handleCloseMenu();
     const result = await showDialog({
-      title: 'Shutdown Session?',
-      body: 'Do you want to shut down your session? This will close all notebooks and shutdown all running kernels.',
+      title: 'Change configuration?',
+      body: 'Do you want to shut down your session and change configuration? This will close all notebooks and shutdown all running kernels.',
       buttons: [
         Dialog.okButton({
           caption: 'Shutdown',
@@ -47,7 +47,7 @@ export const Header = (props: {
       ]
     });
     if (result.button.accept) {
-      window.location.replace(shutdownUrl);
+      window.location.replace(changeConfigurationUrl);
     }
   };
 
@@ -107,8 +107,8 @@ export const Header = (props: {
             <MenuItem button onClick={onClickLogout} dense divider>
               <ListItemText primary="Logout" />
             </MenuItem>
-            <MenuItem button onClick={onClickShutdown} dense>
-              <ListItemText primary="Shutdown" />
+            <MenuItem button onClick={onChangeConfiguration} dense>
+              <ListItemText primary="Change Configuration" />
             </MenuItem>
           </Menu>
         </div>
