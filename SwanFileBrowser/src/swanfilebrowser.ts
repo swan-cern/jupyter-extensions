@@ -5,7 +5,7 @@
  * This file containts the implementation for SwanFileBrowser and SwanFileBrowserModel classes.
  *
  * Those classes are the replacement for the default FileBrowser and allows to
- * manipulated the paths to check is the folder is a project or not and to set the proper kernel path.
+ * manipulated the paths to check if the folder is a project or not and to set the proper kernel path.
  */
 
 import { FilterFileBrowserModel, FileBrowser } from '@jupyterlab/filebrowser';

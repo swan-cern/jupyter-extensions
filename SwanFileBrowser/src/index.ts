@@ -5,13 +5,13 @@
 /**
  * SwanFileBrowser extension is based on the upstream filebrowser extension 3.0.x.
  *
- * This file the entry point for the extension where is defined the commands such as
+ * This file is the entry point for the extension where is defined the commands such as
  * 'filebrowser:copy', 'filebrowser:cut', 'filebrowser:open' etc..
- * Those commands are reimplemented using our class SwanFileBrowser intead the default Jupyter FileBrowser.
+ * Those commands are reimplemented using our class SwanFileBrowser instead the default Jupyter FileBrowser.
  *
  * The classes SwanFileBrowser and SwanFileBrowserModel are defined in the file swanfilebrowser.ts
  * and the class SwanDirListing in the file listing.ts. Those have the code required to manipulate
- * projects and kernel manager.
+ * projects and the kernel manager.
  *
  * Alsmot all the documentation for this file is the default one provided by the Jupyter extension.
  */

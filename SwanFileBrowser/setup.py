@@ -8,8 +8,6 @@ from pathlib import Path
 
 import setuptools
 
-site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
-
 HERE = Path(__file__).parent.resolve()
 
 # The name of the project
