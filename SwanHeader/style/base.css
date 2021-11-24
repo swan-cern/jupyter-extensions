@@ -1,0 +1,87 @@
+#swan-header {
+  --swan-color-dark-1: #09263c;
+  --swan-color-dark-2: #0053a1;
+  --swan-color-dark-3: #2c7bb6;
+  --swan-color-dark-4: #00385c;
+  --swan-color-orange: #f60;
+  --swan-color-grey: #dadada;
+  --swan-border-radius: 1px;
+
+  height: 40px !important;
+  min-height: 40px;
+}
+
+.sw-header .sw-swan-logo {
+  width: 40px;
+  height: 40px;
+  background-image: url(swan_cloud.png);
+  background-repeat: no-repeat;
+  background-size: 100%;
+  background-position: center center;
+  margin: 0 8px;
+}
+
+.sw-header {
+  min-height: 100%;
+  height: 100%;
+  width: 100%;
+  background-color: var(--swan-color-dark-1);
+  color: var(--swan-color-grey);
+  display: flex;
+  padding: 0px 4px;
+  align-items: center;
+  padding-right: 8px;
+}
+
+.sw-header .sw-header-left {
+  display: flex;
+  flex-grow: 1;
+}
+
+.sw-header .sw-header-right {
+  display: flex;
+  height: 100%;
+  align-items: center;
+}
+
+.sw-header .sw-nav-item {
+  box-sizing: border-box;
+  height: 100%;
+  padding: 2px 12px;
+  transition: height 2s linear;
+  display: flex;
+  align-items: center;
+}
+
+.sw-header .sw-nav-item:hover, .sw-header .sw-nav-item-selected {
+  border-top: 2px solid transparent;
+  border-bottom: 2px solid transparent;
+  padding: 0 12px;
+  border-bottom-color: var(--swan-color-orange);
+  background-color: var(--swan-color-dark-4);
+}
+
+.sw-header .sw-avatar {
+  display: flex;
+  align-items: center;
+}
+.sw-header .sw-avatar-picture {
+  background: purple;
+  margin-right: 4px;
+  height: 24px;
+  width: 24px;
+}
+.sw-header .sw-avatar-text {
+  padding: 0 4px;
+}
+
+/* .sw-header-menu is not inside .sw-header */
+.sw-header-menu .MuiPaper-root {
+  border: 1px solid #bdbdbd;
+  border-top: 0;
+  color: black !important;
+}
+
+.sw-header-menu .MuiList-padding {
+  padding: 0;
+}
