@@ -1,5 +1,5 @@
 /**
- * This file have the function that allows request to our backend extensions
+ * This file has the function that allows requesting our backend extensions.
  * SwanProjects and SwanContents.
  *
  */

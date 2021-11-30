@@ -1,6 +1,6 @@
 /**
  * File taken from https://github.com/jupyterlab/jupyterlab/blob/master/packages/filebrowser/src/listing.ts
- * for jupytrelab version 3.0.x.
+ * for Jupyterlab version 3.0.x.
  *
  * In this file, we reimplement the DirListing class in the SwanDirListing class.
  * This allows you to manipulate the low-level entries in the file browser widget,
