@@ -1,3 +1,9 @@
+/**
+ * This file have the function that allows request to our backend extensions
+ * SwanProjects and SwanContents.
+ *
+ */
+
 import { URLExt } from '@jupyterlab/coreutils';
 
 import { ServerConnection } from '@jupyterlab/services';

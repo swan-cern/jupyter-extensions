@@ -1,10 +1,20 @@
 /**
- * File took from https://github.com/jupyterlab/jupyterlab/blob/master/packages/filebrowser/src/listing.ts
+ * File taken from https://github.com/jupyterlab/jupyterlab/blob/master/packages/filebrowser/src/listing.ts
  * for jupytrelab version 3.0.x.
  *
  * In this file, we reimplement the DirListing class in the SwanDirListing class.
  * This allows you to manipulate the low-level entries in the file browser widget,
  * allowing us, for example, to change the icon if the folder is a project.
+ *
+ * Modifications on this file:
+ * -> Implemented  class SwanDirListing that extends Widget
+ * -> In the class SwanDirListing modified the methods:
+ *   -> onUpdateRequest
+ *   -> get model()
+ * -> In the class Renderer was reimplemented:
+ *   -> the method updateItemNode
+ *   -> changed DirListing by SwanDirListing
+ * All the other code are mainly from upstream.
  */
 import {
   Dialog,
@@ -63,15 +73,6 @@ export interface ISwanModel {
   size: number;
   type: string;
   writable: boolean;
-}
-export interface ISwanFileType {
-  contentType: any;
-  displayName: string;
-  extensions: any;
-  fileFormat: any;
-  icon: any;
-  mimeTypes: any;
-  name: string;
 }
 
 /**
@@ -1728,7 +1729,7 @@ export class SwanDirListing extends Widget {
 }
 
 /**
- * The namespace for the `DirListing` class statics.
+ * The namespace for the `SwanDirListing` class statics.
  */
 export namespace SwanDirListing {
   /**

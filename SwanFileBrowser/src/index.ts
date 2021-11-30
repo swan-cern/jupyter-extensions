@@ -3,17 +3,24 @@
 // Author: Omar.Zapata@cern.ch 2021
 
 /**
+ * This file is a hard copy of the original index.ts of the JupyterLab file browser,
+ * it was necessary because it was not possible to just extend it.
  * SwanFileBrowser extension is based on the upstream filebrowser extension 3.0.x.
  *
- * This file is the entry point for the extension where is defined the commands such as
- * 'filebrowser:copy', 'filebrowser:cut', 'filebrowser:open' etc..
- * Those commands are reimplemented using our class SwanFileBrowser instead the default Jupyter FileBrowser.
+ * This extension replaces the default FileBrowser, then we need to redefined the commands provided by the default FileBrowser
+ * such as,'filebrowser:copy', 'filebrowser:cut', 'filebrowser:open' etc..
+ * Those commands are reimplemented using our class SwanFileBrowser instead of the default Jupyter FileBrowser.
  *
  * The classes SwanFileBrowser and SwanFileBrowserModel are defined in the file swanfilebrowser.ts
  * and the class SwanDirListing in the file listing.ts. Those have the code required to manipulate
  * projects and the kernel manager.
+ * The kernelspec/validate.ts file contains the functions to validate the kernel specifications to obtain the ISpecModel objects.
  *
- * Alsmot all the documentation for this file is the default one provided by the Jupyter extension.
+ * Almost all the documentation for this file is the default one provided by the Jupyter extension.
+ *
+ * Modifications on this file:
+ * -> activateFactory creates a new SwanFileBrowserModel and a new SwanFileBrowser
+ * -> Other modifications consist mainly of changing the default FileBrowser objects to the SwanFileBrowser class.
  */
 
 import {
