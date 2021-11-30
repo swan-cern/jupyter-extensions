@@ -2,10 +2,17 @@
 // Author: Omar.Zapata@cern.ch 2021
 
 /**
- * This file containts the implementation for SwanFileBrowser and SwanFileBrowserModel classes.
+ * This file contains the implementation for SwanFileBrowser and SwanFileBrowserModel classes.
+ * The code in this file is mainly from us.
  *
- * Those classes are the replacement for the default FileBrowser and allows to
- * manipulated the paths to check if the folder is a project or not and to set the proper kernel path.
+ * Those classes are the replacement for the default FileBrowser and allow to
+ * manipulate the paths to check if the folder is a project or not and to set the proper kernel path.
+ *
+ * Modifications on this file:
+ * -> created the class SwanFileBrowserModel that extends from FilterFileBrowserModel
+ * -> created the class SwanFileBrowser extends from FileBrowser
+ *
+ * All new methods were implemented by us, take a look in the documentation below for every class and method for more details.
  */
 
 import { FilterFileBrowserModel, FileBrowser } from '@jupyterlab/filebrowser';
@@ -34,11 +41,11 @@ export interface ISwanProjectOptions {
  * Customized SwanFileBrowserModel that inherits from FilterFileBrowserModel.
  *
  * This class has overloaded the method 'async cd(newValue: string): Promise<void>'
- * that a allows to take actions before go to the directory, actions like:
+ * that allows to take actions before changing directory, actions like:
  * 1) Get the contents of the folder (to check if the folder is a project)
- * 2) If the  folder is a project we can ge the information of the project stored in the .swanproject
+ * 2) If the  folder is a project we can get the information of the project stored in the .swanproject
  * 3) if the information for the project is right then we can set the kernel spec manager
- * 4) If the project is corrupted, the a Dialog is showed up telling the user the project requires
+ * 4) If the project is corrupted, the Dialog is showed up telling the user the project requires
  *    to be configured again and the ProjectDialog is called.
  */
 export class SwanFileBrowserModel extends FilterFileBrowserModel {
@@ -55,7 +62,7 @@ export class SwanFileBrowserModel extends FilterFileBrowserModel {
    * Request to set the kernelspec manager path in the backend.
    * Local service manager.services.kernelspecs is updated as well.
    *
-   * @param path path get information from jupyter api
+   * @param path path to get information from jupyter api
    * @returns json object with the information of the path or json object with the information of the error.
    */
   protected kernelSpecSetPathRequest(path: string): any {
@@ -105,7 +112,7 @@ export class SwanFileBrowserModel extends FilterFileBrowserModel {
    * Request to get the project information
    *
    * @param path path to the project
-   * @returns json object with the project information information.
+   * @returns json object with the project information.
    */
   protected projectInfoRequest(path: string): any {
     const uri = 'swan/project/info?caller=swanfilebrowser&path=' + path;
@@ -121,7 +128,7 @@ export class SwanFileBrowserModel extends FilterFileBrowserModel {
   /**
    * Request to get contents from a path
    *
-   * @param cwd path get information from jupyter api
+   * @param cwd path to get information from jupyter api
    * @returns json object with the information of the path
    */
   protected contentRequest(cwd: string): any {
@@ -139,8 +146,8 @@ export class SwanFileBrowserModel extends FilterFileBrowserModel {
   /**
    * Method to check if the project information is valid or it is corrupted.
    *
-   * @param project_data json with project data such as name, stack, release etc..
-   * @returns true if the project is valid or false it the project is corrupted.
+   * @param project_data json with project data such as name, stack, release etc.
+   * @returns true if the project is valid or false if the project is corrupted.
    */
   protected isValidProject(project_data: JSONObject): boolean {
     for (const tag in this.project_tags) {
@@ -152,7 +159,7 @@ export class SwanFileBrowserModel extends FilterFileBrowserModel {
   }
 
   /**
-   * Overloaded method cd, to check folder information before go in.
+   * Overloaded method cd, to check folder information before changing directory.
    *
    * @param newValue new path
    * @returns void promise.
