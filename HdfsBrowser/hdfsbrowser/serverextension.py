@@ -72,9 +72,24 @@ class HDFSBrowserProxy(IPythonHandler):
         Note: this round-trip call for each request might be avoided with request cookies
         """
 
-        # get namenodes list
         tree = ET.parse(self.hdfs_browser_config.hdfs_site_path)
         root = tree.getroot()
+
+        # Define webhdfs_protocol
+        http_policy = 'false'
+        for elem in root.iter('property'):
+            if elem[0].text == 'dfs.http.policy':
+                http_policy = elem[1].text
+                break
+            elif elem[0].text == 'dfs.https.enable':
+                http_policy = elem[1].text
+                break
+        if http_policy == 'true' or http_policy.find('HTTPS') != -1:
+            webhdfs_protocol = 'https'
+        else:
+            webhdfs_protocol = 'http'
+
+        # get namenodes list
         namenodes = ""
         for elem in root.iter('property'):
             if elem[0].text == self.hdfs_browser_config.hdfs_site_namenodes_property:
@@ -83,8 +98,8 @@ class HDFSBrowserProxy(IPythonHandler):
 
         # get active namenode
         for namenode in namenodes.split(','):
-            nmd_active_url = 'http://{0}:{1}/jmx?get=Hadoop:service=NameNode,name=NameNodeStatus::State'.format(
-                namenode, self.hdfs_browser_config.hdfs_site_namenodes_port)
+            nmd_active_url = '{0}://{1}:{2}/jmx?get=Hadoop:service=NameNode,name=NameNodeStatus::State'.format(
+                webhdfs_protocol, namenode, self.hdfs_browser_config.hdfs_site_namenodes_port)
 
             try:
                 response = yield AsyncHTTPClient().fetch(
@@ -101,8 +116,8 @@ class HDFSBrowserProxy(IPythonHandler):
                 self.log.debug('NameNode {0} state is {1}'.format(namenode, namenode_state))
 
                 if namenode_state == 'active':
-                    self.active_namenode_url = 'http://{0}:{1}'.format(
-                        namenode, self.hdfs_browser_config.hdfs_site_namenodes_port)
+                    self.active_namenode_url = '{0}://{1}:{2}'.format(
+                        webhdfs_protocol, namenode, self.hdfs_browser_config.hdfs_site_namenodes_port)
                     break
             else:
                 self.log.error('NameNode request {0} responded with empty response').format(nmd_active_url)
@@ -133,7 +148,6 @@ class HDFSBrowserProxy(IPythonHandler):
         hdfs_browser_url = url_path_join(self.active_namenode_url, request_path)
 
         self.log.debug('HDFSBrowserHandler proxing request {}'.format(hdfs_browser_url))
-
         try:
             if '/webhdfs/v1' in hdfs_browser_url:
                 yield AsyncHTTPClient(force_instance=True,
