@@ -397,11 +397,14 @@ class SparkYarnConfiguration(SparkConfiguration):
                                               '&var-ApplicationId=' + app_id
 
             # determine the history server URL depending on the selected resource manager (yarn, k8s, local etc)
-            history_url = self._get_sc_config(
-                'spark.org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter.param.PROXY_URI_BASES',
+            historyserver_url = self._get_sc_config(
+                'spark.yarn.historyServer.address',
                 wait=True
             )
-            if history_url:
-                conn_config['sparkhistoryserver'] = history_url.split(',', 1)[0]
+            historyserver_protocol = 'https' if self._get_sc_config('spark.ssl.historyServer.enabled') else 'http'
+
+            ui_url = f'{historyserver_protocol}://{historyserver_url}/history/{app_id}'
+            if ui_url:
+                conn_config['sparkhistoryserver'] = ui_url
 
         return conn_config
