@@ -211,7 +211,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         self.run_pre_save_hook(model=model, path=path)
 
         try:
-            if 'is_project' in model and model['is_project']:
+            if model['type'] == 'project':
                 if not self._is_swan_root_folder(os_path):
                     raise web.HTTPError(400, "You can only create projects inside Swan Projects")
                 self._save_project(os_path, model, path)
