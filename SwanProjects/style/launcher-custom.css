@@ -1,0 +1,39 @@
+.sw-launcher-project-header-right:hover {
+  background-color: var(--jp-layout-color2);
+  cursor: pointer;
+}
+
+.sw-launcher-project-header {
+  margin: 40px 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sw-launcher-project-header > * + * {
+  margin-bottom: 20px;
+}
+
+.sw-launcher-project-header-bar {
+  display: flex;
+  width: 100%;
+  align-items: center;
+}
+
+.sw-laucher-project-header-title {
+  flex-grow: 1;
+}
+
+.sw-launcher-project-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.sw-launcher-project-environment {
+  background-color: #f2f2f2;
+  padding: 20px;
+}
+
+.sw-launcher-project-header-root-path {
+  color: #7b7b7b;
+  padding: 10px 0;
+}
