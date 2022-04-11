@@ -6,6 +6,7 @@ Repository that stores all the Jupyter extensions for SWAN.
 * [SparkConnector](SparkConnector) - Helper to connect to CERN's Spark Clusters
 * [SparkMonitor](SparkMonitor) - Live monitoring of Apache Spark Jobs spawned from a notebook
 * [SwanContents](SwanContents) - Contents Manager for Jupyter with Projects functionality and SWAN templates
+* [SwanDask](SwanDask) - Wrapper to run dask_jupyterlab as an external process
 * [SwanHelp](SwanHelp) - SWAN Help panel for Notebooks and Lab
 * [SwanIntro](SwanIntro) - Extension to display to users what has changed since the last time they used the service (or greet new users)
 * [SwanKernelEnv](SwanKernelEnv) - Kernel extension to remove SWAN special paths from the user environment (thus keeping the clean LCG release environment)
