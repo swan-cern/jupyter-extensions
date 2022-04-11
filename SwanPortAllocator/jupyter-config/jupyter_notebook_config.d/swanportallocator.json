@@ -1,7 +1,7 @@
 {
     "NotebookApp": {
         "nbserver_extensions": {
-            "sparkconnector.portallocator": true
+            "swanportallocator.portallocator": true
         }
     }
 }

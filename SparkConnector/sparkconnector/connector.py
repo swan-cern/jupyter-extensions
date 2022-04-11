@@ -8,7 +8,8 @@ import os, logging, tempfile, subprocess
 from pyspark import SparkContext
 from pyspark.sql import SparkSession
 
-from .portallocator import PortsAllocatorClient, NoPortsException, GeneralException
+from swanportallocator.portallocator import PortAllocatorClient, NoPortsException, GeneralException
+
 from .configuration import SparkConfigurationFactory
 from .logreader import LogReader
 
@@ -25,7 +26,7 @@ class SparkConnector:
         log_path = self.file_thread.create_file()
         self.log4j_file = self.create_properties_file(log_path)
         self.file_thread.start()
-        self.port_allocator = PortsAllocatorClient()
+        self.port_allocator = PortAllocatorClient()
         self.spark_configuration = SparkConfigurationFactory(connector=self).create()
 
     def send(self, msg):
