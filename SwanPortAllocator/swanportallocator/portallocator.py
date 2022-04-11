@@ -31,7 +31,7 @@ class Actions(Enum):
     SET_STATUS = "set_status"
 
 
-class PortsAllocator(threading.Thread):
+class PortAllocator(threading.Thread):
     """
         Master service that manages all the ports allocated to the session.
         Keeps track of which processes are using them and manages the lifecycle of the ports, in order to
@@ -47,7 +47,7 @@ class PortsAllocator(threading.Thread):
         """
         self.ports_available = os.environ.get("SPARK_PORTS", "").split(',')
         self.clients = {}
-        self.queue_port = PortsAllocator.get_reserved_port()
+        self.queue_port = PortAllocator.get_reserved_port()
         self.log = log
 
         # Store the queue port so that the clients know where to connect
@@ -223,9 +223,9 @@ class PortsAllocator(threading.Thread):
                 pass
 
 
-class PortsAllocatorClient:
+class PortAllocatorClient:
     """
-       Proxy to the Ports Allocator process, using a message queue.
+       Proxy to the Port Allocator process, using a message queue.
        It asks for a number of ports to be allocated to this specific process.
        Port Allocator checks if the ports are in use and, if not, it might give them to
        other processes.
@@ -311,13 +311,13 @@ def load_jupyter_server_extension(nb_server_app):
         nb_server_app (NotebookWebApplication): handle to the Notebook webserver instance.
     """
 
-    log = logging.getLogger('tornado.sparkconnector.portsallocator')
-    log.name = "SparkConnector.PortsAllocator"
+    log = logging.getLogger('tornado.swanportallocator')
+    log.name = "SwanPortAllocator"
     log.setLevel(logging.INFO)
     log.propagate = True
 
     log.info("Loading Server Extension")
 
-    thread = PortsAllocator(log)
+    thread = PortAllocator(log)
     thread.setDaemon(True)
     thread.start()
