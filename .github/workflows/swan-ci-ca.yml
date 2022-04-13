@@ -33,10 +33,6 @@ jobs:
           echo "PACKAGE_JSON=$(echo 1)" >> $GITHUB_ENV
         fi
 
-        if [ "$PACKAGE_NAME" == "SparkMonitor" ]; then
-          echo "PACKAGE_JAVA=$(echo 1)" >> $GITHUB_ENV
-        fi
-
         PREV_TAG=$(git describe --tags --match "$PACKAGE_NAME*" --abbrev=0 --exclude "$PACKAGE_TAG" || true)
         [ ! -z "$PREV_TAG" ] && PREV_TAG=$PREV_TAG..
         EXT_LOWERCASE=$(echo $PACKAGE_NAME | tr '[:upper:]' '[:lower:]')
@@ -55,12 +51,6 @@ jobs:
         always-auth: true
         node-version: '12.x'
         registry-url: https://registry.npmjs.org
-   
-    - name: Set up JDK 1.8
-      if: ${{env.PACKAGE_JAVA}}
-      uses: actions/setup-java@v1
-      with:
-        java-version: 1.8
 
     - name: Install dependencies 
       run: |

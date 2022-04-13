@@ -4,7 +4,6 @@ Repository that stores all the Jupyter extensions for SWAN.
 
 * [HdfsBrowser](HdfsBrowser) - Extension to browse Hadoop
 * [SparkConnector](SparkConnector) - Helper to connect to CERN's Spark Clusters
-* [SparkMonitor](SparkMonitor) - Live monitoring of Apache Spark Jobs spawned from a notebook
 * [SwanContents](SwanContents) - Contents Manager for Jupyter with Projects functionality and SWAN templates
 * [SwanHelp](SwanHelp) - SWAN Help panel for Notebooks and Lab
 * [SwanIntro](SwanIntro) - Extension to display to users what has changed since the last time they used the service (or greet new users)
@@ -15,6 +14,7 @@ Repository that stores all the Jupyter extensions for SWAN.
 * [SwanShare](SwanShare) - Jupyter Notebooks/CERNBox sharing integration used by SwanContents
 * [SwanPortAllocator](SwanPortAllocator) - Extension to reserve ports in a user container
 
+> NOTE: SparkMonitor, the extension for live monitoring of Apache Spark jobs spawned from a notebook has moved to [swan-cern/sparkmonitor](https://github.com/swan-cern/sparkmonitor)
 ### Development
 
 #### Create a release
