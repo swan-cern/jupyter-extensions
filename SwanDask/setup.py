@@ -30,7 +30,7 @@ setup_args = dict(
         ),
     ],
     packages=setuptools.find_packages(),
-    install_requires=["dask_labextension", "jupyter-server-proxy", "tornado"],
+    install_requires=["jupyter-server-proxy", "tornado"],  # "dask_labextension"
     zip_safe=False,
     include_package_data=True,
     license="AGPL-3.0",
