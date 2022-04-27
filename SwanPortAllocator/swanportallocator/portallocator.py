@@ -45,7 +45,10 @@ class PortAllocator(threading.Thread):
             Starts a communication queue in one available internal port, and then listens for incoming
             requests.
         """
-        self.ports_available = os.environ.get("SPARK_PORTS", "").split(',')
+        self.ports_available = []
+        spark_ports = os.environ.get('SPARK_PORTS')
+        if spark_ports is not None:
+            self.ports_available += spark_ports.split(',')
         self.clients = {}
         self.queue_port = PortAllocator.get_reserved_port()
         self.log = log
