@@ -18,6 +18,7 @@ def setup_proxy():
     return {
         "command": ["swandask", "--port", "{port}", "--base_url", "{base_url}"],
         "absolute_url": True,
+        "timeout": 10,
         "launcher_entry": {"enabled": False},
         "environment": get_env,
     }
