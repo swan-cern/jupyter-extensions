@@ -4,6 +4,10 @@ import logging
 from dask_labextension import load_jupyter_server_extension
 from tornado import ioloop, web
 
+# Prevent exceptions from trying to create an html error response
+# Otherwise, we would need to configure the templates
+from jupyter_server.base.handlers import JupyterHandler, APIHandler
+JupyterHandler.write_error = APIHandler.write_error
 
 class WebApp:
     pass
