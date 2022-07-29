@@ -25,8 +25,8 @@ import { IFrame, MainAreaWidget} from '@jupyterlab/apputils';
       });
 
       window.addEventListener('message', event => {
-
-        requestAPI<any>('notebook')
+        
+        requestAPI<any>(event.data, 'notebook')
         .then(data => {
           //console.log(data);
           app.commands.execute('filebrowser:open-path', {

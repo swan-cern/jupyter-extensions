@@ -10,14 +10,15 @@ import { ServerConnection } from '@jupyterlab/services';
  * @returns The response body interpreted as JSON
  */
 
+ 
 export async function requestAPI<T>(
-  projUrl = '',
+  projUrl: string,
   endPoint = '',
   init: RequestInit = {}
 ): Promise<T> {
-  let settings = ServerConnection.makeSettings(
-    
-  );
+  
+  let settings = ServerConnection.makeSettings();
+  
   const requestUrl = URLExt.join(
     settings.baseUrl,
     'SwanGallery', // API Namespace
