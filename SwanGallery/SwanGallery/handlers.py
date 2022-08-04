@@ -18,9 +18,6 @@ import zipfile
 
 
 class RouteHandler(APIHandler):
-    # The following decorator should be present on all verb methods (head, get, post,
-    # patch, put, delete, options) to ensure only authorized user can request the
-    # Jupyter server
 
     root_dir = ''
     swan_default_folder = '.'
@@ -30,18 +27,6 @@ class RouteHandler(APIHandler):
         help="The base name used when creating untitled projects."
     )
 
-    '''
-    @tornado.web.authenticated
-    def get(self):
-        self.finish(
-            
-
-
-            json.dumps({
-            "data": "This is /SwanGallery/get_example endpoint!"
-        }))
-    '''
-    
     def _finish_model(self, model):
         """Finish a JSON request with a model, setting relevant headers, etc."""
         self.set_header('Content-Type', 'application/json')
@@ -50,7 +35,7 @@ class RouteHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self):
-        
+
         url = self.get_query_argument('url', default=None)
 
         if not url:
