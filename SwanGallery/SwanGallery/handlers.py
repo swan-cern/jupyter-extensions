@@ -50,10 +50,8 @@ class RouteHandler(APIHandler):
     @web.authenticated
     @gen.coroutine
     def get(self):
-
-        url = "https://swan-gallery.web.cern.ch/notebooks/root_primer/OldSummerStudentsCourse/2017/examples/notebooks/Macro1_cpp.ipynb"
-        #url = "https://github.com/dpiparo/swanExamples.git"
-        #url = self.get_query_argument('url', default=None)
+        
+        url = self.get_query_argument('url', default=None)
 
         if not url:
             raise web.HTTPError(400, u'No url provided')
