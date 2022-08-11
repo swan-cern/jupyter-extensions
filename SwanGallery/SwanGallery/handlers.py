@@ -91,7 +91,7 @@ class RouteHandler(APIHandler):
                 dest_dir_name = os.path.join(file_name_no_ext)
 
                 model['type'] = 'file'
-                model['path'] = self.move_file(file_name, tmp_dir_name, dest_dir_name)
+                model['path'] = self.move_file(file_name, tmp_dir_name)
                 #model['path'] = os.path.join(self.move_folder(tmp_dir_name, dest_dir_name), file_name)
 
         elif url.startswith('local:'):
@@ -112,7 +112,7 @@ class RouteHandler(APIHandler):
                 dest_dir_name = os.path.join(file_name_no_ext)
 
                 model['type'] = 'file'
-                model['path'] = self.move_file(file_name, tmp_dir_name, dest_dir_name)
+                model['path'] = self.move_file(file_name, tmp_dir_name)
                 #model['path'] = os.path.join(self.move_folder(tmp_dir_name, dest_dir_name), file_name)
 
             else:
@@ -147,7 +147,7 @@ class RouteHandler(APIHandler):
             dest_dir_name = os.path.join(file_name_no_ext)
 
             model['type'] = 'file'
-            model['path'] = self.move_file(file_name, tmp_dir_name, dest_dir_name)
+            model['path'] = self.move_file(file_name, tmp_dir_name)
             #model['path'] = os.path.join(self.move_folder(tmp_dir_name, dest_dir_name), file_name)
 
         model['path'] = model['path'].replace(self.root_dir, '').strip('/')
@@ -173,20 +173,18 @@ class RouteHandler(APIHandler):
 
             return path
 
-    def move_file(self, file_name, origin, dest, preserve=False):
+    def move_file(self, file_name, origin, preserve=False):
             """ Move a folder to a new location, but renames it if it already exists """
 
             file_format = file_name.split(".")[1]
             new_file_name = file_name
             # If the name exists, get a new one
-            if os.path.isfile(dest+"/"+new_file_name):
-                new_file_name = file_name.split(".")[0]
+            if os.path.isfile(file_name):
                 count = 1
+                new_file_name = file_name.split(".")[0]
                 while os.path.isfile(new_file_name + str(count) + "." + file_format):
                     count += 1
-            
-            new_file_name += str(count) + "." + file_format
-
+                new_file_name += str(count) + "." + file_format
             if preserve:
                 path = shutil.copytree(origin+"/"+file_name, self.swan_default_folder+"/"+new_file_name)
             else:

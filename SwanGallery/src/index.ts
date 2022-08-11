@@ -14,7 +14,7 @@ import { IFrame, MainAreaWidget} from '@jupyterlab/apputils';
   palette: ICommandPalette
 ):Promise<void> {
   console.log('JupyterLab extension SwanGallery is activated!');
-
+  var flag = true;
   const command: string = 'swangallery:open';
   app.commands.addCommand(command, {
     label: `SwanGallery`,
@@ -23,25 +23,28 @@ import { IFrame, MainAreaWidget} from '@jupyterlab/apputils';
       let content = new IFrame({
         sandbox: ['allow-scripts', 'allow-forms', 'allow-same-origin', 'allow-modals', 'allow-downloads']
       });
-
-      window.addEventListener('message', event => {
-        
-        requestAPI<any>(event.data, 'notebook')
-        .then(data => {
-          //console.log(data);
-          app.commands.execute('filebrowser:open-path', {
-            path: data.path,
-            showBrowser: false,
+      
+      if(flag === true){
+        flag = false;
+        window.addEventListener('message', event => {
+          requestAPI<any>(event.data, 'notebook')
+          .then(data => {
+            //console.log(data);
+            app.commands.execute('filebrowser:open-path', {
+              path: data.path,
+              showBrowser: false,
+            });
+          })
+          .catch(reason => {
+            console.error(
+              `The SwanGallery server extension appears to be missing.\n${reason}`
+            );
           });
-        })
-        .catch(reason => {
-          console.error(
-            `The SwanGallery server extension appears to be missing.\n${reason}`
-          );
         });
-      });
+      }
+      
 
-      content.url = "http://127.0.0.1:8080/test.html";
+      content.url = "http://127.0.0.1:8000";
       content.title.label = "SwanGallery";
       let widget = new MainAreaWidget({ content });
       widget.id = 'swan-gallery';
