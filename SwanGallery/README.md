@@ -3,9 +3,17 @@
 [![Github Actions Status](https://github.com/swan-cern/jupyter-extensions/workflows/Build/badge.svg)](https://github.com/swan-cern/jupyter-extensions/actions/workflows/build.yml)
 A JupyterLab extension.
 
-This extension is composed of a Python package named `SwanGallery`
-for the server extension and a NPM package named `SwanGallery`
-for the frontend extension.
+SWAN Gallery is a service that provides the users with a set of notebooks and project examples to help the user use the service by opening them into its session and using them directly without any extra step.
+
+The extension helps reducing the amount of time spent by the user on unnecessary hurdles thanks to its user friendly interface. Since, any user can scroll through the many notebook choices and download it directly to his session within a click. The notebook is then opened in a new tab inside the JupyterLab session allowing the user to freely switch between the many test notebooks and make different changes.
+
+This extension is composed of a Python package named `SwanGallery` for the server extension and a NPM package named `SwanGallery` for the frontend extension. 
+
+The front-end communicates with the static page hosted in an MkDocs server (MkDocs-Swan) that in its own communicates with the python server using `window.PostMessage` to prompt the specific file or folder link to download. The front-end uses the link received to send a request to the back-end, which depending on the link sent uses the download logic to dowload the file or folder inside the existing session. 
+
+The front-end receives back a success message from the request and uses it to have JupyterLab open the created file/ folder to have a smooth interaction for the user.
+
+- Notebook Gallery &rarr; JupyterLab Extension &rarr; SWAN Contents APi &rarr; SWAN Gallery API &rarr; Download
 
 ## Requirements
 
