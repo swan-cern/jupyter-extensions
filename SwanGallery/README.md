@@ -1,8 +1,5 @@
 # SwanGallery
 
-[![Github Actions Status](https://github.com/swan-cern/jupyter-extensions/workflows/Build/badge.svg)](https://github.com/swan-cern/jupyter-extensions/actions/workflows/build.yml)
-A JupyterLab extension.
-
 SWAN Gallery is a service that provides the users with a set of notebooks and project examples to help the user use the service by opening them into its session and using them directly without any extra step.
 
 The extension helps reducing the amount of time spent by the user on unnecessary hurdles thanks to its user friendly interface. Since, any user can scroll through the many notebook choices and download it directly to his session within a click. The notebook is then opened in a new tab inside the JupyterLab session allowing the user to freely switch between the many test notebooks and make different changes.
