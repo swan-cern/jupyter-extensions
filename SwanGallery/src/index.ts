@@ -44,7 +44,7 @@ import { IFrame, MainAreaWidget} from '@jupyterlab/apputils';
       }
       
 
-      content.url = "http://127.0.0.1:8000";
+      content.url = "https://yasser-gallery.docs.cern.ch";
       content.title.label = "SwanGallery";
       let widget = new MainAreaWidget({ content });
       widget.id = 'swan-gallery';
