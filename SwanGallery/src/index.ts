@@ -8,16 +8,18 @@ import { requestAPI } from './handler';
 import { ICommandPalette} from '@jupyterlab/apputils';
 
 import { IFrame, MainAreaWidget} from '@jupyterlab/apputils';
+import { ILauncher } from '@jupyterlab/launcher';
 
  async function activate(
   app: JupyterFrontEnd,
-  palette: ICommandPalette
+  palette: ICommandPalette,
+  launcher: ILauncher
 ):Promise<void> {
   console.log('JupyterLab extension SwanGallery is activated!');
   var flag = true;
   const command: string = 'swangallery:open';
   app.commands.addCommand(command, {
-    label: `SwanGallery`,
+    label: `SWAN Gallery`,
     execute: () => 
     { 
       let content = new IFrame({
@@ -54,11 +56,20 @@ import { IFrame, MainAreaWidget} from '@jupyterlab/apputils';
   });
 
   palette.addItem({ command, category: 'SWAN' });
+
+  if (launcher) {
+    launcher.add({
+      command: command,
+      category: 'Other',
+      rank: 1,
+      // kernelIconUrl: '',
+    });
+  }
 }
 
 const extension: JupyterFrontEndPlugin<void> = {
   id: 'SwanTest:plugin',
-  requires: [ICommandPalette],
+  requires: [ICommandPalette, ILauncher],
   autoStart: true,
   activate: activate
 };
