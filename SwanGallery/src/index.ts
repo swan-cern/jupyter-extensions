@@ -24,12 +24,12 @@ import { IFrame, MainAreaWidget} from '@jupyterlab/apputils';
         sandbox: ['allow-scripts', 'allow-forms', 'allow-same-origin', 'allow-modals', 'allow-downloads']
       });
       
+      //Avoid multiple executes of the same event
       if(flag === true){
         flag = false;
         window.addEventListener('message', event => {
           requestAPI<any>(event.data, 'notebook')
           .then(data => {
-            //console.log(data);
             app.commands.execute('filebrowser:open-path', {
               path: data.path,
               showBrowser: false,
@@ -43,7 +43,6 @@ import { IFrame, MainAreaWidget} from '@jupyterlab/apputils';
         });
       }
       
-
       content.url = "https://yasser-gallery.docs.cern.ch";
       content.title.label = "SwanGallery";
       let widget = new MainAreaWidget({ content });
@@ -54,7 +53,7 @@ import { IFrame, MainAreaWidget} from '@jupyterlab/apputils';
     }
   });
 
-  palette.addItem({ command, category: 'Tutorial' });
+  palette.addItem({ command, category: 'SWAN' });
 }
 
 const extension: JupyterFrontEndPlugin<void> = {

@@ -10,7 +10,6 @@ import { ServerConnection } from '@jupyterlab/services';
  * @returns The response body interpreted as JSON
  */
 
-
 export async function requestAPI<T>(
   projUrl: string,
   endPoint = '',
@@ -25,7 +24,7 @@ export async function requestAPI<T>(
     endPoint
   );
 
-  requestUrl = requestUrl+"?url="+projUrl;
+  requestUrl = requestUrl+"?url="+projUrl; //Add project url parameter 
 
   let response: Response;
   try {
