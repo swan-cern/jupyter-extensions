@@ -6,7 +6,7 @@ The extension helps reducing the amount of time spent by the user on unnecessary
 
 This extension is composed of a Python package named `SwanGallery` for the server extension and a NPM package named `SwanGallery` for the frontend extension. 
 
-The front-end communicates with the static page hosted in an MkDocs server (MkDocs-Swan) that in its own communicates with the python server using `window.PostMessage` to prompt the specific file or folder link to download. The front-end uses the link received to send a request to the back-end, which depending on the link sent uses the download logic to dowload the file or folder inside the existing session. 
+The front-end communicates with the static page hosted in an MkDocs server ([MkDocs-SWAN](https://github.com/DYasser/gallery)) that in its own communicates with the python server using `window.PostMessage` to prompt the specific file or folder link to download. The front-end uses the link received to send a request to the back-end, which depending on the link sent uses the download logic to dowload the file or folder inside the existing session. 
 
 The front-end receives back a success message from the request and uses it to have JupyterLab open the created file/ folder to have a smooth interaction for the user.
 
