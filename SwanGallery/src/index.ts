@@ -69,7 +69,7 @@ import { swanGalleryIcon } from './icons';
 }
 
 const extension: JupyterFrontEndPlugin<void> = {
-  id: 'SwanTest:plugin',
+  id: 'swangallery',
   requires: [ICommandPalette, ILauncher],
   autoStart: true,
   activate: activate
