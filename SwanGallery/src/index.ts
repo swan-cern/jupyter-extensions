@@ -5,7 +5,7 @@ import {
 
 import { requestAPI } from './handler';
 
-import { ICommandPalette} from '@jupyterlab/apputils';
+import { ICommandPalette } from '@jupyterlab/apputils';
 
 import { IFrame, MainAreaWidget} from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
@@ -17,7 +17,7 @@ import { swanGalleryIcon } from './icons';
   launcher: ILauncher
 ):Promise<void> {
   console.log('JupyterLab extension SwanGallery is activated!');
-  var flag = true;
+  let flag = true;
   const command: string = 'swangallery:open';
   app.commands.addCommand(command, {
     label: `SWAN Gallery`,
@@ -25,7 +25,7 @@ import { swanGalleryIcon } from './icons';
     execute: () => 
     { 
       let content = new IFrame({
-        sandbox: ['allow-scripts', 'allow-forms', 'allow-same-origin', 'allow-modals', 'allow-downloads']
+        sandbox: ['allow-scripts', 'allow-same-origin', 'allow-modals', 'allow-downloads']
       });
       
       //Avoid multiple executes of the same event
@@ -40,6 +40,7 @@ import { swanGalleryIcon } from './icons';
             });
           })
           .catch(reason => {
+            alert("Failed to download notebook");
             console.error(
               `The SwanGallery server extension appears to be missing.\n${reason}`
             );
@@ -47,7 +48,7 @@ import { swanGalleryIcon } from './icons';
         });
       }
       
-      content.url = "https://yasser-gallery.docs.cern.ch";
+      content.url = "https://yasser-gallery.docs.cern.ch/";
       content.title.label = "SwanGallery";
       let widget = new MainAreaWidget({ content });
       widget.id = 'swan-gallery';

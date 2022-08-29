@@ -1,3 +1,10 @@
+'''
+Changes made:
+    Slight change on move_folder function
+    Addition of move_file function to be able to download notebook files
+    Change of the way model['path'] is being assigned its value when doanloading files
+'''
+
 import json
 
 from jupyter_server.base.handlers import APIHandler

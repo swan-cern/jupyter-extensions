@@ -34,15 +34,14 @@ export async function requestAPI<T>(
     throw new ServerConnection.NetworkError(<TypeError>error);
   }
 
-  let data: any = await response.text();
+  let data: any;
 
-  if (data.length > 0) {
-    try {
-      data = JSON.parse(data);
-    } catch (error) {
-      console.log('Not a JSON response body.', response);
-    }
+  try {
+    data = await response.json();
+  } catch (error) {
+    console.log('Not a JSON response body.', error);
   }
+  
 
   if (!response.ok) {
     throw new ServerConnection.ResponseError(response, data.message || data);
