@@ -5,11 +5,13 @@ import {
 
 import { requestAPI } from './handler';
 
-import { ICommandPalette } from '@jupyterlab/apputils';
+import { Dialog, ICommandPalette } from '@jupyterlab/apputils';
 
 import { IFrame, MainAreaWidget } from '@jupyterlab/apputils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { swanGalleryIcon } from './icons';
+
+import { showDialog } from "@jupyterlab/apputils";
 
 async function activate(
   app: JupyterFrontEnd,
@@ -44,7 +46,7 @@ async function activate(
               });
             })
             .catch(reason => {
-              alert('Failed to download notebook');
+              showDialog({title:"Failed to download notebook", buttons: [Dialog.okButton()]});
               console.error(
                 `The SwanGallery server extension appears to be missing.\n${reason}`
               );
