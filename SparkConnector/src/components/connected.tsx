@@ -28,7 +28,7 @@ const YouAreConnecedTo = observer(() => {
       <li>
         sc:{' '}
         <a
-          href="https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html#pyspark.SparkContext"
+          href="https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.SparkContext.html"
           target="_blank"
           rel="noreferrer"
         >
@@ -40,7 +40,7 @@ const YouAreConnecedTo = observer(() => {
       <li>
         spark:{' '}
         <a
-          href="https://spark.apache.org/docs/latest/api/python/reference/api/pyspark.sql.SparkSession.html#pyspark.sql.SparkSession"
+          href="https://spark.apache.org/docs/latest/api/python/reference/pyspark.sql/api/pyspark.sql.SparkSession.html"
           target="_blank"
           rel="noreferrer"
         >

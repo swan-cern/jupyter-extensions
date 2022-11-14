@@ -1003,14 +1003,14 @@ SparkConnector.prototype.get_html_connected = function (config, error) {
     if (config && config.sparkmetrics) {
         var metricsURL = $('<a>').attr('href', config.sparkmetrics).attr('target','_blank').text('here')
         html.find('.success-metrics-text')
-            .text('Spark Metrics are available ')
+            .text('Spark Metrics Dashboard is available ')
             .append(metricsURL)
     }
 
     if (config && config.sparkhistoryserver) {
         var historyserverURL = $('<a>').attr('href', config.sparkhistoryserver).attr('target','_blank').text('here')
         html.find('.success-history-text')
-            .text('Spark History Server is available ')
+            .text('Spark WebUI - History Server is available ')
             .append(historyserverURL)
     }
 
