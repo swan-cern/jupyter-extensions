@@ -4,7 +4,7 @@ from jupyter_server import DEFAULT_TEMPLATE_PATH_LIST
 from jupyter_server.serverapp import ServerApp
 
 from .handlers.download import DownloadHandler
-from ..filemanager.handlers import FetchHandler, ContentsHandler
+from ..filemanager.handlers import FetchHandler
 import os
 
 
@@ -24,8 +24,7 @@ def _load_jupyter_server_extension(serverapp):
     """
     A server extension that installs extra handlers required for SWAN
     and that are not served by the default ContentsManager API.
-    That are essentially all handlers required for downloads of Projects (open in SWAN)
-    and our delete implementation (that allows deletion of a non-empty folder).
+    That are essentially all handlers required for downloads of Projects (open in SWAN).
     Enabling this extension also configures the SWAN theme automatically.
     """
 
@@ -33,7 +32,6 @@ def _load_jupyter_server_extension(serverapp):
 
     new_handlers = [
         (r"/api/contents/fetch", FetchHandler),
-        (r"/api/swan/contents%s" % path_regex, ContentsHandler),
         (r"/download", DownloadHandler),
     ]
 

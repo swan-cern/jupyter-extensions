@@ -6,7 +6,7 @@ from .proj_url_checker import is_cernbox_shared_link, get_name_from_shared_from_
 from tornado import web
 import nbformat
 from nbformat.v4 import new_notebook
-from traitlets import Unicode
+from traitlets import Unicode, Bool
 import os, io, stat, shutil, subprocess, tempfile, requests
 import zipfile
 from notebook.utils import (
@@ -24,6 +24,12 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
     untitled_project = Unicode("Project", config=True,
         help="The base name used when creating untitled projects."
+    )
+
+    always_delete_dir = Bool(
+        True,
+        config=True,
+        help="""Allows deleting non empty directories. Default to True for SWAN""",
     )
 
     def _files_handler_params_default(self):
@@ -336,43 +342,6 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
             raise web.HTTPError(400, "The name %s is restricted" % self.swan_default_folder)
 
         return super(LargeFileManager, self).update(model, path)
-
-    def delete(self, path, force=False):
-        """Delete a file/directory and any associated checkpoints."""
-        path = path.strip('/')
-        if not path:
-            raise web.HTTPError(400, "Can't delete root")
-        self.delete_file(path, force)
-        self.checkpoints.delete_all_checkpoints(path)
-
-    def delete_file(self, path, force=False):
-        """Delete file at path."""
-
-        path = path.strip('/')
-        os_path = self._get_os_path(path)
-        rm = os.unlink
-        if not os.path.exists(os_path):
-             raise web.HTTPError(404, u'File or directory does not exist: %s' % os_path)
-
-        if os.path.isdir(os_path):
-            if not force:
-                listing = os.listdir(os_path)
-                # Don't delete non-empty directories.
-                # A directory containing only leftover checkpoints is
-                # considered empty.
-                cp_dir = getattr(self.checkpoints, 'checkpoint_dir', None)
-                for entry in listing:
-                    if entry != cp_dir and entry != self.swan_default_file:
-                        raise web.HTTPError(400, u'Directory %s not empty' % os_path)
-
-            self.log.debug("Removing directory %s", os_path)
-            with self.perm_to_403():
-                shutil.rmtree(os_path)
-
-        else:
-            self.log.debug("Unlinking file %s", os_path)
-            with self.perm_to_403():
-                rm(os_path)
 
     def download(self, url):
         """ Downloads a Project from git or cernbox """
