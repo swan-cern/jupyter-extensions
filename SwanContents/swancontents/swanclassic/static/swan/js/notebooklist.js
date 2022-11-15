@@ -886,7 +886,7 @@ define([
                                 }
                             }
 
-                            that.contents.force_delete(item.path).then(function() {
+                            that.contents.delete(item.path).then(function() {
                                 that.notebook_deleted(item.path);
                             }).catch(function(e) {
 

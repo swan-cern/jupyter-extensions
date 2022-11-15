@@ -61,16 +61,3 @@ class FetchHandler(APIHandler):
         except Exception as e:
             # Clean the error and show only the message
             raise web.HTTPError(400, str(e))
-
-
-class ContentsHandler(APIHandler):
-
-    @web.authenticated
-    @gen.coroutine
-    def delete(self, path=''):
-        """delete a file in the given path"""
-        cm = self.contents_manager
-        self.log.warning('delete %s', path)
-        yield maybe_future(cm.delete(path, force=True))
-        self.set_status(204)
-        self.finish()
