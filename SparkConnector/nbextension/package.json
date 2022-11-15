@@ -1,6 +1,6 @@
 {
     "name": "sparkconnector-nbextension",
-    "version": "2.4.2",
+    "version": "2.4.3",
     "description": "Jupyter Notebook extension to connect to CERN Spark Cluster",
     "keywords": [
         "Jupyter",
