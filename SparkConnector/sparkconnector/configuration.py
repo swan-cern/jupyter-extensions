@@ -280,6 +280,9 @@ class SparkK8sConfiguration(SparkConfiguration):
         conf.set('spark.executorEnv.SPARK_HOME', os.environ.get('SPARK_HOME'))
         conf.set('spark.executorEnv.SPARK_EXTRA_CLASSPATH', os.environ.get('SPARK_DIST_CLASSPATH'))
 
+        # Disable console progress as it would be printed in the notebook (since ipython 6)
+        conf.set('spark.ui.showConsoleProgress', 'false')
+
         # Authenticate EOS and HDFS also on spark executors by
         # telling spark to mount spark-tokens secret to each executor and set env pointing to secret data
         secret_data = {}
