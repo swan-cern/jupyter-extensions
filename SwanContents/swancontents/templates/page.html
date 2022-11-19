@@ -56,13 +56,17 @@
               "*": {
                   "jqueryui": "jquery-ui",
                   'tree/js/notebooklist': 'nbextensions/swancontents/notebooklist',
-                  'contents': 'nbextensions/swancontents/contents'
+                  'contents': 'nbextensions/swancontents/contents',
+                  'base/js/utils': 'nbextensions/swancontents/utils'
               },
               'nbextensions/swancontents/notebooklist': {
                   'tree/js/notebooklist': 'tree/js/notebooklist'
               },
               'nbextensions/swancontents/contents': {
                       'contents': '{{ contents_js_source }}'
+              },
+              'nbextensions/swancontents/utils': {
+                  'base/js/utils': 'base/js/utils'
               }
           },
           shim: {
