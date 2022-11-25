@@ -975,7 +975,7 @@ SparkConnector.prototype.get_html_connecting = function (config, error) {
         .append('<i class="icon-clockwise fa fa-spin"></i>')
         .appendTo(wrapper);
 
-    wrapper.append('Trying to connect to Spark Clusters.<br>This may take a while...');
+    wrapper.append('Trying to connect to the selected Spark cluster.<br>This may take a while...');
 
     var logs_wrapper = $('<div>')
         .addClass('log-connecting')
@@ -1010,7 +1010,7 @@ SparkConnector.prototype.get_html_connected = function (config, error) {
     if (config && config.sparkhistoryserver) {
         var historyserverURL = $('<a>').attr('href', config.sparkhistoryserver).attr('target','_blank').text('here')
         html.find('.success-history-text')
-            .text('Spark WebUI - History Server is available ')
+            .text('<b>Spark WebUI:</b> History Server is available ')
             .append(historyserverURL)
     }
 
