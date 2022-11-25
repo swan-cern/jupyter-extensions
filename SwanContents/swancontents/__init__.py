@@ -21,11 +21,6 @@ def _jupyter_nbextension_paths():
                 src="js",
                 dest="swancontents",
                 require="swancontents/notebooklist"),
-            dict(
-                section="common",
-                src="js",
-                dest="swancontents",
-                require="swancontents/utils"),
             ]
 
 
