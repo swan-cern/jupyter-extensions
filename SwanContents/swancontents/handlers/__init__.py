@@ -27,6 +27,12 @@ def load_jupyter_server_extension(nb_server_app):
     # Calculate current year for copyright message
     nb_server_app.jinja_template_vars['current_year'] = datetime.datetime.now().year
 
+    if datetime.date.today().month == 12:
+        # It's Christmas time!
+        nb_server_app.jinja_template_vars['swan_logo_filename'] = 'swan_letters_christmas.png' 
+    else:
+        nb_server_app.jinja_template_vars['swan_logo_filename'] = 'logo_swan_letters.png' 
+
     for handler in new_handlers:
         pattern = url_path_join(web_app.settings['base_url'], handler[0])
         new_handler = tuple([pattern] + list(handler[1:]))
