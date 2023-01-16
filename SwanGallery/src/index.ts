@@ -12,6 +12,17 @@ import { ILauncher } from '@jupyterlab/launcher';
 import { swanGalleryIcon } from './icons';
 
 import { showDialog } from "@jupyterlab/apputils";
+import { ConfigSection } from '@jupyterlab/services';
+
+/*
+  Fetch URL of the gallery website from the jupyter server config
+*/
+async function initConfigurationFromServer() {
+  const galleryUrl = await ConfigSection.create({
+    name: 'gallery',
+  });
+  return galleryUrl.data?.gallery_url as string;
+}
 
 async function activate(
   app: JupyterFrontEnd,
@@ -19,6 +30,9 @@ async function activate(
   launcher: ILauncher
 ): Promise<void> {
   console.log('JupyterLab extension SwanGallery is activated!');
+  
+  const galleryUrl = await initConfigurationFromServer();
+  
   let flag = true;
   const command = 'swangallery:open';
   app.commands.addCommand(command, {
@@ -55,7 +69,7 @@ async function activate(
         });
       }
 
-      content.url = 'https://yasser-gallery.docs.cern.ch/';
+      content.url = galleryUrl;
       content.title.label = 'SWAN Gallery';
       const widget = new MainAreaWidget({ content });
       widget.id = 'swan-gallery';
