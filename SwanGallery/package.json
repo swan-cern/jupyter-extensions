@@ -11,11 +11,8 @@
   "bugs": {
     "url": "https://github.com/swan-cern/jupyter-extensions/issues"
   },
-  "license": "BSD-3-Clause",
-  "author": {
-    "name": "Swan",
-    "email": ""
-  },
+  "license": "AGPL-3.0",
+  "author": "SWAN Admins",
   "files": [
     "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
     "style/**/*.{css,js,eot,gif,html,jpg,json,png,svg,woff2,ttf}"
