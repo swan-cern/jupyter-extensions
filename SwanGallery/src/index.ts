@@ -34,28 +34,29 @@ async function activate(
         ]
       });
 
-      //Avoid multiple executes of the same event
+      // Avoid multiple executes of the same event
       if (flag === true) {
         flag = false;
-        window.addEventListener('message', event => {
-          requestAPI<any>(event.data, 'notebook')
-            .then(data => {
-              app.commands.execute('filebrowser:open-path', {
-                path: data.path,
-                showBrowser: false
-              });
-            })
-            .catch(reason => {
-              showDialog({title:"Failed to download notebook", buttons: [Dialog.okButton()]});
-              console.error(
-                `The SwanGallery server extension appears to be missing.\n${reason}`
-              );
+        window.addEventListener('message', async (event: any) => {
+          try {
+            const response = await requestAPI<any>(event.data, 'notebook');
+
+            app.commands.execute('filebrowser:open-path', {
+              path: response.path,
+              showBrowser: false
             });
+
+          } catch (error) {
+            showDialog({ title: "Failed to download notebook", buttons: [Dialog.okButton()] });
+            console.error(
+              `The SwanGallery server extension appears to be missing.\n ${error}`
+            );
+          }
         });
       }
 
       content.url = 'https://yasser-gallery.docs.cern.ch/';
-      content.title.label = 'SwanGallery';
+      content.title.label = 'SWAN Gallery';
       const widget = new MainAreaWidget({ content });
       widget.id = 'swan-gallery';
       widget.title.closable = true;
