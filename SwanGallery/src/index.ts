@@ -3,7 +3,7 @@ import {
   JupyterFrontEndPlugin
 } from '@jupyterlab/application';
 
-import { requestAPI } from './handler';
+import { downloadUrlFromServer } from './handler';
 
 import { Dialog, ICommandPalette } from '@jupyterlab/apputils';
 
@@ -53,7 +53,7 @@ async function activate(
         flag = false;
         window.addEventListener('message', async (event: any) => {
           try {
-            const response = await requestAPI<any>(event.data, 'notebook');
+            const response = await downloadUrlFromServer(event.data);
 
             app.commands.execute('filebrowser:open-path', {
               path: response.path,

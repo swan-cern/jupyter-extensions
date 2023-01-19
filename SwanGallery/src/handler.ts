@@ -1,39 +1,34 @@
 import { URLExt } from '@jupyterlab/coreutils';
-
 import { ServerConnection } from '@jupyterlab/services';
 
 /**
- * Call the API extension
- *
- * @param endPoint API REST end point for the extension
- * @param init Initial values for the request
- * @returns The response body interpreted as JSON
+ * Calls /api/contents/fetch/ with the url to download,
+ * which downloads the notebook/project URL to the home directory of the user 
+ * @returns The Jupyter server contents API response of the downloaded file
  */
 
-export async function requestAPI<T>(
-  projUrl: string,
-  endPoint = '',
-  init: RequestInit = {}
-): Promise<T> {
+export async function downloadUrlFromServer(
+  urlToDownload: string,
+): Promise<any> {
   const settings = ServerConnection.makeSettings();
 
   let requestUrl = URLExt.join(
     settings.baseUrl,
-    'SwanGallery', // API Namespace
-    endPoint
+    'api',
+    'contents',
+    'fetch'
   );
 
-  requestUrl = requestUrl + '?url=' + projUrl; //Add project url parameter
+  requestUrl = requestUrl + '?url=' + urlToDownload; //Add project url parameter
 
   let response: Response;
   try {
-    response = await ServerConnection.makeRequest(requestUrl, init, settings);
+    response = await ServerConnection.makeRequest(requestUrl, {}, settings);
   } catch (error) {
     throw new ServerConnection.NetworkError(<TypeError>error);
   }
 
   let data: any;
-
   try {
     data = await response.json();
   } catch (error) {
