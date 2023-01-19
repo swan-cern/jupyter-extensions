@@ -44,7 +44,8 @@ async function activate(
           'allow-scripts',
           'allow-same-origin',
           'allow-modals',
-          'allow-downloads'
+          'allow-downloads', // Required to download notebooks
+          'allow-popups' // Required for opening external links in new tabs
         ]
       });
 
@@ -52,6 +53,10 @@ async function activate(
       if (flag === true) {
         flag = false;
         window.addEventListener('message', async (event: any) => {
+          if (event.origin != galleryUrl) {
+            console.error(`SwanGallery: Failed to validate origin, message from ${event.origin} does not match ${galleryUrl} . Skipping downloading URL`);
+            return;
+          }
           try {
             const response = await downloadUrlFromServer(event.data);
 
