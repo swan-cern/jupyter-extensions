@@ -52,15 +52,12 @@
     "watch:src": "tsc -w"
   },
   "dependencies": {
-    "@jupyterlab/application": "^3.0.3",
-    "@jupyterlab/apputils": "^3.0.2",
-    "@jupyterlab/mainmenu": "^3.0.2",
-    "@jupyterlab/services": "^6.0.2",
-    "@jupyterlab/ui-components": "^3.0.2",
+    "@jupyterlab/application": "^3.0.13",
+    "@jupyterlab/mainmenu": "^3.0.10",
     "react": "^17.0.1"
   },
   "devDependencies": {
-    "@jupyterlab/builder": "^3.0.0-rc.13",
+    "@jupyterlab/builder": "^3.0.9",
     "@typescript-eslint/eslint-plugin": "^2.27.0",
     "@typescript-eslint/parser": "^2.27.0",
     "eslint": "^7.5.0",
