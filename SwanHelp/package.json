@@ -54,6 +54,7 @@
   "dependencies": {
     "@jupyterlab/application": "^3.0.13",
     "@jupyterlab/mainmenu": "^3.0.10",
+    "@jupyterlab/launcher": "^3.0.10",
     "react": "^17.0.1"
   },
   "devDependencies": {

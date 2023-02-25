@@ -1,24 +1,41 @@
 import { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
 import { ConfigWithDefaults, ConfigSection } from '@jupyterlab/services';
-import { IFrame, MainAreaWidget } from '@jupyterlab/apputils';
+import { Dialog, IFrame, MainAreaWidget, ICommandPalette } from '@jupyterlab/apputils';
 import { IMainMenu } from '@jupyterlab/mainmenu';
+import { ILauncher } from '@jupyterlab/launcher';
 import swanDialog from './dialog';
+import { swanGalleryIcon } from './icons';
+import { downloadUrlFromServer } from './gallery-download-helper';
+import { showDialog } from "@jupyterlab/apputils";
+
+function registerGalleryListener(app: JupyterFrontEnd, galleryUrl: string) {
+  window.addEventListener('message', async (event: any) => {
+    if (event.origin != galleryUrl) {
+      console.error(`SwanGallery: Failed to validate origin, message from ${event.origin} does not match ${galleryUrl} . Skipping downloading URL`);
+      return;
+    }
+    try {
+      const response = await downloadUrlFromServer(event.data);
+
+      app.commands.execute('filebrowser:open-path', {
+        path: response.path,
+        showBrowser: false
+      });
+
+    } catch (error) {
+      showDialog({ title: "Failed to download notebook", buttons: [Dialog.okButton()] });
+      console.error(
+        `The SwanGallery server extension appears to be missing.\n ${error}`
+      );
+    }
+  });
+}
 
 const defaultConfigs = {
   help: "https://swan.docs.cern.ch/",
   community: "https://cern.ch/swan-community",
   support: "https://cern.service-now.com/service-portal/function.do?name=swan",
-  gallery: "https://cern.ch/swan-gallery"
 }
-
-const extension: JupyterFrontEndPlugin<void> = {
-  id: '@swan-cern/swanhelp:plugin',
-  requires: [IMainMenu],
-  autoStart: true,
-  activate: activate
-};
-
-export default extension;
 
 namespace CommandIDs {
   export const about = 'swanhelp:about';
@@ -30,17 +47,20 @@ namespace CommandIDs {
 
 async function activate(
   app: JupyterFrontEnd,
-  mainMenu: IMainMenu
-):Promise<void> {
+  mainMenu: IMainMenu,
+  palette: ICommandPalette,
+  launcher: ILauncher
+): Promise<void> {
+  console.log('JupyterLab extension SwanHelp is activated!');
 
   // Load the config from the server but set the default values.
   // The config contains the urls for each button, in case we need to overwrite them
   // (for ScinceBox for example).
   let section = await ConfigSection.create({ name: 'help' });
   let config = new ConfigWithDefaults({
-      section,
-      defaults: defaultConfigs,
-      className: 'SwanHelp'
+    section,
+    defaults: defaultConfigs,
+    className: 'SwanHelp'
   });
 
   // Create a group of SWAN buttons
@@ -70,11 +90,15 @@ async function activate(
       }
     });
   }
-  
-  let galleryUrl = config.get('gallery') as string;
+
+  const gallerySection =  await ConfigSection.create({ name: 'gallery' });
+  const galleryUrl = gallerySection.data?.gallery_url as string
+
   if (galleryUrl !== '') {
+    registerGalleryListener(app, galleryUrl)
     app.commands.addCommand(CommandIDs.gallery, {
       label: 'Examples Gallery',
+      icon: swanGalleryIcon,
       execute: () => {
         return newIframeWidget(galleryUrl, "Gallery");
       }
@@ -105,17 +129,38 @@ async function activate(
   function newIframeWidget(url: string, text: string): MainAreaWidget<IFrame> {
     // Allow for search functionality and animations.
     let content = new IFrame({
-      sandbox: ['allow-scripts', 'allow-forms', 'allow-same-origin']
+      sandbox: ['allow-scripts',
+        'allow-forms',
+        'allow-same-origin',
+        'allow-modals',
+        'allow-downloads', // Required to download notebooks
+        'allow-popups' // Required for opening external links in new tabs
+      ]
     });
     content.url = url;
-    // content.addClass(HELP_CLASS);
     content.title.label = text;
-    // content.id = `${namespace}-${++counter}`;
     let widget = new MainAreaWidget({ content });
     widget.addClass('jp-Help');
     app.shell.add(widget, 'main');
     return widget;
   }
 
-  return;
+  palette.addItem({ command: CommandIDs.gallery, category: 'SWAN' });
+
+  if (launcher) {
+    launcher.add({
+      command: CommandIDs.gallery,
+      category: 'Other',
+      rank: 1
+    });
+  }
 }
+
+const extension: JupyterFrontEndPlugin<void> = {
+  id: '@swan-cern/swanhelp:plugin',
+  requires: [IMainMenu, ICommandPalette, ILauncher],
+  autoStart: true,
+  activate: activate
+};
+
+export default extension;
