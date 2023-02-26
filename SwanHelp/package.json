@@ -35,7 +35,7 @@
     "build:labextension:dev": "jupyter labextension build --development True .",
     "build:lib": "tsc",
     "build:nbextension": "yarn --cwd nbextension build",
-    "build:prod": "jlpm run build:lib && jlpm run build:labextension && jlpm run build:nbextension",
+    "build:prod": "jlpm run build:lib && jlpm run build:labextension",
     "clean": "jlpm run clean:lib",
     "clean:all": "jlpm run clean:lib && jlpm run clean:labextension && jlpm run clean:nbextension",
     "clean:labextension": "rimraf swanhelp/labextension",

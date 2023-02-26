@@ -11,6 +11,7 @@ from jupyter_packaging import (
 import setuptools
 
 HERE = os.path.abspath(os.path.dirname(__file__))
+NBEXTENSION = os.path.join(HERE, "nbextension")
 
 # The name of the project
 name="swanhelp"
@@ -49,6 +50,7 @@ cmdclass = create_cmdclass("jsdeps",
 
 js_command = combine_commands(
     install_npm(HERE, build_cmd="build:prod", npm=["jlpm"]),
+    install_npm(NBEXTENSION, build_cmd="build", npm=["jlpm"]),
     ensure_targets(jstargets),
 )
 
