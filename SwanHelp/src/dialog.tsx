@@ -13,7 +13,7 @@ function swanDialog() {
         <span className="jp-AboutSWAN-name">
             <h1>SWAN</h1>
             <span className="jp-About-copyright">
-                © CERN 2016-2021.<br/>All rights reserved.
+                © CERN 2016-{(new Date().getFullYear())}.<br/>All rights reserved.
             </span>
         </span>
       </span>
