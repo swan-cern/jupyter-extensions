@@ -2,10 +2,28 @@
 
 Help panel for SWAN
 
+This extension adds the following to the 'Help' menu in the menubar
+- About dialog 
+- Links to Community Forum, and Support portal
+- A help panel that opens an iframe to the documentation website
+- An 'Examples Gallery' panel that opens the notebook gallery website inside an iframe. The extension 
+  also allows downloading and opening notebooks in the gallery website directly inside the SWAN session.
 
 This extension is composed of a Python package named `swanhelp`, which installs the nbextension and a NPM package named `@swan-cern/swanhelp`
 for the JupyterLab extension.
 
+## How the 'Examples Gallery' works
+
+- The gallery panel allows browsing the SWAN Gallery website within an iframe and downloading notebooks into the 
+SWAN session all from within the JupyterLab UI.
+
+- On clicking download inside the iframe, javascript inside the iframe sends a message using `window.postMessage()` to the 
+parent JupyterLab window.
+
+- The JupyterLab extension handles this message and makes a request to the SwanContents API (`/user/api/contents/download`) with the URL 
+of the notebook to download.
+
+- The jupyter server downloads the notebook and on success the notebook is opened by the extension in a new tab in JupyterLab 
 
 ## Requirements
 
