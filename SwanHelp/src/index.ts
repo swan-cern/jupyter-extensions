@@ -3,7 +3,7 @@ import { ConfigWithDefaults, ConfigSection } from '@jupyterlab/services';
 import { Dialog, IFrame, MainAreaWidget, ICommandPalette } from '@jupyterlab/apputils';
 import { IMainMenu } from '@jupyterlab/mainmenu';
 import { ILauncher } from '@jupyterlab/launcher';
-import swanDialog from './dialog';
+import { showAboutDialog, showLoadingSpinnerDialog } from './dialog';
 import { swanGalleryIcon } from './icons';
 import { downloadUrlFromServer } from './gallery-download-helper';
 import { showDialog } from "@jupyterlab/apputils";
@@ -14,6 +14,7 @@ function registerGalleryListener(app: JupyterFrontEnd, galleryUrl: string) {
       console.error(`SwanGallery: Failed to validate origin, message from ${event.origin} does not match ${galleryUrl} . Skipping downloading URL`);
       return;
     }
+    const dialog = showLoadingSpinnerDialog();
     try {
       const response = await downloadUrlFromServer(event.data);
 
@@ -21,8 +22,9 @@ function registerGalleryListener(app: JupyterFrontEnd, galleryUrl: string) {
         path: response.path,
         showBrowser: false
       });
-
+      dialog.reject();
     } catch (error) {
+      dialog.reject();
       showDialog({ title: "Failed to download notebook", buttons: [Dialog.okButton()] });
       console.error(
         `The SwanGallery server extension appears to be missing.\n ${error}`
@@ -78,7 +80,7 @@ async function activate(
 
   app.commands.addCommand(CommandIDs.about, {
     label: `About SWAN`,
-    execute: () => swanDialog()
+    execute: () => showAboutDialog()
   });
 
   let helpUrl = config.get('help') as string;
@@ -91,7 +93,7 @@ async function activate(
     });
   }
 
-  const gallerySection =  await ConfigSection.create({ name: 'gallery' });
+  const gallerySection = await ConfigSection.create({ name: 'gallery' });
   const galleryUrl = gallerySection.data?.gallery_url as string
 
   if (galleryUrl !== '') {
