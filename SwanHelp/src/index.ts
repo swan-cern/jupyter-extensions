@@ -110,6 +110,16 @@ async function activate(
       ...commandGallery,
       icon: swanGalleryIcon
     });
+
+    palette.addItem({ command: CommandIDs.gallery, category: 'SWAN' });
+  
+    if (launcher) {
+      launcher.add({
+        command: CommandIDs.galleryLauncher,
+        category: 'Other',
+        rank: 3
+      });
+    }
   }
   
   let communityUrl = config.get('community') as string;
@@ -150,16 +160,6 @@ async function activate(
     widget.addClass('jp-Help');
     app.shell.add(widget, 'main');
     return widget;
-  }
-
-  palette.addItem({ command: CommandIDs.gallery, category: 'SWAN' });
-
-  if (launcher) {
-    launcher.add({
-      command: CommandIDs.galleryLauncher,
-      category: 'Other',
-      rank: 3
-    });
   }
 }
 
