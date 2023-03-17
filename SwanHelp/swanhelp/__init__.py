@@ -19,6 +19,11 @@ def _jupyter_labextension_paths():
 
 # Server extension
 def _jupyter_server_extension_points():
+    # Empty to avoid error when automatically trying to enable all serverextensions
+    return []
+
+# Compatibility with old nb server extensions
+def _jupyter_server_extension_paths():
     return []
 
 # NB extension
