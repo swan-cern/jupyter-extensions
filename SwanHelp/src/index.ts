@@ -27,7 +27,7 @@ function registerGalleryListener(app: JupyterFrontEnd, galleryUrl: string) {
       dialog.reject();
       showDialog({ title: "Failed to download notebook", buttons: [Dialog.okButton()] });
       console.error(
-        `The SwanGallery server extension appears to be missing.\n ${error}`
+        `Failed to download notebook.\n ${error}`
       );
     }
   });
@@ -37,6 +37,7 @@ const defaultConfigs = {
   help: "https://swan.docs.cern.ch/",
   community: "https://cern.ch/swan-community",
   support: "https://cern.service-now.com/service-portal/function.do?name=swan",
+  gallery: "https://cern.ch/swan-gallery"
 }
 
 namespace CommandIDs {
@@ -93,8 +94,7 @@ async function activate(
     });
   }
 
-  const gallerySection = await ConfigSection.create({ name: 'gallery' });
-  const galleryUrl = gallerySection.data?.gallery_url as string
+  let galleryUrl = config.get('gallery') as string;
 
   if (galleryUrl !== '') {
     registerGalleryListener(app, galleryUrl)
