@@ -46,6 +46,7 @@ namespace CommandIDs {
   export const community = 'swanhelp:community';
   export const support = 'swanhelp:support';
   export const gallery = 'swanhelp:gallery';
+  export const galleryLauncher = 'swanhelp:gallery_launcher';
 }
 
 async function activate(
@@ -98,12 +99,16 @@ async function activate(
 
   if (galleryUrl !== '') {
     registerGalleryListener(app, galleryUrl)
-    app.commands.addCommand(CommandIDs.gallery, {
+    const commandGallery = {
       label: 'Examples Gallery',
-      icon: swanGalleryIcon,
       execute: () => {
         return newIframeWidget(galleryUrl, "Gallery");
       }
+    }
+    app.commands.addCommand(CommandIDs.gallery, commandGallery);
+    app.commands.addCommand(CommandIDs.galleryLauncher, {
+      ...commandGallery,
+      icon: swanGalleryIcon
     });
   }
   
@@ -151,9 +156,9 @@ async function activate(
 
   if (launcher) {
     launcher.add({
-      command: CommandIDs.gallery,
+      command: CommandIDs.galleryLauncher,
       category: 'Other',
-      rank: 1
+      rank: 3
     });
   }
 }
