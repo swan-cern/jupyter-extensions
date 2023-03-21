@@ -49,7 +49,7 @@ jobs:
       uses: actions/setup-node@v1
       with:
         always-auth: true
-        node-version: '12.x'
+        node-version: '19.x'
         registry-url: https://registry.npmjs.org
 
     - name: Install dependencies 
