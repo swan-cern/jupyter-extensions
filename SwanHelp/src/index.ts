@@ -37,7 +37,7 @@ const defaultConfigs = {
   help: "https://swan.docs.cern.ch/",
   community: "https://cern.ch/swan-community",
   support: "https://cern.service-now.com/service-portal/function.do?name=swan",
-  gallery: "https://cern.ch/swan-gallery"
+  gallery: "https://swan-gallery.web.cern.ch"
 }
 
 namespace CommandIDs {
