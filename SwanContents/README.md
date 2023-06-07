@@ -26,10 +26,11 @@ To replace the default Jupyter Contents Manager (including its Javascript librar
 ```python
 c.NotebookApp.default_url = 'projects'
 c.NotebookApp.contents_manager_class = 'swancontents.filemanager.swanfilemanager.SwanFileManager'
-c.ContentsManager.checkpoints_class = 'swancontents.filemanager.checkpoints.EOSCheckpoints'
 from swancontents import get_templates
 c.NotebookApp.extra_template_paths = [get_templates()]
 ```
+
+Note: `EOSCheckpoints` is set by default as `checkpoints_class`.
 
 In case you want to provide a different Galleries website, set the following configuration:
 
