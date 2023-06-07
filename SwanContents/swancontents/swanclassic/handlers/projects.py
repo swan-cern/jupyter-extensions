@@ -1,10 +1,16 @@
 
-from tornado import web
-from notebook.base.handlers import IPythonHandler, path_regex
-from notebook.utils import url_path_join, url_escape
+from tornado import web, gen
+
+from jupyter_server.base.handlers import JupyterHandler
+from jupyter_server.extension.handler import (
+    ExtensionHandlerMixin,
+    ExtensionHandlerJinjaMixin
+)
+from jupyter_server.base.handlers import path_regex
+from jupyter_server.utils import url_path_join, url_escape, ensure_async
 
 
-class ProjectsHandler(IPythonHandler):
+class ProjectsHandler(ExtensionHandlerJinjaMixin, ExtensionHandlerMixin, JupyterHandler):
     """ Render the projects view, listing projects, notebooks, etc """
 
     def generate_breadcrumbs(self, path):
@@ -32,23 +38,30 @@ class ProjectsHandler(IPythonHandler):
             return 'My Projects'
 
     @web.authenticated
-    def get(self, path=''):
+    async def get(self, path=''):
         """ Get handler to cope with Projects as root folder """
         path = path.strip('/')
         cm = self.contents_manager
 
         swan_path = url_path_join('SWAN_projects', path)
 
-        if cm.dir_exists(path=swan_path):
-            if cm.is_hidden(swan_path):
+        file_exists = False
+        dir_exists = await ensure_async(cm.dir_exists(path=swan_path))
+        if not dir_exists:
+            file_exists = await ensure_async(cm.file_exists(swan_path))
+
+        if dir_exists:
+            is_hidden = await ensure_async(cm.is_hidden(swan_path))
+            if is_hidden and not cm.allow_hidden:
                 self.log.info("Refusing to serve hidden directory, via 404 Error")
                 raise web.HTTPError(404)
 
             if path != '':
-                parent_project = cm._get_project_path(swan_path)
+                parent_project = await ensure_async(cm._get_project_path(swan_path))
                 if not parent_project or parent_project == 'invalid':
                     self.log.info("Trying to see a folder inside Projects")
                     raise web.HTTPError(404)
+
             breadcrumbs = self.generate_breadcrumbs(path)
             page_title = self.generate_page_title(path)
             self.write(self.render_template('tree.html',
@@ -59,9 +72,9 @@ class ProjectsHandler(IPythonHandler):
                                             server_root=self.settings['server_root_dir'],
                                             projects_page=True,
                                             ))
-        elif cm.file_exists(swan_path):
+        elif file_exists:
             # it's not a directory, we have redirecting to do
-            model = cm.get(swan_path, content=False)
+            model = await ensure_async(cm.get(swan_path, content=False))
             # redirect to /api/notebooks if it's a notebook, otherwise /api/files
             service = 'notebooks' if model['type'] == 'notebook' else 'files'
             url = url_path_join(
@@ -71,3 +84,13 @@ class ProjectsHandler(IPythonHandler):
             self.redirect(url)
         else:
             raise web.HTTPError(404)
+
+
+#-----------------------------------------------------------------------------
+# URL to handler mappings
+#-----------------------------------------------------------------------------
+
+
+default_handlers = [
+    (r"/projects%s" % path_regex, ProjectsHandler),
+]

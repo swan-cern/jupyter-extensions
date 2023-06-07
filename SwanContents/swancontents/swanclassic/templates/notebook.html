@@ -1,6 +1,6 @@
 {% extends "page.html" %}
 
-{% block favicon %}<link rel="shortcut icon" type="image/x-icon" href="{{static_url("base/images/favicon-notebook.ico") }}">{% endblock %}
+{% block favicon %}<link id="favicon" rel="shortcut icon" type="image/x-icon" href="{{static_url("base/images/favicon-notebook.ico") }}">{% endblock %}
 
 {% block stylesheet %}
 
@@ -14,6 +14,7 @@ window.mathjax_url = "{{mathjax_url}}";
 </script>
 
 <link rel="stylesheet" href="{{ static_url("components/bootstrap-tour/build/css/bootstrap-tour.min.css") }}" type="text/css" />
+<link rel="stylesheet" href="{{ static_url("components/codemirror/lib/codemirror.css") }}">
 
 {{super()}}
 
@@ -78,7 +79,8 @@ data-notebook-path="{{notebook_path | urlencode}}"
                                         <ul id="file_menu" class="dropdown-menu" role="menu" aria-labelledby="filelink">
                                             <li id="new_notebook" class="menu_focus_highlight dropdown dropdown-submenu" role="none">
                                                 <a href="#" role="menuitem" aria-haspopup="true" aria-expanded="false" class="dropdown-toggle" data-toggle="dropdown">{% trans %}New Notebook{% endtrans %}<span class="sr-only">Dropdown</span></a>
-                                                <ul class="dropdown-menu" id="menu-new-notebook-submenu" role="menu"></ul>
+                                                <ul class="dropdown-menu" id="menu-new-notebook-submenu" role="menu">
+                                                </ul>
                                             </li>
                                             <li id="open_notebook" role="none"
                                                 title="{% trans %}Opens a new window with the Dashboard view{% endtrans %}">

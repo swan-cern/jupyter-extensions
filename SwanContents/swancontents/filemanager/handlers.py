@@ -1,4 +1,4 @@
-from notebook.base.handlers import (
+from jupyter_server.base.handlers import (
     AuthenticatedFileHandler, APIHandler
 )
 from notebook.utils import maybe_future, url_path_join

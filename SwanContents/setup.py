@@ -6,25 +6,23 @@ import os
 from jupyter_packaging import get_version, create_cmdclass
 import setuptools
 
-name="swancontents"
+name = "swancontents"
 
 # Get our version
 version = get_version(os.path.join(name, "_version.py"))
 
-package_data_spec = {
-    name: [
-        "*"
-    ]
-}
+package_data_spec = {name: ["*"]}
 
 data_files_spec = [
-    ("etc/jupyter/jupyter_notebook_config.d",
-     "jupyter-config", "swancontents.json"),
+    (
+        "etc/jupyter/jupyter_server_config.d",
+        "jupyter_server_config.d",
+        "swancontents.json",
+    ),
 ]
 
 cmdclass = create_cmdclass(
-    package_data_spec=package_data_spec,
-    data_files_spec=data_files_spec
+    package_data_spec=package_data_spec, data_files_spec=data_files_spec
 )
 
 with open("README.md", "r") as fh:
@@ -36,15 +34,13 @@ setup_args = dict(
     url="https://github.com/swan-cern/jupyter-extensions",
     author="SWAN Admins",
     description="SWAN Contents Manager for Jupyter",
-    long_description= long_description,
+    long_description=long_description,
     long_description_content_type="text/markdown",
-    cmdclass= cmdclass,
+    cmdclass=cmdclass,
     packages=setuptools.find_packages(),
     install_requires=[
-          'notebook==6.4.*',
-          'tornado',
-          'jupyter_core',
-          'requests'
+        "jupyter_server",
+        "nbclassic",
     ],
     zip_safe=False,
     include_package_data=True,
@@ -55,12 +51,15 @@ setup_args = dict(
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
         "Framework :: Jupyter",
     ],
+    python_requires=">=3.9",
+    entry_points={
+        "console_scripts": [
+            "jupyter-swanclassic = swancontents.swanclassic.notebookapp:main",
+        ]
+    },
 )
 
 

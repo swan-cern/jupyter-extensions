@@ -1,9 +1,10 @@
 
-import notebook.tree.handlers as notebook
-from notebook.utils import url_path_join, url_escape
+from nbclassic.tree.handlers import TreeHandler
+from jupyter_server.base.handlers import path_regex
+from jupyter_server.utils import url_path_join, url_escape
 
 
-class TreeHandler(notebook.TreeHandler):
+class CernboxHandler(TreeHandler):
     """ Render the CERNBox view, listing notebooks, etc """
 
     def generate_breadcrumbs(self, path):
@@ -29,3 +30,12 @@ class TreeHandler(notebook.TreeHandler):
             return 'CERNBox - ' + page_title
         else:
             return 'CERNBox'
+
+#-----------------------------------------------------------------------------
+# URL to handler mappings
+#-----------------------------------------------------------------------------
+
+
+default_handlers = [
+    (r"/cernbox%s" % path_regex, CernboxHandler),
+]
