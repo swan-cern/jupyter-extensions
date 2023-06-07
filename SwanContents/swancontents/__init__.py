@@ -9,5 +9,6 @@ def _jupyter_server_extension_paths():
             "module": "swancontents.swanclassic.notebookapp",
             "app": NotebookApp,
             "name": "jupyter-swanclassic",
-        }
+        },
+        {"module": "swancontents.serverextension"},
     ]
