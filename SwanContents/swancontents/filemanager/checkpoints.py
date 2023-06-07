@@ -1,4 +1,4 @@
-from notebook.services.contents.checkpoints import Checkpoints
+from jupyter_server.services.contents.checkpoints import Checkpoints
 from .fileio import SwanFileManagerMixin
 import os, time, datetime, shutil
 from traitlets import Unicode, Int

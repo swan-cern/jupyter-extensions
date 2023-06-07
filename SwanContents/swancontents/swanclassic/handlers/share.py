@@ -1,10 +1,16 @@
 from tornado import web
-from notebook.base.handlers import IPythonHandler, path_regex
-from notebook.utils import url_path_join, url_escape
-from ..filemanager.fileio import swan_sharing_folder
+
+from jupyter_server.base.handlers import JupyterHandler
+from jupyter_server.extension.handler import (
+    ExtensionHandlerMixin,
+    ExtensionHandlerJinjaMixin
+)
+from jupyter_server.base.handlers import path_regex
+from jupyter_server.utils import url_path_join, url_escape, ensure_async
+from ...filemanager.fileio import swan_sharing_folder
 
 
-class ShareHandler(IPythonHandler):
+class ShareHandler(ExtensionHandlerJinjaMixin, ExtensionHandlerMixin, JupyterHandler):
     """ Render the Share page """
 
     def generate_breadcrumbs(self, path):
@@ -20,12 +26,12 @@ class ShareHandler(IPythonHandler):
         return breadcrumbs
 
     @web.authenticated
-    def get(self, path=''):
+    async def get(self, path=''):
 
         # If path is empty, show the base page with the list of projects shared by me and with me.
         if path == '':
             self.write(self.render_template('tree.html',
-                                            page_title='Share',
+                                            page_title='Shares',
                                             terminals_available=self.settings['terminals_available'],
                                             server_root=self.settings['server_root_dir'],
                                             share_page=True,
@@ -33,7 +39,10 @@ class ShareHandler(IPythonHandler):
                                             ))
         else:
             path = path.strip('/')
-            if self.contents_manager.dir_exists(path=swan_sharing_folder + path):
+            cm = self.contents_manager
+            dir_exists = await ensure_async(cm.dir_exists(path=swan_sharing_folder + path))
+
+            if dir_exists:
                 breadcrumbs = self.generate_breadcrumbs(path)
                 self.write(self.render_template('tree.html',
                                                 page_title='Share - ' + path,
@@ -45,3 +54,12 @@ class ShareHandler(IPythonHandler):
                                                 ))
             else:
                 raise web.HTTPError(404)
+
+#-----------------------------------------------------------------------------
+# URL to handler mappings
+#-----------------------------------------------------------------------------
+
+
+default_handlers = [
+    (r"/share%s" % path_regex, ShareHandler),
+]

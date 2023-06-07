@@ -1,5 +1,5 @@
-from notebook.services.contents.fileio import FileManagerMixin
-from notebook.utils import url_path_join
+from jupyter_server.services.contents.fileio import FileManagerMixin
+from jupyter_server.utils import url_path_join
 from tornado.web import HTTPError
 from contextlib import contextmanager
 import io, os, nbformat

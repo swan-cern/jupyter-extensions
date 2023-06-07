@@ -1,0 +1,8 @@
+{
+    "ServerApp": {
+        "jpserver_extensions": {
+            "swancontents": true,
+            "nbclassic": false
+        }
+    }
+}
