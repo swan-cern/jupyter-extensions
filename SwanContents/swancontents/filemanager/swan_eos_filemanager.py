@@ -3,6 +3,7 @@ from jupyter_server.services.contents.largefilemanager import LargeFileManager
 from .eos.fileio import SwanFileManagerMixin
 from .eos.handlers import SwanAuthenticatedFileHandler
 from .projects_mixin import ProjectsMixin
+from ..checkpoints.eoscheckpoints import EOSCheckpoints
 from traitlets import default
 import os
 import shutil
@@ -13,6 +14,10 @@ class SwanEosFileManager(ProjectsMixin, SwanFileManagerMixin, LargeFileManager):
     SWAN File Manager Wrapper for content on EOS
     Adds "Project" as a new type of folder
     """
+
+    @default("checkpoints_class")
+    def _checkpoints_class_default(self):
+        return EOSCheckpoints
 
     @default("files_handler_class")
     def _files_handler_class_default(self):
