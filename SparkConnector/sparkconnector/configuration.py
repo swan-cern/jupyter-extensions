@@ -399,7 +399,13 @@ class SparkYarnConfiguration(SparkConfiguration):
                                               '&var-UserName=' + self.get_spark_user() + \
                                               '&var-ApplicationId=' + app_id
 
-            # determine the WebUI URL for Spark on YARN
+            # Determine the WebUI URL for Spark on YARN
+            # First, we get a list of 2 potential proxy addresses,
+            # one for each YARN RM (we have 2 Resource Managers in our Hadoop configs)
+            # Example result:
+            # 'https://ithdpXXX1.cern.ch:8088/proxy/application_1688370955275_70252,
+            # https://ithdpXXX2.cern.ch:8088/proxy/application_1688370955275_70252'
+            # Then we simply take the first one and use it as the WebUi URL
             webui_urls = self._get_sc_config(
                 'spark.org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter.param.PROXY_URI_BASES',
                 wait=True
