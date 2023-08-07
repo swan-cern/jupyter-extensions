@@ -184,7 +184,7 @@ export class JupyterLabConnector {
         }
         case 'sparkconn-connected': {
           store.notebooks[notebookPanel.id].connectionResources = {
-            sparkHistoryServerUrl: data.config.sparkhistoryserver as string,
+            sparkWebuiUrl: data.config.sparkwebui as string,
             sparkMetricsUrl: data.config.sparkmetrics as string,
           };
           store.notebooks[notebookPanel.id].status = 'connected';
