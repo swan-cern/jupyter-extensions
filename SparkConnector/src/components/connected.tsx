@@ -64,7 +64,7 @@ export const Connected = observer(() => {
             component="a"
             target="_blank"
             href={
-              store.currentNotebook?.connectionResources?.sparkHistoryServerUrl
+              store.currentNotebook?.connectionResources?.sparkWebuiUrl
             }
           >
             <ListItemIcon>

@@ -208,7 +208,7 @@ class NotebookStateStore {
   selectedBundles: Array<string> = [];
   errorMessage?: string;
   connectionResources?: {
-    sparkHistoryServerUrl?: string;
+    sparkWebuiUrl?: string;
     sparkMetricsUrl?: string;
     logs?: string[];
   };

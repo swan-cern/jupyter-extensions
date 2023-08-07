@@ -1007,11 +1007,11 @@ SparkConnector.prototype.get_html_connected = function (config, error) {
             .append(metricsURL)
     }
 
-    if (config && config.sparkhistoryserver) {
-        var historyserverURL = $('<a>').attr('href', config.sparkhistoryserver).attr('target','_blank').text('here')
+    if (config && config.sparkwebui) {
+        var webuiURL = $('<a>').attr('href', config.sparkwebui).attr('target','_blank').text('here')
         html.find('.success-history-text')
             .text('Spark WebUI is available ')
-            .append(historyserverURL)
+            .append(webuiURL)
     }
 
     html.find('.success-show-logs-action')
