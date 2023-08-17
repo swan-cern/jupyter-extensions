@@ -53,12 +53,16 @@
         "@jupyterlab/coreutils": "^5.0.6",
         "@jupyterlab/notebook": "^3.0.11",
         "@lumino/messaging": "^1.7.0",
-        "@lumino/widgets": "^1.23.0",
+        "@lumino/widgets": "^1.37.2",
         "@material-ui/core": "^4.11.4",
         "@material-ui/icons": "^4.11.2",
         "@material-ui/lab": "^4.0.0-alpha.58",
         "mobx": "^6.3.2",
         "mobx-react-lite": "^3.2.0"
+    },
+    "resolutions": {
+        "@types/react": "17.0.64",
+        "@lumino/widgets": "1.37.2"
     },
     "devDependencies": {
         "@jupyterlab/builder": "^3.0.9",
