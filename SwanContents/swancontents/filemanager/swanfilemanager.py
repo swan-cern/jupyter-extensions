@@ -382,7 +382,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
         if url.endswith('.git'):
 
-            rc = subprocess.run(['git', 'clone', '--recurse-submodules', url, tmp_dir_name])
+            rc = subprocess.run(['git', 'clone', '--recurse-submodules', '--', url, tmp_dir_name])
             if rc.returncode != 0:
                 raise web.HTTPError(400, "It was not possible to clone the repo %s. Did you pass the username/token?" % url)
 
