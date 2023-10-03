@@ -381,8 +381,10 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         tmp_dir_name = tempfile.mkdtemp()
 
         if url.endswith('.git'):
-
-            rc = subprocess.run(['git', 'clone', '--recurse-submodules', '--', url, tmp_dir_name])
+            # Use subprocess.run instead of subprocess.call as the later one is deprecated and add the "--"
+            # to separate the process arguments from the url, to prevent users from passing command options
+            # in the place of the url.
+            rc = subprocess.run(['git', 'clone', '--recurse-submodules', '--depth=1', '--', url, tmp_dir_name])
             if rc.returncode != 0:
                 raise web.HTTPError(400, "It was not possible to clone the repo %s. Did you pass the username/token?" % url)
 
