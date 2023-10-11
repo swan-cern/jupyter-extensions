@@ -45,6 +45,7 @@ const darkTheme = createLightorDarkTheme('dark');
 
 export const ThemeProvider: React.FunctionComponent<{
   theme?: 'light' | 'dark';
+  children?: React.ReactNode;
 }> = props => {
   const currentTheme = props.theme === 'dark' ? darkTheme : lightTheme;
   return (
