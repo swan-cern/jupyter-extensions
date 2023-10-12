@@ -1,12 +1,17 @@
 *.bundle.*
 lib/
 node_modules/
+*.log
+.eslintcache
+.stylelintcache
 *.egg-info/
 .ipynb_checkpoints
 *.tsbuildinfo
+sparkconnector/labextension
+sparkconnector/nbextension
+# Version file is handled by hatchling
+sparkconnector/_version.py
 
-sparkconnector/labextension/
-sparkconnector/nbextension/
 # Created by https://www.gitignore.io/api/python
 # Edit at https://www.gitignore.io/?templates=python
 
@@ -57,6 +62,7 @@ htmlcov/
 .coverage.*
 .cache
 nosetests.xml
+coverage/
 coverage.xml
 *.cover
 .hypothesis/
@@ -109,4 +115,8 @@ dmypy.json
 
 # End of https://www.gitignore.io/api/python
 
-example-options/lab
+# OSX files
+.DS_Store
+
+# Yarn cache
+.yarn/

@@ -15,10 +15,11 @@ import { JupyterLabConnector } from './labconnector';
 import SparkIcon from '../style/apachespark.svg';
 
 /**
- * Initialization data for the sparkconnector extension.
+ * Initialization data for the @swan-cern/sparkconnector extension.
  */
 const plugin: JupyterFrontEndPlugin<void> = {
-  id: 'sparkconnector',
+  id: '@swan-cern/sparkconnector:plugin',
+  description: "Helper to connect to CERN's Spark Clusters",
   requires: [ILabShell, INotebookTracker, ILayoutRestorer],
   optional: [IThemeManager],
   activate: activate,
@@ -69,5 +70,5 @@ function activate(
       }
     });
   }
-  console.log('SparkConnector: Jupyter Lab extension is activated!');
+  console.log('JupyterLab extension @swan-cern/sparkconnector is activated!');
 }
