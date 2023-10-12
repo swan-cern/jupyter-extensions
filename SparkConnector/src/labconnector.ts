@@ -4,6 +4,7 @@ import { JupyterFrontEnd } from '@jupyterlab/application';
 import { IComm } from '@jupyterlab/services/lib/kernel/kernel';
 import { INotebookTracker, NotebookPanel } from '@jupyterlab/notebook';
 import { KernelMessage, ConfigSection } from '@jupyterlab/services';
+import { JSONObject } from '@lumino/coreutils';
 
 import { store } from './store';
 export interface SparkOpt {
@@ -275,10 +276,9 @@ export class JupyterLabConnector {
 
   private getSavedConfigFromNotebookMetadata(notebookPanel: NotebookPanel) {
     let currentConfig;
-    if (notebookPanel.model?.metadata.has('sparkconnect')) {
-      currentConfig = notebookPanel.model.metadata.get(
-        'sparkconnect'
-      ) as unknown as SparkconnectMetadata;
+    const metadata = (notebookPanel.model?.metadata || {}) as JSONObject
+    if (metadata.sparkconnect) {
+      currentConfig = metadata.sparkconnect as unknown as SparkconnectMetadata;
     } else {
       currentConfig = {
         bundled_options: [],
@@ -295,6 +295,7 @@ export class JupyterLabConnector {
     config: SparkconnectMetadata
   ) {
     const notebookPanel = this.getNotebookPanel(notebookPanelId);
-    notebookPanel.model?.metadata.set('sparkconnect', config as any);
+    const metadata = (notebookPanel.model?.metadata || {}) as JSONObject
+    metadata.sparkconnect = config as any;
   }
 }
