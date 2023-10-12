@@ -9,6 +9,6 @@ It's not supposed to contain a JupyterLab because this functionality is being re
 
 ```bash
 pip install swanshare
-jupyter nbextension install swanshare --py
-jupyter nbextension enable swanshare --py
+jupyter nbclassic-extension install swanshare --py
+jupyter nbclassic-extension enable swanshare --py
 ```
