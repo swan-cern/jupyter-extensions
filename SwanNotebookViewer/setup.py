@@ -24,7 +24,7 @@ setup_args = dict(
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     install_requires=[
-        'notebook',
+        'nbclassic',
         'nbconvert>=6.0'
     ],
     zip_safe=False,

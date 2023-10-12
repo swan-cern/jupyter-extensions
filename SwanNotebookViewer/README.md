@@ -20,7 +20,7 @@ This extension requires a template file `notebook_view.html`, just like the one 
 Configure the server extension to load when the notebook server starts
 
 ```bash
- jupyter serverextension enable --py --user swannotebookviewer
+ jupyter nbclassic-serverextension enable --py --user swannotebookviewer
 ```
 
 Notebooks opened in Jupyter have the following type of url: `http://localhost:8888/notebooks/Untitled.ipynb`.
