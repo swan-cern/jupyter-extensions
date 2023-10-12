@@ -49,6 +49,7 @@ cmdclass = create_cmdclass("jsdeps",
 )
 
 js_command = combine_commands(
+    install_npm(HERE, build_cmd="install:all", npm=["jlpm"]),
     install_npm(HERE, build_cmd="build:prod", npm=["jlpm"]),
     install_npm(NBEXTENSION, build_cmd="build", npm=["jlpm"]),
     ensure_targets(jstargets),
@@ -74,7 +75,7 @@ setup_args = dict(
     cmdclass= cmdclass,
     packages=setuptools.find_packages(),
     install_requires=[
-        "jupyterlab>=3.0.0rc13,==3.*",
+        "jupyterlab>=4.0.0,<5",
     ],
     zip_safe=False,
     include_package_data=True,
@@ -83,13 +84,18 @@ setup_args = dict(
     platforms="Linux, Mac OS X, Windows",
     keywords=["Jupyter", "JupyterLab", "JupyterLab3", "SWAN", "CERN"],
     classifiers=[
+        "Framework :: Jupyter",
+        "Framework :: Jupyter :: JupyterLab",
+        "Framework :: Jupyter :: JupyterLab :: 4",
+        "Framework :: Jupyter :: JupyterLab :: Extensions",
+        "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt",
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
-        "Framework :: Jupyter",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
 )
 
