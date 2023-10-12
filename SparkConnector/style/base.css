@@ -1,0 +1,158 @@
+.jp-SparkConnector {
+    display: flex;
+    flex-direction: column;
+    background: var(--jp-layout-color1);
+    color: var(--jp-ui-font-color1);
+    font-size: var(--jp-ui-font-size0);
+    height: 100%;
+    overflow: auto;
+  }
+  
+  .jp-SparkConnector-scrollable {
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+  }
+  
+  .jp-SparkConnector-details {
+    margin: 0px;
+    font-size: var(--jp-ui-font-size1);
+  }
+  
+  .jp-SparkConnector-section-header {
+    flex: 0 0 auto;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 8px;
+    font-size: var(--jp-ui-font-size0);
+    border-bottom: var(--jp-border-width) solid var(--jp-border-color2);
+  }
+  
+  .jp-SparkConnector-failed {
+    flex-grow: 1;
+  }
+  .jp-SparkConnector-failed .jp-SparkConnector-confDetailsContainer-sparkLogs {
+    margin: 8px;
+    transition: height 2s;
+  }
+  .jp-SparkConnector-panel {
+    display: flex;
+    flex-direction: row;
+    color: var(--jp-ui-font-color3);
+    height: 24px;
+    line-height: 24px;
+    border-bottom: var(--jp-border-width) solid var(--jp-border-color2);
+  }
+  
+  .jp-SparkConnector-panelLabel {
+    font-size: var(--jp-ui-font-size0);
+    font-weight: 600;
+    flex: 1 1 auto;
+    margin-right: 4px;
+    padding-left: 8px;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .jp-SparkConnector-loading {
+    display: flex;
+    flex-direction: column;
+    height: 300px;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    margin: 20px 0;
+    flex: 1 0;
+  }
+  
+  .jp-SparkConnector-confDetailsContainer-sparkLogs {
+    padding: 4px 4px 4px 4px;
+    border-bottom: var(--jp-border-width) solid transparent;
+    border-radius: var(--jp-border-radius);
+  }
+  
+  .jp-SparkConnector-confDetailsContainer-sparkLogs pre {
+    font-size: var(--jp-ui-font-size0);
+  }
+  
+  .jp-SparkConnector-confDetailsContainer-sparkLogs.info {
+    color: var(--jp-ui-font-color1);
+    background-color: var(--jp-layout-color2);
+    border-color: var(--md-grey-300);
+    overflow: auto;
+    word-wrap: break-word;
+    flex-grow: 1;
+  }
+  
+  .jp-SparkConnector-logo {
+    background-image: url('Apache_Spark_logo.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center center;
+    height: 40px;
+    width: 100%;
+  }
+  .jp-SparkConnector-connectionDetailsContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 4px;
+  }
+  .jp-SparkConnector-notattached {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    opacity: 0.4;
+    padding: 8px;
+  }
+  .jp-SparkConnector-connectionDetailsContainerInfo {
+    opacity: 0.4;
+  }
+  
+  .jp-SparkConnector-input-sparkopts {
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+  }
+  .jp-SparkConnector-button-main {
+    margin: 8px !important;
+  }
+  .jp-SparkConnector-input-sparkopts > * {
+    margin-bottom: 8px !important;
+  }
+  .jp-SparkConnector-logs {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  
+  .jp-SparkConnector-auth {
+    flex-grow: 1;
+    padding: 8px;
+  }
+  .jp-SparkConnector-auth > * {
+    margin-bottom: 8px;
+  }
+  .jp-SparkConnector-error * {
+    word-break: break-all;
+  }
+  .jp-SparkConnector-selected-config {
+    word-break: break-all;
+  }
+  
+  .jp-SparkConnector-logrefresh {
+    height: 10px;
+    width: 10px;
+    margin: 0;
+    padding: 0;
+    float: right;
+  }
+  

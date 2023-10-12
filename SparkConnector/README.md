@@ -2,43 +2,49 @@
 
 Helper to connect to CERN's Spark Clusters
 
-This extension is composed of a Python package named `sparkconnector`, which installs the nbextension and a NPM package named `@swan-cern/sparkconnector`
-for the JupyterLab extension.
+This extension is built as a Python module named `sparkconnector`, which simplifies the connection to Spark clusters.
+
+It installs:
+
+1. an nbclassic-extension
+1. a Jupyterlab extension
+1. an iPython extension
 
 
 ## Requirements
 
-* JupyterLab >= 3.0
+- JupyterLab >= 4.0.0
+- pyspark (not installed by default)
 
 ## Install
 
-Note: You will need NodeJS to install the extension.
+To install the extension, execute:
 
 ```bash
 pip install sparkconnector
-jupyter nbextension install sparkconnector --py
-jupyter nbextension enable  sparkconnector --py
-jupyter lab build
+jupyter nbclassic-extension install sparkconnector --py
+jupyter nbclassic-extension enable  sparkconnector --py
 ```
 
-## Troubleshoot
-
-If you are not seeing the frontend, check if it's installed:
+It is also necessary to enable the iPython code. Append the following code to the config file (usually in `~/.ipython/profile_default/ipython_kernel_config.py`, check [here](https://ipython.readthedocs.io/en/stable/config/intro.html#python-configuration-files)):
 
 ```bash
-jupyter labextension list
+c.InteractiveShellApp.extensions.append('sparkconnector.connector')
 ```
 
-If it is installed, try:
+## Uninstall
+
+To remove the extension, execute:
 
 ```bash
-jupyter lab clean
-jupyter lab build
+pip uninstall sparkconnector
 ```
 
 ## Contributing
 
-### Install
+### Development install
+
+Note: You will need NodeJS to build the extension package.
 
 The `jlpm` command is JupyterLab's pinned version of
 [yarn](https://yarnpkg.com/) that is installed with JupyterLab. You may use
@@ -46,39 +52,42 @@ The `jlpm` command is JupyterLab's pinned version of
 
 ```bash
 # Clone the repo to your local environment
-# Move to sparkconnector directory
-
-# Install server extension
-# This will also build the js code
-pip install -e .
-
-# Install and enable the nbextension
-jupyter nbextension install sparkconnector --py --sys-prefix
-jupyter nbextension enable  sparkconnector --py --sys-prefix
-
+# Change directory to the sparkconnector directory
+# Install package in development mode
+pip install -e "."
 # Link your development version of the extension with JupyterLab
-jupyter labextension link .
-# Rebuild JupyterLab after making any changes
-jupyter lab build
-
-# Rebuild Typescript source after making changes
+jupyter labextension develop . --overwrite
+# Rebuild extension Typescript source after making changes
 jlpm build
-# Rebuild JupyterLab after making any changes
-jupyter lab build
 ```
 
-You can watch the source directory and run JupyterLab in watch mode to watch for changes in the extension's source and automatically rebuild the extension and application.
+You can watch the source directory and run JupyterLab at the same time in different terminals to watch for changes in the extension's source and automatically rebuild the extension.
 
 ```bash
-# Watch the source directory in another terminal tab
+# Watch the source directory in one terminal, automatically rebuilding when needed
 jlpm watch
-# Run jupyterlab in watch mode in one terminal tab
-jupyter lab --watch
+# Run JupyterLab in another terminal
+jupyter lab
 ```
 
-### Uninstall
+With the watch command running, every saved change will immediately be built locally and available in your running JupyterLab. Refresh JupyterLab to load the change in your browser (you may need to wait several seconds for the extension to be rebuilt).
+
+By default, the `jlpm build` command generates the source maps for this extension to make it easier to debug using the browser dev tools. To also generate source maps for the JupyterLab core extensions, you can run the following command:
+
+```bash
+jupyter lab build --minimize=False
+```
+
+### Development uninstall
 
 ```bash
 pip uninstall sparkconnector
-jupyter labextension uninstall @swan-cern/sparkconnector
 ```
+
+In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
+command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
+folder is located. Then you can remove the symlink named `@swan-cern/sparkconnector` within that folder.
+
+### Packaging the extension
+
+See [RELEASE](RELEASE.md)
