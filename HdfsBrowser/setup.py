@@ -66,7 +66,7 @@ setup_args = dict(
     cmdclass= cmdclass,
     packages=setuptools.find_packages(),
     install_requires=[
-        "jupyterlab~=3.0",
+        "jupyterlab>=4.0.0,<5",
         "bs4",
     ],
     zip_safe=False,
@@ -76,14 +76,18 @@ setup_args = dict(
     platforms="Linux",
     keywords=["Jupyter", "JupyterLab", "SWAN", "CERN"],
     classifiers=[
+        "Framework :: Jupyter",
+        "Framework :: Jupyter :: JupyterLab",
+        "Framework :: Jupyter :: JupyterLab :: 4",
+        "Framework :: Jupyter :: JupyterLab :: Extensions",
+        "Framework :: Jupyter :: JupyterLab :: Extensions :: Prebuilt",
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
-        "Framework :: Jupyter",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
     ],
 )
 

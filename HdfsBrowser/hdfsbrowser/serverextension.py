@@ -6,8 +6,8 @@ import traceback
 from traitlets import Unicode, Long, Float, Bool
 from traitlets.config import Configurable
 
-from notebook.utils import url_path_join
-from notebook.base.handlers import IPythonHandler
+from jupyter_server.utils import url_path_join
+from jupyter_server.base.handlers import APIHandler
 
 from tornado import gen, web, httputil
 from tornado.httpclient import AsyncHTTPClient, HTTPRequest
@@ -56,7 +56,8 @@ class HDFSBrowserConfig(Configurable):
     validate_cert = Bool(True, config=True, help='Validate SSL or not')
 
 
-class HDFSBrowserProxy(IPythonHandler):
+# Use APIHandler to avoid having to configure the templates (required to render errors)
+class HDFSBrowserProxy(APIHandler):
 
     hdfs_browser_config = None
     proxy_root = None
