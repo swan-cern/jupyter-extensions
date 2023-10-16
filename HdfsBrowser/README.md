@@ -1,30 +1,26 @@
 # HdfsBrowser
 
-Hadoop JupyterLab Extension
+Hadoop JupyterLab Extension to browse an HDFS filesystem.
 
-This extension is composed of a Python package named `hdfsbrowser`, which installs the server+nbextension and a NPM package named `@swan-cern/hdfsbrowser`
-for the JupyterLab extension.
-
-![Hadoop JupyterLab Extension](hdfsbrowser.png)
+This extension is composed of a Python package named `hdfsbrowser`
+for the server extension, a NPM package named `@swan-cern/hdfsbrowser`
+for the frontend extension and an nbextension for nbclassic.
 
 ## Requirements
 
-* JupyterLab >= 2.1
+- JupyterLab >= 4.0.0
 
 ## Install
 
-Note: You will need NodeJS to install the extension.
+To install the extension, execute:
 
 ```bash
 pip install hdfsbrowser
-jupyter nbextension install hdfsbrowser --py
-jupyter nbextension enable  hdfsbrowser --py
-jupyter lab build
 ```
 
 ## Configure extension to work with Hadoop cluster through hdfs-site.xml
 
-Configure notebook `jupyter_notebook_config.py`:
+You can set some configurations (check the `serverextension.py` for the full reference) in you jupyter-server or notebook config files (i.e `jupyter_lab_config.py`):
 
 ```
 c.HDFSBrowserConfig.hdfs_site_path = "/cvmfs/sft.cern.ch/lcg/etc/hadoop-confext/conf/etc/analytix/hadoop.analytix/hdfs-site.xml"
@@ -33,24 +29,35 @@ c.HDFSBrowserConfig.hdfs_site_namenodes_port = "50070"
 c.HDFSBrowserConfig.webhdfs_token = "dummy"
 ```
 
+## Uninstall
+
+To remove the extension, execute:
+
+```bash
+pip uninstall hdfsbrowser
+```
+
 ## Troubleshoot
 
-If you are not seeing the frontend, check if it's installed:
+If you are seeing the frontend extension, but it is not working, check
+that the server extension is enabled:
+
+```bash
+jupyter server extension list
+```
+
+If the server extension is installed and enabled, but you are not seeing
+the frontend extension, check the frontend extension is installed:
 
 ```bash
 jupyter labextension list
 ```
 
-If it is installed, try:
-
-```bash
-jupyter lab clean
-jupyter lab build
-```
-
 ## Contributing
 
-### Install
+### Development install
+
+Note: You will need NodeJS to build the extension package.
 
 The `jlpm` command is JupyterLab's pinned version of
 [yarn](https://yarnpkg.com/) that is installed with JupyterLab. You may use
@@ -58,39 +65,46 @@ The `jlpm` command is JupyterLab's pinned version of
 
 ```bash
 # Clone the repo to your local environment
-# Move to hdfsbrowser directory
-
-# Install server extension
-# This will also build the js code
-pip install -e .
-
-# Install and enable the nbextension
-jupyter nbextension install hdfsbrowser --py --sys-prefix
-jupyter nbextension enable  hdfsbrowser --py --sys-prefix
-
+# Change directory to the hdfsbrowser directory
+# Install package in development mode
+pip install -e "."
 # Link your development version of the extension with JupyterLab
-jupyter labextension link .
-# Rebuild JupyterLab after making any changes
-jupyter lab build
-
-# Rebuild Typescript source after making changes
+jupyter labextension develop . --overwrite
+# Server extension must be manually installed in develop mode
+jupyter server extension enable hdfsbrowser
+# Rebuild extension Typescript source after making changes
 jlpm build
-# Rebuild JupyterLab after making any changes
-jupyter lab build
 ```
 
-You can watch the source directory and run JupyterLab in watch mode to watch for changes in the extension's source and automatically rebuild the extension and application.
+You can watch the source directory and run JupyterLab at the same time in different terminals to watch for changes in the extension's source and automatically rebuild the extension.
 
 ```bash
-# Watch the source directory in another terminal tab
+# Watch the source directory in one terminal, automatically rebuilding when needed
 jlpm watch
-# Run jupyterlab in watch mode in one terminal tab
-jupyter lab --watch
+# Run JupyterLab in another terminal
+jupyter lab
 ```
 
-### Uninstall
+With the watch command running, every saved change will immediately be built locally and available in your running JupyterLab. Refresh JupyterLab to load the change in your browser (you may need to wait several seconds for the extension to be rebuilt).
+
+By default, the `jlpm build` command generates the source maps for this extension to make it easier to debug using the browser dev tools. To also generate source maps for the JupyterLab core extensions, you can run the following command:
 
 ```bash
-pip uninstall hdfsbrowser
-jupyter labextension uninstall @swan-cern/hdfsbrowser
+jupyter lab build --minimize=False
 ```
+
+### Development uninstall
+
+```bash
+# Server extension must be manually disabled in develop mode
+jupyter server extension disable hdfsbrowser
+pip uninstall hdfsbrowser
+```
+
+In development mode, you will also need to remove the symlink created by `jupyter labextension develop`
+command. To find its location, you can run `jupyter labextension list` to figure out where the `labextensions`
+folder is located. Then you can remove the symlink named `@swan-cern/hdfsbrowser` within that folder.
+
+### Packaging the extension
+
+See [RELEASE](RELEASE.md)

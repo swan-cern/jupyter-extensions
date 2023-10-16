@@ -10,7 +10,8 @@ import { HdfsBrowserWidget } from './widgets/HdfsBrowserWidget';
  * Initialization data for the hdfsbrowser extension.
  */
 const plugin: JupyterFrontEndPlugin<void> = {
-    id: '@swan-cern/hdfsbrowser',
+    id: '@swan-cern/hdfsbrowser:plugin',
+    description: 'Jupyterlab extension to browse HDFS filesystem',
     requires: [
         IMainMenu, ILayoutRestorer
     ],
@@ -31,6 +32,7 @@ function activate(
     // Add a menu for the plugin
     mainMenu.addMenu(
         createHadoopMenu(app, restorer),
+        true,
         { rank: 60 }
     );
     console.log('JupyterLab hdfsbrowser is activated!');
