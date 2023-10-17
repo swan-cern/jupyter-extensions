@@ -159,7 +159,7 @@ class ProjectsMixin(HasTraits):
 
         validation_error: dict = {}
         try:
-            if model['type'] == 'project':
+            if model['type'] == 'directory' and model['is_project']:
                 if not self._is_swan_root_folder(os_path):
                     raise web.HTTPError(400, "You can only create projects inside Swan Projects")
                 self._save_project(os_path, model, path)
@@ -204,16 +204,6 @@ class ProjectsMixin(HasTraits):
 
         return model
 
-    def new(self, model=None, path=''):
-        """ Create a new file or directory and return its model with no content
-            To create a new untitled entity in a directory, use `new_untitled`
-        """
-
-        if model is not None and model['type'] == 'project':
-            return self.save(model, path)
-        
-        return super().new(model, path)
-
     def new_untitled(self, path='', type='', ext=''):
         """ Create a new untitled file or directory in path
             path must be a directory
@@ -225,13 +215,13 @@ class ProjectsMixin(HasTraits):
         if not self.dir_exists(path):
             raise web.HTTPError(404, 'No such directory: %s' % path)
 
-        if type == 'project':
+        if type == 'directory' and ext == 'project':
             model = {
                 'type': 'directory',
                 'is_project': True
             }
             name = self.increment_filename(self.untitled_project, path, insert=' ')
-            path = u'{0}/{1}'.format(path, name)
+            path = f'{path}/{name}'
 
             return self.new(model, path)
         

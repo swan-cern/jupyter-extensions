@@ -375,7 +375,7 @@ define([
                     var proj_name = modal.find('input[name="proj_name"]').val();
 
                     if (proj_name === '') {
-                        that.contents.new_untitled((that.notebook_path || ''), {type: 'project'})
+                        that.contents.new_untitled((that.notebook_path || ''), {type: 'directory', ext: 'project'})
                             .then(function (result) {
                                 new_project_success(modal, result.path.replace(swan_projects_name, ''));
                             }).catch(function (e) {
@@ -387,7 +387,7 @@ define([
                             .then(function () {
                                 new_project_error(modal, 'Cannot create project. Directory/Project already exist.');
                             }).catch(function (e) {
-                                that.contents.new(((that.notebook_path || '') + '/' + proj_name), {type: 'project'})
+                                that.contents.new(((that.notebook_path || '') + '/' + proj_name), {type: 'directory', ext: 'project'})
                                     .then(function (result) {
                                         new_project_success(modal, proj_name);
                                     }).catch(function (e) {
