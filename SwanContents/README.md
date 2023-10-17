@@ -24,19 +24,9 @@ Do not enable the nbextension, this will be done bellow.
 To replace the default Jupyter Contents Manager (including its Javascript library) and the templates, in the Jupyter Notebook configuration (i.e in `jupyter_notebook_config.py`), set the following:
 
 ```python
-c.NotebookApp.default_url = 'projects'
-c.NotebookApp.contents_manager_class = 'swancontents.filemanager.swanfilemanager.SwanFileManager'
-from swancontents import get_templates
-c.NotebookApp.extra_template_paths = [get_templates()]
+c.ServerApp.contents_manager_class = 'swancontents.filemanager.SwanEosFileManager'
 ```
 
-Note: `EOSCheckpoints` is set by default as `checkpoints_class`.
+Note: `EOSCheckpoints` is set by default as `checkpoints_class` when using SwanEosFileManager.
 
-In case you want to provide a different Galleries website, set the following configuration:
-
-```python
-c.NotebookApp.jinja_template_vars = {
-    'gallery_url': 'https://swan-gallery.example.com'
-}
-```
 
