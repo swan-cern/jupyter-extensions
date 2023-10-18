@@ -2,7 +2,6 @@
 from traitlets import HasTraits, Unicode
 from tornado import web
 import os, io, shutil, subprocess, tempfile, requests
-import nbformat
 from .proj_url_checker import (
     is_cernbox_shared_link,
     get_name_from_shared_from_link,
@@ -139,70 +138,36 @@ class ProjectsMixin(HasTraits):
 
         chunk = model.get('chunk', None)
         if chunk is not None:
-            return super().save(self, model, path)
-
-        path = path.strip('/')
-
-        self.run_pre_save_hook(model=model, path=path)
+            return super().save(model, path)
 
         if 'type' not in model:
             raise web.HTTPError(400, u'No file type provided')
-        if 'content' not in model and model['type'] != 'directory' and model['type'] != 'project':
-            raise web.HTTPError(400, u'No file content provided')
+        
+        if model['type'] != 'directory' or 'is_project' not in model or not model['is_project']:
+            return super().save(model, path)
 
+        path = path.strip('/')
         os_path = self._get_os_path(path)
 
         if self._contains_swan_folder_name(os_path):
             raise web.HTTPError(400, "The name %s is restricted" % self.swan_default_folder)
 
-        self.log.debug("Saving %s", os_path)
+        self.log.debug("Creating project %s", os_path)
 
-        validation_error: dict = {}
         try:
-            if model['type'] == 'directory' and model['is_project']:
-                if not self._is_swan_root_folder(os_path):
-                    raise web.HTTPError(400, "You can only create projects inside Swan Projects")
-                self._save_project(os_path, model, path)
-
-            elif model['type'] == 'notebook':
-                nb = nbformat.from_dict(model['content'])
-                self.check_and_sign(nb, path)
-                self._save_notebook(os_path, nb, capture_validation_error=validation_error)
-                # We do not create checkpoints, unlike upstream
-                # as EOS or Reva handle that themselves
-                # So, the following code is commited
-                # if not self.checkpoints.list_checkpoints(path):
-                #     self.create_checkpoint(path)
-
-            elif model['type'] == 'file':
-                # Missing format will be handled internally by _save_file.
-                self._save_file(os_path, model['content'], model.get('format'))
-
-            elif model['type'] == 'directory':
-                self._save_directory(os_path, model, path)
-
-            else:
-                raise web.HTTPError(400, "Unhandled contents type: %s" % model['type'])
+            if not self._is_swan_root_folder(os_path):
+                raise web.HTTPError(400, "You can only create projects inside SWAN Projects")
+            self._save_project(os_path, model, path)
 
         except web.HTTPError:
             raise
 
         except Exception as e:
-            self.log.error(u'Error while saving file: %s %s', path, e, exc_info=True)
-            raise web.HTTPError(500, f"Unexpected error while saving file: {path} {e}") from e
-
-        validation_message = None
-        if model['type'] == 'notebook':
-            self.validate_notebook_model(model, validation_error=validation_error)
-            validation_message = model.get('message', None)
-
-        model = self.get(path, content=False)
-        if validation_message:
-            model['message'] = validation_message
-
-        self.run_post_save_hook(model=model, os_path=os_path)
-
-        return model
+            self.log.error(u'Error while creating a Project: %s %s', path, e, exc_info=True)
+            raise web.HTTPError(500, f"Unexpected error while creating a Project: {path} {e}") from e
+        
+        return self.get(path, content=False)
+        
 
     def new_untitled(self, path='', type='', ext=''):
         """ Create a new untitled file or directory in path
@@ -210,22 +175,23 @@ class ProjectsMixin(HasTraits):
             File extension can be specified.
             Use `new` to create files with a fully specified path (including filename).
         """
+        
+        if type != 'directory' or ext != 'project':
+            return super().new_untitled(path, type=type, ext=ext)
 
         path = path.strip('/')
         if not self.dir_exists(path):
             raise web.HTTPError(404, 'No such directory: %s' % path)
 
-        if type == 'directory' and ext == 'project':
-            model = {
-                'type': 'directory',
-                'is_project': True
-            }
-            name = self.increment_filename(self.untitled_project, path, insert=' ')
-            path = f'{path}/{name}'
+        model = {
+            'type': 'directory',
+            'is_project': True
+        }
+        name = self.increment_filename(self.untitled_project, path, insert=' ')
+        path = f'{path}/{name}'
 
-            return self.new(model, path)
+        return self.new(model, path)
         
-        return super().new_untitled(path, type, ext)
 
     def update(self, model, path):
         """ Prevent users from using the name of SWAN projects folder"""
