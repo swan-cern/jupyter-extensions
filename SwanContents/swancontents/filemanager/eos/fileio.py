@@ -107,18 +107,7 @@ class SwanFileManagerMixin(FileManagerMixin):
         else:
             return super()._get_os_path(path)
 
-    def _read_notebook(self, os_path, as_version=4):
-        """Read a notebook from an os path."""
-        with self.open(os_path, 'r', encoding='utf-8') as f:
-            try:
-                return nbformat.read(f, as_version=as_version)
-            except Exception as e:
-                raise HTTPError(
-                    400,
-                    u"Unreadable Notebook: %s %r" % (os_path, e),
-                )
-
-    def _save_notebook(self, os_path, nb):
+    def _save_notebook(self, os_path, nb, capture_validation_error=None):
         """
         Save a notebook on EOS via FUSE with the default routine.
         Plus, store a copy of the same notebook on the host machine via docker volume.
@@ -151,12 +140,10 @@ class SwanFileManagerMixin(FileManagerMixin):
 
             # Write the notebook locally and check for consistency
             local_retry = 10
-            local_checksum = False
             write_notebook_to_local(local_path, nb)
             for i in range(0, local_retry):
                 read_nb = read_notebook_from_local(local_path)
                 if (nb == read_nb):
-                    local_checksum = True
                     break
                 else:
                     #time.sleep(0.1*2**i)    # Backoff on retry (100ms to 51.2s)
@@ -164,8 +151,13 @@ class SwanFileManagerMixin(FileManagerMixin):
                     write_notebook_to_local(local_path, nb)
 
         # In all cases, save on eos via fuse
-        with self.atomic_writing(os_path, encoding='utf-8') as f:
-            nbformat.write(nb, f, version=nbformat.NO_CONVERT)
+        with self.atomic_writing(os_path, encoding="utf-8") as f:
+            nbformat.write(
+                nb,
+                f,
+                version=nbformat.NO_CONVERT,
+                capture_validation_error=capture_validation_error,
+            )
 
     @contextmanager
     def atomic_writing(self, os_path, *args, **kwargs):
@@ -174,7 +166,6 @@ class SwanFileManagerMixin(FileManagerMixin):
         wrapper around atomic_writing that turns permission errors to 403.
         Depending on flag 'use_atomic_writing', the wrapper perform an actual atomic writing or
         simply writes the file (whatever an old exists or not)"""
-
 
         if self.use_atomic_writing:
             with self.perm_to_403(os_path):
