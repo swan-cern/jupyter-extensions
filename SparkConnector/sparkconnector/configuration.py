@@ -329,7 +329,6 @@ class SparkK8sConfiguration(SparkConfiguration):
             if sc._conf.get('spark.cern.grafana.url') is not None:
                 # if spark.cern.grafana.url is set, use cern spark monitoring dashboard
                 conn_config['sparkmetrics'] = sc._conf.get('spark.cern.grafana.url') + \
-                                              '?orgId=1' + \
                                               '&var-ClusterName=' + self.get_cluster_name() + \
                                               '&var-UserName=' + self.get_spark_user() + \
                                               '&var-ApplicationId=' + sc._conf.get('spark.app.id')
