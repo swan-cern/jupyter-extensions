@@ -40,15 +40,15 @@ class PortAllocator(threading.Thread):
 
     def __init__(self, log):
         """
-            Creates a list of available ports in the session, by reading the SPARK_PORTS env variable,
+            Creates a list of available ports in the session, by reading the COMPUTING_PORTS env variable,
             that should contain a comma separated list of ports.
             Starts a communication queue in one available internal port, and then listens for incoming
             requests.
         """
         self.ports_available = []
-        spark_ports = os.environ.get('SPARK_PORTS')
-        if spark_ports is not None:
-            self.ports_available += spark_ports.split(',')
+        ports = os.environ.get('COMPUTING_PORTS')
+        if ports is not None:
+            self.ports_available += ports.split(',')
         self.clients = {}
         self.queue_port = PortAllocator.get_reserved_port()
         self.log = log
