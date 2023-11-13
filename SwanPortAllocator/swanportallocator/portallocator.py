@@ -62,35 +62,25 @@ class PortAllocator(threading.Thread):
     def get_ports(self, process, n):
         """
             Return 'n' available ports and assign them to 'process' pid.
-            If the 'process' already asked for ports, and the information was not recycled, return the same ports.
-            Raises NoPortsException if all ports are in use.
+            Raises NoPortsException if there are less than 'n' free ports.
         """
-
-        if process in self.clients:
-            ports = self.clients[process]['ports']
-
-            if len(ports) is n:
-                self.log.info('Returning same ports for process %s: %s' % (process, ports))
-                return ports
-            else:
-                n = n - len(ports)
-        else:
-            ports = []
 
         if len(self.ports_available) < n:
             raise NoPortsException
 
-        ports += self.ports_available[:n]
+        stored_ports = self.clients[process]['ports'] if process in self.clients else []
+
+        assigned_ports = self.ports_available[:n]
         del self.ports_available[:n]
 
         self.clients[process] = {
-            'ports': ports,
+            'ports': stored_ports + assigned_ports,
             'status': Conn_State.CONNECTING.value,
             'time': time.time()
         }
 
-        self.log.info('Requested ports for process %s: %s' % (process, ports))
-        return ports
+        self.log.info('Requested ports for process %s: %s' % (process, assigned_ports))
+        return assigned_ports
 
     def delete_client(self, process):
         """ Delete a client from the list of processes and put its ports back in the list so that they're reused """
