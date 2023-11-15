@@ -28,6 +28,7 @@ class Errors(Enum):
 # Actions pickable to be sent between master and clients
 class Actions(Enum):
     GET_PORT = "get_port"
+    RELEASE_PORT = "release_port"
     SET_STATUS = "set_status"
 
 
@@ -81,6 +82,24 @@ class PortAllocator(threading.Thread):
 
         self.log.info('Requested ports for process %s: %s' % (process, assigned_ports))
         return assigned_ports
+
+    def release_ports(self, process, ports):
+        """
+            Release a list of ports from a process.
+        """
+
+        if process not in self.clients:
+            self.log.warn(f'Process {process} not in registered clients, not releasing ports {ports}')
+            return
+
+        stored_ports = self.clients[process]['ports']
+        for p in ports:
+            try:
+                stored_ports.remove(p)
+                self.ports_available.append(p)
+                self.log.info(f'Port {p} from process {process} has been released')
+            except ValueError:
+                self.log.warn(f'Port {p} not assigned to process {process}, not releasing port {p}')
 
     def delete_client(self, process):
         """ Delete a client from the list of processes and put its ports back in the list so that they're reused """
@@ -206,6 +225,10 @@ class PortAllocator(threading.Thread):
                             ports = self.get_ports(message['process'], message['n'])
                             send_ok(ports)
 
+                        elif message['action'] == Actions.RELEASE_PORT.value:
+                            self.release_ports(message['process'], message['ports'])
+                            send_ok(message['ports'])
+
                         elif message['action'] == Actions.SET_STATUS.value:
                             self.set_status(message['process'], message['status'])
                             send_ok(message['status'])
@@ -261,6 +284,18 @@ class PortAllocatorClient:
             raise NoPortsException
         else:
             raise GeneralException
+
+    def release_ports(self, ports):
+        """
+           Sends a request with a list of ports to release.
+        """
+        request_info = {
+            'action': Actions.RELEASE_PORT.value,
+            'process': self.pid,
+            'ports': ports
+        }
+        self.socket.send_json(request_info)
+        self.socket.recv_json()
 
     def _set_status(self, status):
         request_info = {
