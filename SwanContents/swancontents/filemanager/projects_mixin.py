@@ -55,7 +55,7 @@ class ProjectsMixin(HasTraits):
     def _contains_swan_folder_name(self, path):
         """ To prevent users from using the default SWAN projects folder name """
 
-        folders = path.replace(self.root_dir+'/'+self.swan_default_folder+'/', '', 1).split('/')
+        folders = path.replace(self.root_dir + '/' + self.swan_default_folder + '/', '', 1).split('/')
         for folder in folders:
             if folder == self.swan_default_folder:
                 return True
