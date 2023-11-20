@@ -205,7 +205,7 @@ class PortAllocator(threading.Thread):
                 }
                 zmq_socket.send_json(msg)
 
-            def send_ok(content):
+            def send_ok(content = None):
                 send_msg('ok', content)
 
             def send_error(content):
@@ -227,11 +227,11 @@ class PortAllocator(threading.Thread):
 
                         elif message['action'] == Actions.RELEASE_PORT.value:
                             self.release_ports(message['process'], message['ports'])
-                            send_ok(message['ports'])
+                            send_ok()
 
                         elif message['action'] == Actions.SET_STATUS.value:
                             self.set_status(message['process'], message['status'])
-                            send_ok(message['status'])
+                            send_ok()
 
                     except NoPortsException:
                         send_error(Errors.NO_PORTS_AVAILABLE.value)
