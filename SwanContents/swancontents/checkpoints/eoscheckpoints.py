@@ -1,6 +1,7 @@
 from jupyter_server.services.contents.checkpoints import Checkpoints
-from .fileio import SwanFileManagerMixin
-import os, time, datetime, shutil
+from ..filemanager.eos.fileio import SwanFileManagerMixin
+import os
+import datetime
 from traitlets import Unicode, Int
 from tornado.web import HTTPError
 

@@ -1,1 +1,1 @@
-from .swanfilemanager import *
+from .swan_eos_filemanager import SwanEosFileManager
