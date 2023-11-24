@@ -15,6 +15,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     {% block stylesheet %}
+      {%if hub_prefix %}
+      <link rel="stylesheet" href="{{hub_prefix}}static/swan/css/style.css" type="text/css" />
+      {% else %}
+      <link rel="stylesheet" href="/custom/css/style.css" type="text/css"/> <!-- For Dev purposes-->
+      {% endif %}
     {% endblock stylesheet %}
 
     {% block meta %}
@@ -31,25 +36,42 @@
       {% trans %}Please enable it to proceed. {% endtrans %}
     </div>
   </noscript>
-  <div id="header" role="navigation" aria-label="{% trans %}Top Menu{% endtrans %}">
+  <header role="navigation" aria-label="{% trans %}Top Menu{% endtrans %}">
     <div id="header-container" class="container">
-      <div id="jupyter_server" class="nav navbar-brand"><a href="{{default_url}}
-    {%- if logged_in and token -%}?token={{token}}{%- endif -%}" title='{% trans %}dashboard{% endtrans %}'>
-          {% block logo %}<img src='{% if hub_prefix %}{{hub_prefix}}logo{% else %}{{static_url("base/images/logo.png")}}{% endif %}' alt='SWAN' />{% endblock %}
-        </a></div>
-
-      {% block headercontainer %}
-      {% endblock headercontainer %}
-
-      {% block header_buttons %}
-      {% endblock header_buttons %}
-
+        <div class="row">
+            <div class="col-md-1 col-xs-6">
+                <div id="ipython_notebook" class="nav navbar-brand">
+                  <a href="{{default_url}}
+                    {%- if logged_in and token -%}?token={{token}}{%- endif -%}" title='{% trans %}dashboard{% endtrans %}'>
+                    {% block logo %}<img src='{% if hub_prefix %}{{hub_prefix}}logo{% else %}{{static_url("base/images/logo.png")}}{% endif %}' alt='SWAN' />{% endblock %}
+                  </a>
+                </div>
+            </div>
+  
+            <div class="col-md-3 col-md-push-8 col-xs-6 control">
+                {% block header_buttons %}
+                <div id="buttons-right-wrapper">
+                    <div id="buttons-right">
+                        <button class="btn btn-default btn-xs" onclick="javascript: window.location = '{{base_url}}logout'" title="Log out">
+                            <i class="fa fa-sign-out" aria-hidden="true"></i>
+                        </button>
+                    </div>
+                </div>
+                {% endblock header_buttons %}
+            </div>
+  
+  
+            <div class="middle col-md-8 col-md-pull-3 col-xs-12">
+                {% block headercontainer %}
+                {% endblock %}
+            </div>
+        </div>
     </div>
     <div class="header-bar"></div>
-
+  
     {% block header %}
-    {% endblock header %}
-  </div>
+    {% endblock %}
+  </header>
 
   <div id="site">
     {% block site %}
@@ -58,6 +80,25 @@
 
   {% block after_site %}
   {% endblock after_site %}
+
+  <footer>
+      <div class="container">
+          <div class="row">
+              <div class="col-xs-8 text">
+                  <span class="text-muted">SWAN &copy; Copyright CERN 2016-{{ current_year }}. All rights reserved.</span>
+                  <ul class="text-muted">
+                      <li><a target="_blank" href="https://cern.ch/swan/">Home</a></li>
+                      <li><a target="_blank" href="https://swan-community.web.cern.ch/">Community</a></li>
+                      <li><a target="_blank" href="https://cern.service-now.com/service-portal/?id=functional_element&name=swan">Support</a></li>
+                      <li><a target="_blank" href="https://github.com/swan-cern">Github</a></li>
+                  </ul>
+              </div>
+              <div class="col-xs-4 logo">
+                  <img src='{{hub_prefix}}static/swan/logos/logo_cern.png' alt='CERN'/>
+              </div>
+          </div>
+      </div>
+  </footer>
 
   {% block script %}
   {% endblock script %}
