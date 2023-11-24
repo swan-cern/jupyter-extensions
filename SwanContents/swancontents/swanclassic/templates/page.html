@@ -149,7 +149,7 @@ dir="ltr">
   <div id="header-container" class="container">
       <div class="row">
           <div class="{% if tree %}col-md-3{% else %}col-md-1{% endif %} col-xs-6">
-              <div id="ipython_notebook" class="nav navbar-brand"><a href="{{base_url}}projects" title='SWAN Projects'>{% block logo %}<img src='{{hub_prefix}}logo' alt='SWAN'/>{% endblock %}</a></div>
+              <div id="ipython_notebook" class="nav navbar-brand"><a href="{{base_url}}projects" title='SWAN Projects'>{% block logo %}<img src='{% if hub_prefix %}{{hub_prefix}}logo{% else %}{{static_url("base/images/logo.png")}}{% endif %}' alt='SWAN'/>{% endblock %}</a></div>
           </div>
 
           <div class="col-md-3 {% if tree %}col-md-push-6{% else %}col-md-push-8{% endif %} col-xs-6 control">

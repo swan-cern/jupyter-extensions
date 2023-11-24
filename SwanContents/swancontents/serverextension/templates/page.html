@@ -35,7 +35,7 @@
     <div id="header-container" class="container">
       <div id="jupyter_server" class="nav navbar-brand"><a href="{{default_url}}
     {%- if logged_in and token -%}?token={{token}}{%- endif -%}" title='{% trans %}dashboard{% endtrans %}'>
-          {% block logo %}<img src='{{static_url("logo/logo.png") }}' alt='SWAN' />{% endblock %}
+          {% block logo %}<img src='{% if hub_prefix %}{{hub_prefix}}logo{% else %}{{static_url("base/images/logo.png")}}{% endif %}' alt='SWAN' />{% endblock %}
         </a></div>
 
       {% block headercontainer %}
