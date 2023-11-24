@@ -21,12 +21,6 @@ div#header, div#site {
         <i class="fa fa-desktop" aria-hidden="true"></i>
     </button>
 {% endif %}
-{% if clonable %}
-    <button id="clone-button" role="presentation" class="btn btn-default btn-xs"
-            onclick="javascript: window.location = '{{base_url | urlencode}}download?projurl=local:{{clone_url | urlencode}}'"  title="Clone and edit">
-        <i class="fa fa-pencil" aria-hidden="true"></i>
-    </button>
-{% endif %}
 {% endblock %}
 
 {% block headercontainer %}

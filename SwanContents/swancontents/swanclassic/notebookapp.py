@@ -47,6 +47,7 @@ class NotebookApp(ClassicNotebookApp):
         handlers.extend(load_handlers("swancontents.swanclassic.handlers.projects"))
         handlers.extend(load_handlers("swancontents.swanclassic.handlers.share"))
         handlers.extend(load_handlers("swancontents.swanclassic.handlers.cernbox"))
+        handlers.extend(load_handlers("swancontents.swanclassic.handlers.notebookviewer"))
         self.handlers.extend(handlers)
         super(NotebookApp, self).initialize_handlers()
 
