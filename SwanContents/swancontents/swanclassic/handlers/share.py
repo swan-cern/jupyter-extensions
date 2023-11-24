@@ -7,7 +7,7 @@ from jupyter_server.extension.handler import (
 )
 from jupyter_server.base.handlers import path_regex
 from jupyter_server.utils import url_path_join, url_escape, ensure_async
-from ...filemanager.fileio import swan_sharing_folder
+from ...filemanager.eos.fileio import swan_sharing_folder
 
 
 class ShareHandler(ExtensionHandlerJinjaMixin, ExtensionHandlerMixin, JupyterHandler):

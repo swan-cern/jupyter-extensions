@@ -3,8 +3,7 @@ from jupyter_server.base.handlers import path_regex
 from jupyter_server import DEFAULT_TEMPLATE_PATH_LIST
 from jupyter_server.serverapp import ServerApp
 
-from .handlers.download import DownloadHandler
-from ..filemanager.handlers import FetchHandler
+from .handlers.download import DownloadHandler, FetchHandler
 import os
 
 

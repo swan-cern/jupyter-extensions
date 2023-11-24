@@ -1,65 +1,45 @@
-from notebook import transutils #needs to be imported before Jupyter File Manager
-from notebook.services.contents.largefilemanager import LargeFileManager
-from .fileio import SwanFileManagerMixin
-from .handlers import SwanAuthenticatedFileHandler
-from .proj_url_checker import is_cernbox_shared_link, get_name_from_shared_from_link, is_file_on_eos,get_eos_username, get_path_without_eos_base
+
+from traitlets import HasTraits, Unicode
 from tornado import web
+import os, io, shutil, subprocess, tempfile, requests
 import nbformat
-from nbformat.v4 import new_notebook
-from traitlets import Unicode, Bool
-import os, io, stat, shutil, subprocess, tempfile, requests
-import zipfile
-from notebook.utils import (
-    is_hidden, is_file_hidden
+from .proj_url_checker import (
+    is_cernbox_shared_link,
+    get_name_from_shared_from_link,
+    is_file_on_eos,
+    get_eos_username,
+    get_path_without_eos_base
 )
 
 
-class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
-    """ SWAN File Manager Wrapper
-        Adds "Project" as a new type of folder
-    """
+class InvalidProject(Exception):
+    pass
 
-    swan_default_folder = 'SWAN_projects'
-    swan_default_file = '.swanproject'
+class ProjectsMixin(HasTraits):
+
+    swan_default_folder = Unicode("SWAN_projects", config=True,
+        help=""
+    )
+
+    swan_default_file = Unicode(".swanproject", config=True,
+        help=""
+    )
 
     untitled_project = Unicode("Project", config=True,
         help="The base name used when creating untitled projects."
     )
-
-    always_delete_dir = Bool(
-        True,
-        config=True,
-        help="""Allows deleting non empty directories. Default to True for SWAN""",
-    )
-
-    def _files_handler_params_default(self):
-        """
-            Define the root path for tornado StaticFileHandler object
-            This is necessary to open files from other users (for sharing tab)
-        """
-        if self.root_dir.startswith('/eos/') :
-            return {'path': '/eos/', 'default_path' : self.root_dir}
-        else:
-            return {'path': self.root_dir}
-
-    def _files_handler_class_default(self):
-        """
-            Return a SWAN personalised AuthenticatedFileHandler in order
-            to access files in other users paths
-        """
-        return SwanAuthenticatedFileHandler
 
     def _get_project_path(self, path):
         """ Return the project path where the path provided belongs to """
 
         folders = path.replace(self.root_dir+'/', '', 1).split('/')
         if len(folders) == 0 or folders[0] != self.swan_default_folder:
-            return 'invalid'
+            raise InvalidProject
 
         path_to_project = folders[0]
         for folder in folders[1:]:
             path_to_project += '/' + folder
-            if os.path.isfile(self._get_os_path(os.path.join(path_to_project, self.swan_default_file))):
+            if self._is_file(self._get_os_path(os.path.join(path_to_project, self.swan_default_file))):
                 return path_to_project
 
         return None
@@ -86,88 +66,47 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
     def _dir_model(self, path, content=True):
         """ When returning the info of a folder, add the info of the project to which it belong to (if inside a Project) """
 
-        model = super(LargeFileManager, self)._dir_model(path, content)
-        parent_project = self._get_project_path(path)
-
+        model = super()._dir_model(path, content)
         model['is_project'] = False
-        if parent_project and not parent_project == 'invalid':
-            model['project'] = parent_project
+
+        try:
+            parent_project = self._get_project_path(path)
+            if parent_project:
+                model['project'] = parent_project
+        except InvalidProject:
+            pass
 
         return model
 
     def _proj_model(self, path, content=True):
         """ Build a model for a directory
             if content is requested, will include a listing of the directory
+            Now we can re-use the folder model because it's just a folder with 
+            an extra bool inside
         """
-        os_path = self._get_os_path(path)
-        four_o_four = u'directory does not exist: %r' % path
 
-        if not os.path.isdir(os_path):
-            raise web.HTTPError(404, four_o_four)
-
-        elif is_hidden(os_path, self.root_dir):
-            self.log.info("Refusing to serve hidden directory %r, via 404 Error",
-                os_path
-            )
-
-            raise web.HTTPError(404, four_o_four)
-
-        model = self._base_model(path)
-        model['type'] = 'directory'
+        model = super()._dir_model(path, content)
         model['is_project'] = True
-
-        if content:
-            model['content'] = contents = []
-            os_dir = self._get_os_path(path)
-            for name in os.listdir(os_dir):
-                try:
-                    os_path = os.path.join(os_dir, name)
-
-                except UnicodeDecodeError as e:
-                    self.log.warning("failed to decode filename '%s': %s", name, e)
-                    continue
-
-                try:
-                    st = os.stat(os_path)
-
-                except OSError as e:
-                    # skip over broken symlinks in listing
-                    if e.errno == errno.ENOENT:
-                        self.log.warning("%s doesn't exist", os_path)
-
-                    else:
-                        self.log.warning("Error stat-ing %s: %s", os_path, e)
-
-                    continue
-
-                if not stat.S_ISREG(st.st_mode) and not stat.S_ISDIR(st.st_mode):
-                    self.log.debug("%s not a regular file", os_path)
-
-                    continue
-
-                if self.should_list(name) and not is_file_hidden(os_path, stat_res=st):
-                    contents.append(self.get(
-                        path='%s/%s' % (path, name),
-                        content=False)
-                    )
-
-            model['format'] = 'json'
-
         return model
 
     def _save_project(self, os_path, model, path=''):
-        """ create a project """
+        """ Creates a project
+            A project is just a folder with a hidden file inside it  
+        """
 
-        if is_hidden(os_path, self.root_dir):
-            raise web.HTTPError(400, u'Cannot create hidden directory %r' % os_path)
-        if not os.path.exists(os_path):
+        # To avoid having to copy code from upstream, just call parent
+        # and write a file if the path did not exist before.
+        # The drawback is that we need to check if it exists twice...
+        # FIXME maybe not efficient with CS3 calls?
+        create_file = not self.exists(os_path)
+
+        super()._save_directory(os_path, model, path)
+
+        # FIXME if a folder already existed with this name, 
+        # should we also tranform it into a project?
+        if create_file:
             with self.perm_to_403():
-                os.mkdir(os_path)
                 self._save_file(os.path.join(os_path, self.swan_default_file), '', 'text')
-        elif not os.path.isdir(os_path):
-            raise web.HTTPError(400, u'Not a directory: %s' % (os_path))
-        else:
-            self.log.debug("Directory %r already exists", os_path)
 
     def get(self, path, content=True, type=None, format=None):
         """ Get info from a path"""
@@ -179,12 +118,12 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
         os_path = self._get_os_path(path)
 
-        if path == self.swan_default_folder and not os.path.isdir(os_path):
-            os.mkdir(os_path)
+        if path == self.swan_default_folder and not self._is_dir(os_path):
+            self._mkdir(os_path)
 
         os_path_proj = self._get_os_path(os.path.join(path, self.swan_default_file))
 
-        if os.path.isdir(os_path) and os.path.isfile(os_path_proj):
+        if self._is_dir(os_path) and self._is_file(os_path_proj):
             if type not in (None, 'project', 'directory'):
                 raise web.HTTPError(400,
                                 u'%s is a project, not a %s' % (path, type), reason='bad type')
@@ -192,7 +131,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
             model = self._proj_model(path, content=content)
 
         else:
-            model = super(LargeFileManager, self).get(path, content, type, format)
+            model = super().get(path, content, type, format)
         return model
 
     def save(self, model, path=''):
@@ -200,57 +139,61 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
         chunk = model.get('chunk', None)
         if chunk is not None:
-            return LargeFileManager.save(self, model, path)
+            return super().save(self, model, path)
+
+        path = path.strip('/')
+
+        self.run_pre_save_hook(model=model, path=path)
 
         if 'type' not in model:
             raise web.HTTPError(400, u'No file type provided')
         if 'content' not in model and model['type'] != 'directory' and model['type'] != 'project':
             raise web.HTTPError(400, u'No file content provided')
 
-        path = path.strip('/')
         os_path = self._get_os_path(path)
 
         if self._contains_swan_folder_name(os_path):
             raise web.HTTPError(400, "The name %s is restricted" % self.swan_default_folder)
 
         self.log.debug("Saving %s", os_path)
-        self.run_pre_save_hook(model=model, path=path)
 
+        validation_error: dict = {}
         try:
             if model['type'] == 'project':
                 if not self._is_swan_root_folder(os_path):
                     raise web.HTTPError(400, "You can only create projects inside Swan Projects")
                 self._save_project(os_path, model, path)
 
+            elif model['type'] == 'notebook':
+                nb = nbformat.from_dict(model['content'])
+                self.check_and_sign(nb, path)
+                self._save_notebook(os_path, nb, capture_validation_error=validation_error)
+                # We do not create checkpoints, unlike upstream
+                # as EOS or Reva handle that themselves
+                # So, the following code is commited
+                # if not self.checkpoints.list_checkpoints(path):
+                #     self.create_checkpoint(path)
+
+            elif model['type'] == 'file':
+                # Missing format will be handled internally by _save_file.
+                self._save_file(os_path, model['content'], model.get('format'))
+
+            elif model['type'] == 'directory':
+                self._save_directory(os_path, model, path)
+
             else:
-                if model['type'] == 'notebook':
-                    nb = nbformat.from_dict(model['content'])
-                    self.check_and_sign(nb, path)
-                    self._save_notebook(os_path, nb)
-                    # One checkpoint should always exist for notebooks.
-                    if not self.checkpoints.list_checkpoints(path):
-                        self.create_checkpoint(path)
-
-                elif model['type'] == 'file':
-                    # Missing format will be handled internally by _save_file.
-                    self._save_file(os_path, model['content'], model.get('format'))
-
-                elif model['type'] == 'directory':
-                    self._save_directory(os_path, model, path)
-
-                else:
-                    raise web.HTTPError(400, "Unhandled contents type: %s" % model['type'])
+                raise web.HTTPError(400, "Unhandled contents type: %s" % model['type'])
 
         except web.HTTPError:
             raise
 
         except Exception as e:
             self.log.error(u'Error while saving file: %s %s', path, e, exc_info=True)
-            raise web.HTTPError(500, u'Unexpected error while saving file: %s %s' % (path, e))
+            raise web.HTTPError(500, f"Unexpected error while saving file: {path} {e}") from e
 
         validation_message = None
         if model['type'] == 'notebook':
-            self.validate_notebook_model(model)
+            self.validate_notebook_model(model, validation_error=validation_error)
             validation_message = model.get('message', None)
 
         model = self.get(path, content=False)
@@ -265,29 +208,11 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         """ Create a new file or directory and return its model with no content
             To create a new untitled entity in a directory, use `new_untitled`
         """
-        path = path.strip('/')
-        if model is None:
-            model = {}
 
-        if path.endswith('.ipynb'):
-            model.setdefault('type', 'notebook')
-        else:
-            model.setdefault('type', 'file')
-
-        # no content, not a directory, so fill out new-file model
-        if 'content' not in model \
-                and model['type'] != 'directory' \
-                and model['type'] != 'project':
-            if model['type'] == 'notebook':
-                model['content'] = new_notebook()
-                model['format'] = 'json'
-            else:
-                model['content'] = ''
-                model['type'] = 'file'
-                model['format'] = 'text'
-
-        model = self.save(model, path)
-        return model
+        if model is not None and model['type'] == 'project':
+            return self.save(model, path)
+        
+        return super().new(model, path)
 
     def new_untitled(self, path='', type='', ext=''):
         """ Create a new untitled file or directory in path
@@ -300,40 +225,17 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         if not self.dir_exists(path):
             raise web.HTTPError(404, 'No such directory: %s' % path)
 
-        model = {}
-        if type:
-            model['type'] = type
+        if type == 'project':
+            model = {
+                'type': 'directory',
+                'is_project': True
+            }
+            name = self.increment_filename(self.untitled_project, path, insert=' ')
+            path = u'{0}/{1}'.format(path, name)
 
-        if ext == '.ipynb':
-            model.setdefault('type', 'notebook')
-        else:
-            model.setdefault('type', 'file')
-        insert = ''
-        if model['type'] == 'directory':
-            untitled = self.untitled_directory
-            model['is_project'] = False
-            insert = ' '
-
-        elif model['type'] == 'project':
-            model['type'] = 'directory'
-            model['is_project'] = True
-            untitled = self.untitled_project
-            insert = ' '
-
-        elif model['type'] == 'notebook':
-            untitled = self.untitled_notebook
-            ext = '.ipynb'
-
-        elif model['type'] == 'file':
-            untitled = self.untitled_file
-
-        else:
-            raise web.HTTPError(400, "Unexpected model type: %r" % model['type'])
-
-        name = self.increment_filename(untitled + ext, path, insert=insert)
-        path = u'{0}/{1}'.format(path, name)
-
-        return self.new(model, path)
+            return self.new(model, path)
+        
+        return super().new_untitled(path, type, ext)
 
     def update(self, model, path):
         """ Prevent users from using the name of SWAN projects folder"""
@@ -341,7 +243,25 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         if self._contains_swan_folder_name(self._get_os_path(path)):
             raise web.HTTPError(400, "The name %s is restricted" % self.swan_default_folder)
 
-        return super(LargeFileManager, self).update(model, path)
+        return super().update(model, path)
+
+
+    def move_folder(self, origin, dest, preserve=False):
+        """ Move a folder to a new location, but renames it if it already exists """
+
+        # If the name exists, get a new one
+        if self._is_dir(dest):
+            count = 1
+            while self._is_dir(dest + str(count)):
+                count += 1
+            dest += str(count)
+
+        self._move(origin, dest, preserve)
+
+        # Make the folder a SWAN Project
+        self._save_file(os.path.join(dest, self.swan_default_file), '', 'text')
+
+        return dest
 
     def download(self, url):
         """ Downloads a Project from git or cernbox """
@@ -375,7 +295,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
             else:
                 # Outside of user directory. Copy the file.
-                shutil.copy2(file_path, tmp_dir_name)
+                shutil.copy2(file_path, tmp_dir_name) ##### FIXME
                 file_name = file_path.split('/').pop()
                 file_name_no_ext = os.path.splitext(file_name)[0]
                 dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name_no_ext)
@@ -396,7 +316,7 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
 
             elif os.path.isfile(path):
 
-                shutil.copy2(path, tmp_dir_name)
+                shutil.copy2(path, tmp_dir_name) ##### FIXME
                 file_name_no_ext = os.path.splitext(file_name)[0]
                 dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name_no_ext)
 
@@ -440,23 +360,3 @@ class SwanFileManager(SwanFileManagerMixin, LargeFileManager):
         model['path'] = model['path'].replace(self.root_dir, '').strip('/')
 
         return model
-
-    def move_folder(self, origin, dest, preserve=False):
-        """ Move a folder to a new location, but renames it if it already exists """
-
-        # If the name exists, get a new one
-        if os.path.isdir(dest):
-            count = 1
-            while os.path.isdir(dest + str(count)):
-                count += 1
-            dest += str(count)
-
-        if preserve:
-            path = shutil.copytree(origin, dest)
-        else:
-            path = shutil.move(origin, dest)
-
-        # Make the folder a SWAN Project
-        self._save_file(os.path.join(dest, self.swan_default_file), '', 'text')
-
-        return path
