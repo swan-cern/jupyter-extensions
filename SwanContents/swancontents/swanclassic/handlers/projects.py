@@ -44,20 +44,27 @@ class ProjectsHandler(ExtensionHandlerJinjaMixin, ExtensionHandlerMixin, Jupyter
         cm = self.contents_manager
 
         swan_path = url_path_join('SWAN_projects', path)
+        real_path = swan_path
+
+        # If we're using the CS3 cm, the home might be mounted somewhere else
+        home_dir = ''
+        if hasattr(cm, 'cs3_config') and cm.cs3_config.home_dir:
+            home_dir = cm.cs3_config.home_dir
+            real_path = url_path_join(home_dir, swan_path)
 
         file_exists = False
-        dir_exists = await ensure_async(cm.dir_exists(path=swan_path))
+        dir_exists = await ensure_async(cm.dir_exists(path=real_path))
         if not dir_exists:
-            file_exists = await ensure_async(cm.file_exists(swan_path))
+            file_exists = await ensure_async(cm.file_exists(real_path))
 
         if dir_exists:
-            is_hidden = await ensure_async(cm.is_hidden(swan_path))
+            is_hidden = await ensure_async(cm.is_hidden(real_path))
             if is_hidden and not cm.allow_hidden:
                 self.log.info("Refusing to serve hidden directory, via 404 Error")
                 raise web.HTTPError(404)
 
             if path != '':
-                parent_project = await ensure_async(cm._get_project_path(swan_path))
+                parent_project = await ensure_async(cm._get_project_path(real_path))
                 if not parent_project or parent_project == 'invalid':
                     self.log.info("Trying to see a folder inside Projects")
                     raise web.HTTPError(404)
@@ -66,6 +73,7 @@ class ProjectsHandler(ExtensionHandlerJinjaMixin, ExtensionHandlerMixin, Jupyter
             page_title = self.generate_page_title(path)
             self.write(self.render_template('tree.html',
                                             page_title=page_title,
+                                            home_dir=home_dir,
                                             notebook_path=swan_path,
                                             breadcrumbs=breadcrumbs,
                                             terminals_available=self.settings['terminals_available'],
@@ -74,13 +82,13 @@ class ProjectsHandler(ExtensionHandlerJinjaMixin, ExtensionHandlerMixin, Jupyter
                                             ))
         elif file_exists:
             # it's not a directory, we have redirecting to do
-            model = await ensure_async(cm.get(swan_path, content=False))
+            model = await ensure_async(cm.get(real_path, content=False))
             # redirect to /api/notebooks if it's a notebook, otherwise /api/files
             service = 'notebooks' if model['type'] == 'notebook' else 'files'
             url = url_path_join(
-                self.base_url, service, url_escape(swan_path),
+                self.base_url, service, url_escape(real_path),
             )
-            self.log.debug("Redirecting %s to %s", self.request.swan_path, url)
+            self.log.debug("Redirecting %s to %s", self.request.real_path, url)
             self.redirect(url)
         else:
             raise web.HTTPError(404)
