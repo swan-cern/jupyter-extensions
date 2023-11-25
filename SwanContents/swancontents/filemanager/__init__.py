@@ -1,1 +1,2 @@
 from .swan_eos_filemanager import SwanEosFileManager
+from .swan_cs3_filemanager import SwanCs3FileManager
