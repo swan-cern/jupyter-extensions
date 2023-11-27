@@ -2,11 +2,10 @@ include LICENSE
 include README.md
 include pyproject.toml
 
-include jupyter-config/swannotifications.json
-
 include package.json
 include ts*.json
 include swanshare/nbextension/*.js
+include webpack.config.js
 
 # Javascript files
 graft src
