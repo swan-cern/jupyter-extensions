@@ -1,6 +1,6 @@
 {
   "name": "@swan-cern/swanhelp",
-  "version": "3.0.1",
+  "version": "3.0.2",
   "description": "Help panel for SWAN",
   "keywords": [
     "jupyter",
