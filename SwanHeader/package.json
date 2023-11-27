@@ -1,6 +1,6 @@
 {
   "name": "@swan-cern/header",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "SWAN JupyterLab Header Bar",
   "license": "AGPL-3.0",
   "keywords": [
