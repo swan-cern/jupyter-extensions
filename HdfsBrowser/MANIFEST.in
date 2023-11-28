@@ -5,12 +5,17 @@ include pyproject.toml
 graft jupyter-config
 
 include package.json
+include nbextension/package.json
+include nbextension/webpack.config.js
 include ts*.json
-include hdfsbrowser/labextension/*.tgz
-include hdfsbrowser/nbextension/*.js
+include yarn.lock
+include nbextension/yarn.lock
+include hdfsbrowser/labextension/
+include hdfsbrowser/nbextension/
 
 # Javascript files
 graft src
+graft nbextension/src
 graft style
 prune **/node_modules
 prune lib

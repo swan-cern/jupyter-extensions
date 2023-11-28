@@ -4,14 +4,17 @@ include pyproject.toml
 
 
 include package.json
+include nbextension/package.json
+include nbextension/webpack.config.js
 include ts*.json
 include yarn.lock
+include nbextension/yarn.lock
 graft sparkconnector/labextension
-include sparkconnector/nbextension/*.js
+graft sparkconnector/nbextension
 
 # Javascript files
 graft src
-graft nbextension
+graft nbextension/src
 graft style
 prune **/node_modules
 prune lib
