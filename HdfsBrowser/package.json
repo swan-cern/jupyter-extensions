@@ -64,11 +64,14 @@
   },
   "dependencies": {
     "@jupyterlab/application": "^4.0.6",
+    "@jupyterlab/apputils": "^4.1.9",
     "@jupyterlab/mainmenu": "^4.0.6",
+    "@jupyterlab/services": "^7.0.9",
+    "@jupyterlab/ui-components": "^4.0.9",
     "@lumino/widgets": "^2.0.1"
   },
   "devDependencies": {
-    "@jupyterlab/builder": "^4.0.0",
+    "@jupyterlab/builder": "^4.0.7",
     "@types/json-schema": "^7.0.11",
     "@types/react": "^18.0.26",
     "@types/react-addons-linked-state-mixin": "^0.14.22",
@@ -78,6 +81,7 @@
     "eslint": "^8.36.0",
     "eslint-config-prettier": "^8.8.0",
     "eslint-plugin-prettier": "^5.0.0",
+    "eslint-plugin-react": "^7.24.0",
     "mkdirp": "^1.0.3",
     "npm-run-all": "^4.1.5",
     "prettier": "^3.0.0",
@@ -89,7 +93,7 @@
     "stylelint-config-standard": "^34.0.0",
     "stylelint-csstree-validator": "^3.0.0",
     "stylelint-prettier": "^4.0.0",
-    "typescript": "~5.0.2",
+    "typescript": "^5.2.2",
     "yjs": "^13.5.40"
   },
   "jupyterlab": {

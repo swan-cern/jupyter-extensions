@@ -1,4 +1,4 @@
-import { IFrame } from '@jupyterlab/apputils';
+import { IFrame } from '@jupyterlab/ui-components';
 import { ServerConnection } from '@jupyterlab/services';
 
 /**
