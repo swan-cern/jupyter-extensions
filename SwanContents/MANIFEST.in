@@ -4,8 +4,9 @@ include pyproject.toml
 
 include jupyter-config/swancontents.json
 
-graft swancontents/js
-graft swancontents/templates/
+graft swancontents/swanclassic/static
+graft swancontents/swanclassic/templates
+graft swancontents/serverextension/templates
 
 # Patterns to exclude from any directory
 global-exclude *~
