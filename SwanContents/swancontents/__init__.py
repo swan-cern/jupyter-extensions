@@ -1,7 +1,7 @@
 from ._version import __version__
 
 
-def _jupyter_server_extension_paths():
+def _jupyter_server_extension_points():
     from .swanclassic.notebookapp import NotebookApp
 
     return [
