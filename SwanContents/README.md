@@ -16,10 +16,7 @@ Install the package and the nbextension:
 
 ```bash
 pip install swancontents
-jupyter nbextension install --user --py swancontents
 ```
-
-Do not enable the nbextension, this will be done bellow.
 
 To replace the default Jupyter Contents Manager (including its Javascript library) and the templates, in the Jupyter Notebook configuration (i.e in `jupyter_notebook_config.py`), set the following:
 
