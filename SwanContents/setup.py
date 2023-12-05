@@ -3,7 +3,10 @@ Setup Module to setup Python Handlers for the SwanKernelEnv extension.
 """
 import os
 
-from jupyter_packaging import get_version, create_cmdclass
+from jupyter_packaging import (
+    create_cmdclass, install_npm, ensure_targets,
+    combine_commands, skip_if_exists, get_version
+)
 import setuptools
 
 name = "swancontents"
@@ -11,15 +14,48 @@ name = "swancontents"
 # Get our version
 version = get_version(os.path.join(name, "_version.py"))
 
-package_data_spec = {name: ["*"]}
+HERE = os.path.abspath(os.path.dirname(__file__))
+lab_path = os.path.join(HERE, name, "swanclassic/labextension")
+
+# Representative files that should exist after a successful build
+jstargets = [
+    os.path.join(lab_path, "package.json"),
+]
+
+package_data_spec = {
+    name: [
+        "*"
+    ]
+}
+
+labext_name = "@swanclassic/lab-extension"
 
 data_files_spec = [
+    ("share/jupyter/labextensions/%s" % labext_name, lab_path, "**"),
+    ("share/jupyter/labextensions/%s" % labext_name, HERE, "install.json"),
     (
         "etc/jupyter/jupyter_server_config.d",
         "jupyter_server_config.d",
         "swancontents.json",
     ),
 ]
+
+cmdclass = create_cmdclass("jsdeps",
+    package_data_spec=package_data_spec,
+    data_files_spec=data_files_spec
+)
+
+js_command = combine_commands(
+    install_npm(HERE, build_cmd="install", npm=["jlpm"]),
+    install_npm(HERE, build_cmd="build:prod", npm=["jlpm"]),
+    ensure_targets(jstargets),
+)
+
+is_repo = os.path.exists(os.path.join(HERE, ".git"))
+if is_repo:
+    cmdclass["jsdeps"] = js_command
+else:
+    cmdclass["jsdeps"] = skip_if_exists(jstargets, js_command)
 
 cmdclass = create_cmdclass(
     package_data_spec=package_data_spec, data_files_spec=data_files_spec

@@ -4,8 +4,12 @@ include pyproject.toml
 
 include jupyter-config/swancontents.json
 
+include package.json
+include ts*.json
+
 graft swancontents/swanclassic/static
 graft swancontents/swanclassic/templates
+graft swancontents/swanclassic/labextension
 graft swancontents/serverextension/templates
 
 # Patterns to exclude from any directory

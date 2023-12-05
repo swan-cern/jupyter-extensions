@@ -6,6 +6,8 @@ Server and NB extension that provides:
 * git download
 * SWAN style in a form of Jupyter Notebook templates
 
+This module also installs a lab extension that adds links throughout the UI to switch between the Lab and the old UI.
+
 ## Requirements
 
 Besides Jupyter, this extension requires that the user home is set inside EOS.
