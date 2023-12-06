@@ -22,6 +22,13 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
 
     root_dir = Unicode(config=True)
 
+    # The root dir might be different than the path where jupyter has been launched from
+    # so we need to set this to avoid looking in the wrong place when calling `_get_os_path`
+    def _root_dir_default(self):
+        if not self.parent:
+            return os.getcwd()
+        return self.parent.root_dir
+
     version_base = Unicode(
         default_value='.sys.v#.%s',
         config=True
