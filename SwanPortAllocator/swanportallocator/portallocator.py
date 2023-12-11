@@ -306,7 +306,7 @@ class GeneralException(BaseException):
     pass
 
 
-def load_jupyter_server_extension(nb_server_app):
+def _load_jupyter_server_extension(nb_server_app):
     """
     Called when the Jupyter server extension is loaded.
 
