@@ -14,8 +14,6 @@ version = get_version(os.path.join(name, "_version.py"))
 data_files_spec = [
     ("etc/jupyter/jupyter_server_config.d",
      "jupyter-config/jupyter_server_config.d", "swanportallocator.json"),
-    ("etc/jupyter/jupyter_notebook_config.d",
-     "jupyter-config/jupyter_notebook_config.d", "swanportallocator.json"),
 ]
 
 with open("README.md", "r") as fh:
