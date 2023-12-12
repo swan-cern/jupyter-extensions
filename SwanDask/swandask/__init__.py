@@ -15,8 +15,10 @@ def get_env():
 
 
 def setup_proxy():
+    # SwanDask needs to run with the LCG python
+    python_bin = get_kernel_spec("python3").argv[0]
     return {
-        "command": ["swandask", "--port", "{port}", "--base_url", "{base_url}"],
+        "command": [python_bin, "-m", "swandask", "--port", "{port}", "--base_url", "{base_url}"],
         "absolute_url": True,
         "timeout": 10,
         "launcher_entry": {"enabled": False},
