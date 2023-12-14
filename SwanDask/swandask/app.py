@@ -24,7 +24,7 @@ def _set_dashboard_whitelist():
 
     def custom_init(self, *args, **kwargs):
         super(DaskDashboardHandler, self).__init__(*args,
-                                                   host_whitelist=[private_ip],
+                                                   host_allowlist=[private_ip],
                                                    *kwargs)
 
     DaskDashboardHandler.__init__ = partialmethod(custom_init)
