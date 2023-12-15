@@ -46,7 +46,7 @@ cmdclass = create_cmdclass("jsdeps",
 )
 
 js_command = combine_commands(
-    install_npm(HERE, build_cmd="install", npm=["jlpm"]),
+    install_npm(HERE, npm=["jlpm"]),
     install_npm(HERE, build_cmd="build:prod", npm=["jlpm"]),
     ensure_targets(jstargets),
 )
@@ -57,9 +57,6 @@ if is_repo:
 else:
     cmdclass["jsdeps"] = skip_if_exists(jstargets, js_command)
 
-cmdclass = create_cmdclass(
-    package_data_spec=package_data_spec, data_files_spec=data_files_spec
-)
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
