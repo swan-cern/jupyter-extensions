@@ -64,6 +64,14 @@ class NotebookApp(ClassicNotebookApp):
         )
         new_vars.update({"current_year": datetime.datetime.now().year})
 
+        # Check if we are running via Jupyterhub single user (in that case, control url is defined),
+        #  and set a required variable for the templates
+        if 'hub_control_panel_url' in new_vars:
+            control_url = new_vars['hub_control_panel_url']
+            # Remove the prefix from the path (it's built by appending 'home' at the end)
+            hub_prefix = '/'.join(control_url.split('/')[:-1]) + '/'
+            new_vars.update({"hub_prefix": hub_prefix})
+
         if datetime.date.today().month == 12:
             # It's Christmas time!
             new_vars.update({"swan_logo_filename": "swan_letters_christmas.png"})
