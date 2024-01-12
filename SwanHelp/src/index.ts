@@ -36,7 +36,7 @@ function registerGalleryListener(app: JupyterFrontEnd, galleryUrl: string) {
 const defaultConfigs = {
   help: "https://swan.docs.cern.ch/",
   community: "https://cern.ch/swan-community",
-  support: "https://cern.service-now.com/service-portal/function.do?name=swan",
+  support: "https://cern.service-now.com/service-portal/?id=functional_element&name=swan",
   gallery: "https://swan-gallery.web.cern.ch"
 }
 
