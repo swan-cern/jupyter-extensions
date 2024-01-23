@@ -68,7 +68,7 @@ data-base-url="{{base_url | urlencode}}"
     sys_info = {{sys_info|safe}};
     
     require(['jquery'], function (jq) {
-      require(['nbextensions_configurator/main'], function (nbext_config_module) {
+      require(['nbextensions/nbextensions_configurator/main'], function (nbext_config_module) {
         nbext_config_module.build_page();
       });
     });
