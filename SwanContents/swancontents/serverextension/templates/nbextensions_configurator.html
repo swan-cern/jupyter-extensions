@@ -1,0 +1,76 @@
+{% extends "page.html" %}
+
+{% block title %}{{page_title}}{% endblock %}
+
+{% block stylesheet %}
+{{super()}}
+{% endblock %}
+
+{% block params %}
+{{super()}}
+data-base-url="{{base_url | urlencode}}"
+{% endblock %}
+
+{% block headercontainer %}
+
+<div class="pull-left nbext-page-title-wrap">
+  <span class="nbext-page-title">
+    Nbextensions configuration
+  </span>
+</div>
+
+{% endblock %}
+
+{% block header %}
+{% endblock %}
+
+{% block script %}
+
+  {{super()}}
+
+  <script src="{{static_url('components/requirejs/require.js') }}" type="text/javascript" charset="utf-8"></script>
+  <script type="text/javascript" charset="utf-8">
+    require.config({
+          {% if version_hash %}
+          urlArgs: "v={{version_hash}}",
+          {% endif %}
+          baseUrl: '{{static_url("", include_version=False)}}',
+          paths: {
+            nbextensions : '{{ base_url }}nbextensions',
+            underscore : 'components/underscore/underscore-min',
+            jed: 'components/jed/jed',
+            jquery: 'components/jquery/jquery.min',
+            json: 'components/requirejs-plugins/src/json',
+            text: 'components/requirejs-text/text',
+            bootstrap: 'components/bootstrap/dist/js/bootstrap.min',
+            'jquery-ui': 'components/jquery-ui/dist/jquery-ui.min',
+            moment: 'components/moment/min/moment-with-locales',
+            codemirror: 'components/codemirror',
+          },
+          map: { // for backward compatibility
+              "*": {
+                  "jqueryui": "jquery-ui"
+              }
+          },
+          shim: {
+            bootstrap: {
+              deps: ["jquery"],
+              exports: "bootstrap"
+            },
+            "jquery-ui": {
+              deps: ["jquery"],
+              exports: "$"
+            }
+          },
+          waitSeconds: 30,
+        });
+    document.nbjs_translations = {{ nbjs_translations|safe }};
+    sys_info = {{sys_info|safe}};
+    
+    require(['jquery'], function (jq) {
+      require(['nbextensions_configurator/main'], function (nbext_config_module) {
+        nbext_config_module.build_page();
+      });
+    });
+  </script>
+{% endblock %}
