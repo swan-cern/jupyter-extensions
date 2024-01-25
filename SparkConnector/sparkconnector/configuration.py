@@ -269,6 +269,15 @@ class SparkK8sConfiguration(SparkConfiguration):
         conf.set('spark.kubernetes.namespace', os.environ.get('SPARK_USER'))
         conf.set('spark.master', self._retrieve_k8s_master(os.environ.get('KUBECONFIG')))
 
+        # The image used by the Spark executor should be set by the spawner, as we need
+        # different images for different platform types
+        # Get the value of 'SPARK_K8S_EXECUTOR_CONTAINER_IMAGE_URL' environment variable
+        # The default value is a stopgap till we implement the changes in the spawner
+        container_image_url = os.environ.get('SPARK_K8S_EXECUTOR_CONTAINER_IMAGE_URL',
+                              'gitlab-registry.cern.ch/db/spark-service/docker-registry/swan:cc7-20240123')
+        # Set the configuration using the obtained or default value
+        conf.set('spark.kubernetes.container.image', container_image_url)
+
         # Ensure that Spark ENVs on executors are the same as on the driver
         conf.set('spark.executorEnv.PYTHONPATH', os.environ.get('PYTHONPATH'))
         conf.set('spark.executorEnv.JAVA_HOME', os.environ.get('JAVA_HOME'))
