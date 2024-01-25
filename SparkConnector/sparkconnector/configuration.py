@@ -269,11 +269,6 @@ class SparkK8sConfiguration(SparkConfiguration):
         conf.set('spark.kubernetes.namespace', os.environ.get('SPARK_USER'))
         conf.set('spark.master', self._retrieve_k8s_master(os.environ.get('KUBECONFIG')))
 
-        # Configure shuffle if running on K8s with Spark 3.x.x
-        if self.get_spark_version().split('.')[0]=='3':
-            conf.set('spark.shuffle.service.enabled', 'false')
-            conf.set('spark.dynamicAllocation.shuffleTracking.enabled', 'true')
-
         # Ensure that Spark ENVs on executors are the same as on the driver
         conf.set('spark.executorEnv.PYTHONPATH', os.environ.get('PYTHONPATH'))
         conf.set('spark.executorEnv.JAVA_HOME', os.environ.get('JAVA_HOME'))
