@@ -272,8 +272,7 @@ class SparkK8sConfiguration(SparkConfiguration):
         # The image used by the Spark executor should be set by the spawner, as we need
         # different images for different platform types
         # Get the value of 'SPARK_K8S_EXECUTOR_CONTAINER_IMAGE_URL' environment variable
-        # The default value is a stopgap till we implement the changes in the spawner
-        container_image_url = os.environ.get('SPARK_K8S_EXECUTOR_CONTAINER_IMAGE_URL',
+        container_image_url = os.environ.get('SPARK_EXECUTOR_IMAGE',
                               'gitlab-registry.cern.ch/db/spark-service/docker-registry/swan:cc7-20240123')
         # Set the configuration using the obtained or default value
         conf.set('spark.kubernetes.container.image', container_image_url)
