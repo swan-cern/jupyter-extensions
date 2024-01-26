@@ -269,13 +269,31 @@ class SparkK8sConfiguration(SparkConfiguration):
         conf.set('spark.kubernetes.namespace', os.environ.get('SPARK_USER'))
         conf.set('spark.master', self._retrieve_k8s_master(os.environ.get('KUBECONFIG')))
 
-        # The image used by the Spark executor should be set by the spawner, as we need
-        # different images for different platform types
-        # Get the value of 'SPARK_K8S_EXECUTOR_CONTAINER_IMAGE_URL' environment variable
-        container_image_url = os.environ.get('SPARK_EXECUTOR_IMAGE',
-                              'gitlab-registry.cern.ch/db/spark-service/docker-registry/swan:cc7-20240123')
-        # Set the configuration using the obtained or default value
-        conf.set('spark.kubernetes.container.image', container_image_url)
+
+        # The image that should be used by the Spark executor depends on the platform
+        container_image_url = None
+        centos7_file = "/etc/centos-release"
+        alma9_file = "/etc/almalinux-release"
+        centos7_image = "gitlab-registry.cern.ch/db/spark-service/docker-registry/swan:CC7-20240123"
+        alma9_image = "gitlab-registry.cern.ch/db/spark-service/docker-registry/swan:alma9-20240123"
+        # Check for CentOS 7
+        if os.path.isfile(centos7_file):
+            with open(centos7_file, 'r') as file:
+                if "CentOS Linux release 7" in file.read():
+                    container_image_url = centos7_image
+        # Check for Alma 9
+        elif os.path.isfile(alma9_file):
+            with open(alma9_file, 'r') as file:
+                if "AlmaLinux release 9" in file.read():
+                    container_image_url = alma9_image
+        else:
+            raise ValueError("Unknown Linux distribution")
+
+        # Validate the image URL before setting configuration
+        if container_image_url is not None:
+            conf.set('spark.kubernetes.container.image', container_image_url)
+        else:
+            raise ValueError("Unknown Linux distribution")
 
         # Ensure that Spark ENVs on executors are the same as on the driver
         conf.set('spark.executorEnv.PYTHONPATH', os.environ.get('PYTHONPATH'))
