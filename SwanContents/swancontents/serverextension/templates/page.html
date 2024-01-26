@@ -15,6 +15,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
     {% block stylesheet %}
+
+      <link rel="stylesheet" href="{{ static_url('style/style.min.css') }}" type="text/css"/>
       {%if hub_prefix %}
       <link rel="stylesheet" href="{{hub_prefix}}static/swan/css/style.css" type="text/css" />
       {% else %}
