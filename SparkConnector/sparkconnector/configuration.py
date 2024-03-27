@@ -393,7 +393,6 @@ class SparkYarnConfiguration(SparkConfiguration):
             if grafana_url and app_id:
                 # if spark.cern.grafana.url is set, use cern spark monitoring dashboard
                 conn_config['sparkmetrics'] = grafana_url + \
-                                              '?orgId=1' + \
                                               '&var-ClusterName=' + self.get_cluster_name() + \
                                               '&var-UserName=' + self.get_spark_user() + \
                                               '&var-ApplicationId=' + app_id
