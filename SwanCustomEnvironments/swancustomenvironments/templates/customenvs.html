@@ -1,0 +1,73 @@
+{% extends "page.html" %}
+
+{% block stylesheet %}
+{{super()}}
+<style type="text/css">
+/* disable initial hide */
+div#header, div#site {
+    display: block;
+}
+</style>
+{% endblock %}
+
+{% block params %}
+{{super()}}
+data-base-url="{{base_url | urlencode}}"
+{% endblock %}
+
+{% block site %}
+
+<div class="container">
+  <div class="row">
+    <div class="swan-info">
+      <div id="swan-loader">
+        <div class="loader-circle">
+          <img src="{{hub_prefix}}static/swan/logos/{{swan_logo_filename}}">
+        </div>
+        <div class="loader-line-mask">
+          <div class="loader-line"></div>
+        </div>
+        <span class="text">Creating environment...</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+    {{super()}}
+
+<script type = "text/javascript" >
+
+// FIXME we should not rely on requirejs, as this is not available in jupyter server..
+// It works now because I've added it to make old extensions work...
+// --Diogo
+    require(['jquery', 'base/js/utils'], function ($, utils) {
+
+        var base_url = utils.get_body_data("baseUrl");
+        var custom_env = utils.get_url_param('customEnv');
+
+        var settings = {
+            processData : false,
+            type : "GET",
+            contentType: 'application/json',
+            dataType : "json",
+        };
+
+        utils.promising_ajax(base_url +  'api/customenvs?repo=' + custom_env, settings)
+            .then(function (result) {
+              // FIXME some logic here...
+              error(result)
+            }).catch(function (e) {
+            error(e.message || e.xhr_error || e.reason || e);
+        });
+
+        function error(reason) {
+            $('#swan-loader .loader-line-mask').hide();
+            $('#swan-loader .text').html('<p class="extra">Error creating custom env: ' + reason + '</p>');
+        }
+    });
+
+</script>
+{% endblock %}
