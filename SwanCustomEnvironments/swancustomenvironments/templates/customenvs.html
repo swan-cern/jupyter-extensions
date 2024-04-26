@@ -7,6 +7,15 @@
 div#header, div#site {
     display: block;
 }
+#output-box {
+	display: block;
+	width: 1150px;
+	height: 300px;
+	border: 1px solid #ccc;
+	background-color: #f7f7f7;
+	padding: 10px;
+	border-radius: 5px;
+}
 </style>
 {% endblock %}
 
@@ -28,6 +37,7 @@ data-base-url="{{base_url | urlencode}}"
           <div class="loader-line"></div>
         </div>
         <span class="text">Creating environment...</span>
+		<div class="swan-info" id="output-box"></div>
       </div>
     </div>
   </div>
@@ -39,35 +49,41 @@ data-base-url="{{base_url | urlencode}}"
     {{super()}}
 
 <script type = "text/javascript" >
+	
+	function error(reason) {
+		var loader = document.getElementById('swan-loader');
+		loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
+		loader.getElementsByClassName('text')[0].innerHTML = `<p class=\"extra\">Error downloading Project: ${reason}</p>`;
+	}
 
-// FIXME we should not rely on requirejs, as this is not available in jupyter server..
-// It works now because I've added it to make old extensions work...
-// --Diogo
-    require(['jquery', 'base/js/utils'], function ($, utils) {
+	var base_url = document.body.getAttribute('data-base-url');
+	
+	const urlParams = new URLSearchParams(document.location.search);
+	var env_name = encodeURIComponent(urlParams.get('env') || "");
+	var req = encodeURIComponent(urlParams.get('req') || "");
+	var clear = encodeURIComponent(urlParams.get('clear') || "true");
+	var accpy_version = encodeURIComponent(urlParams.get('accpy') || "");
+	var custom_python = encodeURIComponent(urlParams.get('python') || "");
 
-        var base_url = utils.get_body_data("baseUrl");
-        var custom_env = utils.get_url_param('customEnv');
+	var eventSource = new EventSource(`${base_url}api/customenvs?env=${env_name}&req=${req}&clear=${clear}&accpy=${accpy_version}&python=${custom_python}`);
 
-        var settings = {
-            processData : false,
-            type : "GET",
-            contentType: 'application/json',
-            dataType : "json",
-        };
+	eventSource.onmessage = function(event) {
+		if (event.data === 'EOF') {
+			// Close SSE connection and update UI when done
+			eventSource.close();
+			var loader = document.getElementById('swan-loader');
+			loader.getElementsByClassName('text')[0].innerHTML = 'Done';
+			loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
+		} else {
+			// Add output to output-box
+			var outputBox = document.getElementById('output-box');
+			outputBox.innerHTML += event.data + '<br>';
+		}
+	};
 
-        utils.promising_ajax(base_url +  'api/customenvs?repo=' + custom_env, settings)
-            .then(function (result) {
-              // FIXME some logic here...
-              error(result)
-            }).catch(function (e) {
-            error(e.message || e.xhr_error || e.reason || e);
-        });
-
-        function error(reason) {
-            $('#swan-loader .loader-line-mask').hide();
-            $('#swan-loader .text').html('<p class="extra">Error creating custom env: ' + reason + '</p>');
-        }
-    });
+	eventSource.onerror = function(err) {
+		error(err.message);
+	};
 
 </script>
 {% endblock %}

@@ -3,8 +3,9 @@ from traitlets.config import Configurable
 
 from jupyter_server.base.handlers import JupyterHandler, APIHandler
 from jupyter_server.utils import url_path_join
-import json
 
+import subprocess
+from os import environ, path
 
 
 class SwanCustomEnvironments(Configurable):
@@ -21,10 +22,37 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
 
     @web.authenticated
     def get(self):
-        self.set_header("Content-Type", "application/json")
-        self.finish(json.dumps({
-            'hello': 'world'
-        }))
+        self.set_header("Content-Type", "text/event-stream")
+        
+        env_name = self.get_query_argument("env", default=None)
+        req = self.get_query_argument("req", default=None)
+        clear = self.get_query_argument("clear", default="true")
+        accpy_version = self.get_query_argument("accpy", default=None)
+        custom_python = self.get_query_argument("python", default=None)
+
+        if not req.startswith("http"):
+            req = path.join(environ["HOME"], req)
+
+        try:
+            arguments = ["--env", env_name, "--req", req]
+            if clear.lower() == "true":
+                arguments.extend(["--clear"])
+            if accpy_version is not None:
+                arguments.extend(["--accpy", accpy_version])
+            if custom_python is not None:
+                arguments.extend(["--python", custom_python])
+            
+            makenv_process = subprocess.Popen(["/srv/singleuser/bin/makenv", *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            
+            for line in iter(makenv_process.stdout.readline, b""):
+                self.write(f"data: {line.decode('utf-8')}\n\n")
+                self.flush()
+            
+        except Exception as e:
+            self.write(f"data: Error: {str(e)}\n\n")
+            self.flush()
+
+        self.finish("data: EOF\n\n")
 
 
 class SwanCustomEnvironmentsHandler(JupyterHandler):
