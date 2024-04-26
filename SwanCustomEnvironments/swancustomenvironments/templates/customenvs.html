@@ -58,12 +58,11 @@ data-base-url="{{base_url | urlencode}}"
 
 	var base_url = document.body.getAttribute('data-base-url');
 	
-	const urlParams = new URLSearchParams(document.location.search);
-	var env_name = encodeURIComponent(urlParams.get('env') || "");
-	var req = encodeURIComponent(urlParams.get('req') || "");
-	var clear = encodeURIComponent(urlParams.get('clear') || "true");
-	var accpy_version = encodeURIComponent(urlParams.get('accpy') || "");
-	var custom_python = encodeURIComponent(urlParams.get('python') || "");
+	var env_name = encodeURIComponent(document.body.getAttribute('env') || "");
+	var req = encodeURIComponent(document.body.getAttribute('req') || "");
+	var clear = encodeURIComponent(document.body.getAttribute('clear') || "true");
+	var accpy_version = encodeURIComponent(document.body.getAttribute('accpy') || "");
+	var custom_python = encodeURIComponent(document.body.getAttribute('python') || "");
 
 	var eventSource = new EventSource(`${base_url}api/customenvs?env=${env_name}&req=${req}&clear=${clear}&accpy=${accpy_version}&python=${custom_python}`);
 
