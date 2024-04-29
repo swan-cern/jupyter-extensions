@@ -42,7 +42,7 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
             if custom_python is not None:
                 arguments.extend(["--python", custom_python])
             
-            makenv_process = subprocess.Popen(["/srv/singleuser/bin/makenv", *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            makenv_process = subprocess.Popen(["makenv", *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             
             for line in iter(makenv_process.stdout.readline, b""):
                 self.write(f"data: {line.decode('utf-8')}\n\n")
