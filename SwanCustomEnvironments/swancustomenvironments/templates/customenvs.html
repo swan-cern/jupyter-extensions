@@ -11,10 +11,44 @@ div#header, div#site {
 	display: block;
 	width: 1150px;
 	height: 300px;
+	overflow-y: scroll;
+	overflow-x: hidden;
+	white-space: pre-wrap;
+	text-align: left;
 	border: 1px solid #ccc;
 	background-color: #f7f7f7;
 	padding: 10px;
 	border-radius: 5px;
+}
+#back_button {
+	display: none;
+	text-align: center;
+    background-color: #fc6404;
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+#next_button {
+	display: none;
+	text-align: center;
+    background-color: #0454a4;
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 </style>
 {% endblock %}
@@ -27,20 +61,24 @@ data-base-url="{{base_url | urlencode}}"
 {% block site %}
 
 <div class="container">
-  <div class="row">
-    <div class="swan-info">
-      <div id="swan-loader">
-        <div class="loader-circle">
-          <img src="{{hub_prefix}}static/swan/logos/{{swan_logo_filename}}">
-        </div>
-        <div class="loader-line-mask">
-          <div class="loader-line"></div>
-        </div>
-        <span class="text">Creating environment...</span>
-		<div class="swan-info" id="output-box"></div>
-      </div>
-    </div>
-  </div>
+	<div class="row">
+		<div class="swan-info">
+			<div id="swan-loader">
+				<div class="loader-circle">
+					<img src="{{hub_prefix}}static/swan/logos/{{swan_logo_filename}}">
+				</div>
+				<div class="loader-line-mask">
+					<div class="loader-line"></div>
+				</div>
+				<span class="text">Creating environment...</span>
+			</div>
+		</div>
+		<br><br>
+		<div id="output-box"></div>
+		<br>
+		<button id="back_button">Back</button>
+		<button id="next_button">Next</button>
+	</div>
 </div>
 
 {% endblock %}
@@ -53,30 +91,56 @@ data-base-url="{{base_url | urlencode}}"
 	function error(reason) {
 		var loader = document.getElementById('swan-loader');
 		loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
-		loader.getElementsByClassName('text')[0].innerHTML = `<p class=\"extra\">Error downloading Project: ${reason}</p>`;
+		loader.getElementsByClassName('text')[0].innerHTML = 'Error creating environment';
 	}
 
 	var base_url = document.body.getAttribute('data-base-url');
 	
-	var env_name = document.body.getAttribute('env') || "";
-	var req = document.body.getAttribute('req') || "";
-	var clear = document.body.getAttribute('clear') || "true";
-	var accpy_version = document.body.getAttribute('accpy') || "";
-	var custom_python = document.body.getAttribute('python') || "";
-
-	var eventSource = new EventSource(`${base_url}api/customenvs?env=${env_name}&req=${req}&clear=${clear}&accpy=${accpy_version}&python=${custom_python}`);
-
+	const urlParams = new URLSearchParams(window.location.search);
+	var env_name = encodeURIComponent(urlParams.get('env') || "");
+	var requirements = encodeURIComponent(urlParams.get('req') || "");
+	var clear = encodeURIComponent(urlParams.get('clear') || "true");
+	var accpy_version = encodeURIComponent(urlParams.get('accpy') || "");
+	var custom_python = encodeURIComponent(urlParams.get('python') || "");
+	
+	var project_folder = `/tree/${requirements.split("/").pop()}`;
+	if (requirements.startsWith('http')) {
+		// Extract repository name from URL
+		const pattern = /^https?:\/\/[^/]+\/([^/\s]+)\/([^/\s]+)/;
+		const match = urlParams.get('req').match(pattern);
+		project_folder = match ? `/tree/SWAN_projects/${match[2]}` : '';
+	} 
+	
+	const user = base_url.split('/')[2];
+	var errors_detected = false;
+	var eventSource = new EventSource(`${base_url}api/customenvs?env=${env_name}&req=${requirements}&clear=${clear}&accpy=${accpy_version}&python=${custom_python}`);
+	
 	eventSource.onmessage = function(event) {
 		if (event.data === 'EOF') {
 			// Close SSE connection and update UI when done
 			eventSource.close();
 			var loader = document.getElementById('swan-loader');
-			loader.getElementsByClassName('text')[0].innerHTML = 'Done';
+			var back_button = document.getElementById('back_button');
+			var next_button = document.getElementById('next_button');
 			loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
+			if (errors_detected) {
+				loader.getElementsByClassName('text')[0].innerHTML = 'Error creating environment';
+				// arrow function on back_button click
+				back_button.onclick = () => window.location = `/hub/home?changeconfig`;
+				back_button.style.display = 'block';
+			} else {
+				loader.getElementsByClassName('text')[0].innerHTML = 'Environment created';
+				next_button.onclick = () => window.location = `/user/${user}/lab${project_folder}` ;
+				next_button.style.display = 'block';
+			}
 		} else {
 			// Add output to output-box
 			var outputBox = document.getElementById('output-box');
 			outputBox.innerHTML += event.data + '<br>';
+			outputBox.scrollTop = outputBox.scrollHeight;
+			if (event.data.includes('ERROR')) {
+				errors_detected = true;
+			}
 		}
 	};
 

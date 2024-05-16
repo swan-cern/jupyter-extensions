@@ -5,6 +5,7 @@ from jupyter_server.base.handlers import JupyterHandler, APIHandler
 from jupyter_server.utils import url_path_join
 
 import subprocess
+import re
 from os import environ, path
 
 
@@ -23,18 +24,24 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
     @web.authenticated
     def get(self):
         self.set_header("Content-Type", "text/event-stream")
-        
+
         env_name = self.get_query_argument("env", default=None)
-        req = self.get_query_argument("req", default=None)
+        requirements = self.get_query_argument("req", default=None)
         clear = self.get_query_argument("clear", default="true")
         accpy_version = self.get_query_argument("accpy", default=None)
         custom_python = self.get_query_argument("python", default=None)
 
-        if not req.startswith("http"):
-            req = path.join(environ["HOME"], req)
+        if requirements.startswith("http"):
+            # Extract http/domain/user/repo_name from repository URL, getting rid of the branches, tags, etc.
+            repo_pattern = r'^(https?://[^/]+/[^/\s]+/[^/\s]+).*'
+            match = re.match(repo_pattern, requirements)
+            if match:
+                requirements = match.group(1)
+        else:
+            requirements = path.join(environ["HOME"], requirements)
 
         try:
-            arguments = ["--env", env_name, "--req", req]
+            arguments = ["--env", env_name, "--req", requirements]
             if clear.lower() == "true":
                 arguments.extend(["--clear"])
             if accpy_version is not None:
@@ -42,14 +49,14 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
             if custom_python is not None:
                 arguments.extend(["--python", custom_python])
             
-            makenv_process = subprocess.Popen(["makenv", *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            makenv_process = subprocess.Popen(["/srv/singleuser/bin/makenv", *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             
             for line in iter(makenv_process.stdout.readline, b""):
                 self.write(f"data: {line.decode('utf-8')}\n\n")
                 self.flush()
             
         except Exception as e:
-            self.write(f"data: Error: {str(e)}\n\n")
+            self.write(f"data: ERROR: {str(e)}\n\n")
             self.flush()
 
         self.finish("data: EOF\n\n")

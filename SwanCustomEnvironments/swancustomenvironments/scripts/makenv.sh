@@ -14,10 +14,10 @@ _log () {
 #     source /home/$USER/.bashrc
 # fi
 # CUSTOMENVS_LIMIT=1
-ACCPY_BASE=/opt/acc-py/base
+ACCPY_BASE=$ACCPY_PATH/base
 ACCPY_ALL_VERSIONS_STR="?"
 PYTHON_DEFAULT_PATH=$(which python)
-if [ -d "/opt/acc-py" ]; then
+if [ -d "$ACCPY_PATH" ]; then
     ACCPY_ALL_VERSIONS=$(ls -tr $ACCPY_BASE)
     ACCPY_ALL_VERSIONS_STR=$(echo $ACCPY_ALL_VERSIONS | tr ' ' ', ')
 fi
@@ -47,7 +47,7 @@ while [ $# -gt 0 ]; do
             shift
             ;;
         --req|-r)
-            requirements=$2
+            REQUIREMENTS=$2
             shift
             shift
             ;;
@@ -112,53 +112,49 @@ fi
 
 # Checks if the provided Python interpreter is found
 if [ ! -f $PYTHON_CUSTOM_PATH ]; then
-    >&2 _log "ERROR: Python interpreter not found."
+    >&2 _log "ERROR: Python interpreter (${PYTHON_CUSTOM_PATH}) not found."
     exit 1
 fi
 
 # Checks if the provided Acc-Py version is valid
-if [ ! -e "$ACCPY_BASE/$ACCPY_CUSTOM_VERSION" ]; then
+if [ -n "$ACCPY_CUSTOM_VERSION" ] && [ ! -e "$ACCPY_BASE/$ACCPY_CUSTOM_VERSION" ]; then
     >&2 _log "ERROR: Invalid Acc-Py version. Options: ${ACCPY_ALL_VERSIONS_STR}"
     exit 1
 fi
 
 # Checks if a requirements file is given
-if [ -z "$requirements" ]; then
+if [ -z "$REQUIREMENTS" ]; then
     >&2 _log "ERROR: No requirements provided." && _log
     print_help
     exit 1
 # Checks if the provided requirements source is found
-elif [ -f $requirements ]; then
-    if [[ ${requirements##*.} != "txt" ]]; then
+elif [ -f $REQUIREMENTS ]; then
+    if [[ ${REQUIREMENTS##*.} != "txt" ]]; then
         >&2 _log "ERROR: Invalid requirements file."
         exit 1
     fi
-    REQ_PATH=$requirements
-elif [[ $requirements == http* ]]; then
+    REQ_PATH=$REQUIREMENTS
+elif [[ $REQUIREMENTS == http* ]]; then
     # Extract the repository name from the URL
-    repo_name=$(basename $requirements)
+    repo_name=$(basename $REQUIREMENTS)
     repo_name=${repo_name%.*}
+    
+    mkdir -p $HOME/SWAN_projects
     REPO_PATH=$HOME/SWAN_projects/${repo_name}
 
-    cd ~
-
-    if [ ! -d "$HOME/SWAN_projects" ]; then
-        mkdir $HOME/SWAN_projects
-    else
-        # Checks if the repository already exists in the home directory
-        if [ -d "${REPO_PATH}" ]; then
-            if [ -z "$CLEAR_ENV" ]; then
-                >&2 _log "ERROR: ${REPO_PATH} already exists. Use --clear to reclone the repository."
-                exit 1
-            else
-                rm -rf ${REPO_PATH}
-            fi
+    # Checks if the repository already exists in the home directory
+    if [ -d "${REPO_PATH}" ]; then
+        if [ -z "$CLEAR_ENV" ]; then
+            >&2 _log "ERROR: ${REPO_PATH} already exists. Use --clear to reclone the repository."
+            exit 1
+        else
+            rm -rf ${REPO_PATH}
         fi
     fi
 
-    ls "$HOME/SWAN_projects"
+    echo "Cloning the repository from ${REQUIREMENTS}..."
     # Clone the repository
-    git clone $requirements -q --template /usr/share/git-core/templates "${REPO_PATH}" || { >&2 _log "ERROR: Failed to clone repository"; exit 1; }
+    git clone $REQUIREMENTS -q --template /usr/share/git-core/templates "${REPO_PATH}" || { >&2 _log "ERROR: Failed to clone repository"; exit 1; }
 
     REQ_PATH=${REPO_PATH}/requirements.txt
     # Check if requirements.txt exists in the repository
@@ -318,8 +314,13 @@ if [ -z "$ACCPY_CUSTOM_VERSION" ]; then
     echo '${ACTIVATE_BIN_TEMPLATE}' > ${ENV_PATH}/bin/activate
 fi
 
+# Check if the virtual environment gets activated automatically when the terminal is opened
+if [ "$AUTOENV" = "true" ] || [ "$AUTOENV" = "on" ]; then
+    echo "source /home/$USER/${ENV_NAME}/bin/activate" > /home/$USER/.bashprofile
+fi
+
 echo "Virtual environment ${ENV_NAME} created successfully."
-echo "WARNING: You may need to refresh the page to be able to access the new kernel in Jupyter."
+
 EOF
 
 # Check if the virtual environment was created successfully

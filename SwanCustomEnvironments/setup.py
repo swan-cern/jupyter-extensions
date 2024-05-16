@@ -1,1 +1,1 @@
-__import__("setuptools").setup(scripts=["scripts/makenv.sh"])
+__import__('setuptools').setup()
