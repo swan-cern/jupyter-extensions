@@ -4,35 +4,30 @@
 # Copyright CERN
 # Here the script is used to create a virtual environment and install the packages from a provided requirements file.
 
+# By default, we use the Python installed in the image
+ACCPY_BASE=$ACCPY_PATH/base
+ACCPY_ALL_VERSIONS_STR="?"
+PYTHON_PATH=$(which python)
+if [ -d "$ACCPY_PATH" ]; then
+    ACCPY_ALL_VERSIONS=$(ls -tr $ACCPY_BASE)
+    ACCPY_ALL_VERSIONS_STR=$(echo $ACCPY_ALL_VERSIONS | tr ' ' ', ')
+fi
+
 _log () {
     if [ "$*" == "ERROR:"* ] || [ "$*" == "WARNING:"* ] || [ "${JUPYTER_DOCKER_STACKS_QUIET}" == "" ]; then
         echo "$@"
     fi
 }
 
-# if [ -f "/home/$USER/.bashrc" ]; then
-#     source /home/$USER/.bashrc
-# fi
-# CUSTOMENVS_LIMIT=1
-ACCPY_BASE=$ACCPY_PATH/base
-ACCPY_ALL_VERSIONS_STR="?"
-PYTHON_DEFAULT_PATH=$(which python)
-if [ -d "$ACCPY_PATH" ]; then
-    ACCPY_ALL_VERSIONS=$(ls -tr $ACCPY_BASE)
-    ACCPY_ALL_VERSIONS_STR=$(echo $ACCPY_ALL_VERSIONS | tr ' ' ', ')
-fi
-
-
-# Function to print the help page
+# Function for printing the help page
 print_help() {
-    _log "Usage: makenv --env/-e NAME --req/-r REQUIREMENTS [--accpy ACCPY_VERSION] [--python PATH] [--clear/-c] [--help/-h]"
+    _log "Usage: makenv --env/-e NAME --req/-r REQUIREMENTS [--accpy ACCPY_VERSION] [--clear/-c] [--help/-h]"
     _log "Options:"
     _log "  -e, --env NAME              Name of the custom virtual environment (mandatory)"
     _log "  -r, --req REQUIREMENTS      Path to requirements.txt file or http link for a public repository (mandatory)"
     _log "  -c, --clear                 Clear the current virtual environment, if it exists"
     _log "  -h, --help                  Print this help page"
     _log "  --accpy VERSION             Version of Acc-Py to be used (options: ${ACCPY_ALL_VERSIONS_STR})"
-    _log "  --python PATH               Path to the Python interpreter to be used (default: ${PYTHON_DEFAULT_PATH})"
 }
 
 # --------------------------------------------------------------------------------------------
@@ -64,11 +59,6 @@ while [ $# -gt 0 ]; do
             shift
             shift
             ;;
-        --python)
-            PYTHON_CUSTOM_PATH=$2
-            shift
-            shift
-            ;;
         *)
             >&2 _log "ERROR: Invalid argument: $1" && _log
             print_help
@@ -80,17 +70,7 @@ done
 # --------------------------------------------------------------------------------------------
 
 ENV_PATH="/home/$USER/${ENV_NAME}"
-PYTHON_PATH=$PYTHON_DEFAULT_PATH
-if [ -n "$PYTHON_CUSTOM_PATH" ]; then
-    PYTHON_PATH=$PYTHON_CUSTOM_PATH
-fi
 
-
-# Check if the maximum number of created custom environments is reached
-# if [ ! -d "$ENV_PATH" ] && [ -n "$TOTAL_CUSTOMENVS" ] && [ $TOTAL_CUSTOMENVS -ge $CUSTOMENVS_LIMIT ]; then
-#     >&2 _log "ERROR: Maximum number of custom environments reached."
-#     exit 1
-# fi
 # Checks if a name for the environment is given
 if [ -z "$ENV_NAME" ]; then
     >&2 _log "ERROR: No virtual environment name provided." && _log
@@ -101,18 +81,6 @@ fi
 # Checks if an environment with the same name was already created, if --clear is not passed
 if [ -d "$ENV_PATH" ] && [ -z "$CLEAR_ENV" ]; then
     >&2 _log "ERROR: Virtual environment already exists."
-    exit 1
-fi
-
-# Checks if AccPy and Python are both set, trigger an error
-if [ -n "$ACCPY_CUSTOM_VERSION" ] && [ -n "$PYTHON_CUSTOM_PATH" ]; then
-    >&2 _log "ERROR: --python and --accpy are both set. Please choose only one of the options."
-    exit 1
-fi
-
-# Checks if the provided Python interpreter is found
-if [ ! -f $PYTHON_CUSTOM_PATH ]; then
-    >&2 _log "ERROR: Python interpreter (${PYTHON_CUSTOM_PATH}) not found."
     exit 1
 fi
 
@@ -262,7 +230,7 @@ if [ -n \"\${BASH:-}\" -o -n \"\${ZSH_VERSION:-}\" ] ; then
 fi
 "
 
-# Create a new bash session to avoid conflicts with the current environment in the background, in case the user chooses Acc-Py
+# Create a new bash session to avoid conflicts with the current environment in the background
 env -i bash --noprofile --norc << EOF
 
 export OAUTH2_FILE=${OAUTH2_FILE}
@@ -316,14 +284,9 @@ fi
 
 # Check if the virtual environment gets activated automatically when the terminal is opened
 if [ "$AUTOENV" = "true" ] || [ "$AUTOENV" = "on" ]; then
-    echo "source /home/$USER/${ENV_NAME}/bin/activate" > /home/$USER/.bashprofile
+    echo -e "source /home/$USER/${ENV_NAME}/bin/activate\ncd $HOME" > /home/$USER/.bash_profile
 fi
 
 echo "Virtual environment ${ENV_NAME} created successfully."
 
 EOF
-
-# Check if the virtual environment was created successfully
-# if [ -f "${ENV_PATH}/bin/activate" ] && [ -z "${CLEAR_ENV}" ]; then
-#     echo "TOTAL_CUSTOMENVS=$((TOTAL_CUSTOMENVS+1))" > /home/$USER/.bashrc
-# fi

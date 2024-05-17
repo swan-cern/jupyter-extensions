@@ -2,7 +2,7 @@
 
 [![Github Actions Status](https://github.com/swan-cern/jupyter-extensions/workflows/Build/badge.svg)](https://github.com/swan-cern/jupyter-extensions/actions/workflows/build.yml)
 
-Extension to provide support for venvs
+Extension to create custom software environments
 
 This extension is composed of a Python package named `swancustomenvironments`
 for the server extension and a NPM package named `swancustomenvironments`

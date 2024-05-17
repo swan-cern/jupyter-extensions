@@ -29,7 +29,6 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         requirements = self.get_query_argument("req", default=None)
         clear = self.get_query_argument("clear", default="true")
         accpy_version = self.get_query_argument("accpy", default=None)
-        custom_python = self.get_query_argument("python", default=None)
 
         if requirements.startswith("http"):
             # Extract http/domain/user/repo_name from repository URL, getting rid of the branches, tags, etc.
@@ -38,7 +37,7 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
             if match:
                 requirements = match.group(1)
         else:
-            requirements = path.join(environ["HOME"], requirements)
+            requirements = path.join(environ["HOME"], requirements, "requirements.txt")
 
         try:
             arguments = ["--env", env_name, "--req", requirements]
@@ -46,9 +45,8 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
                 arguments.extend(["--clear"])
             if accpy_version is not None:
                 arguments.extend(["--accpy", accpy_version])
-            if custom_python is not None:
-                arguments.extend(["--python", custom_python])
             
+            print(f"Running makenv with arguments: {arguments}")
             makenv_process = subprocess.Popen(["/srv/singleuser/bin/makenv", *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             
             for line in iter(makenv_process.stdout.readline, b""):
