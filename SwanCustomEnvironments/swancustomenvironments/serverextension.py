@@ -1,4 +1,5 @@
 from tornado import web
+from traitlets import Unicode
 from traitlets.config import Configurable
 
 from jupyter_server.base.handlers import JupyterHandler, APIHandler
@@ -10,8 +11,12 @@ from os import environ, path
 
 
 class SwanCustomEnvironments(Configurable):
-    # TODO set configs here, check e.g. SwanShare
-    pass
+
+    makenv_path = Unicode(
+        path.join(path.dirname(__file__), "scripts/makenv.sh"),
+        config=True,
+        help='Path to the script used to create custom environments.'
+    )
 
 
 class SwanCustomEnvironmentsApiHandler(APIHandler):
@@ -46,8 +51,7 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
             if accpy_version is not None:
                 arguments.extend(["--accpy", accpy_version])
             
-            print(f"Running makenv with arguments: {arguments}")
-            makenv_process = subprocess.Popen(["/srv/singleuser/bin/makenv", *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            makenv_process = subprocess.Popen([self.config.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             
             for line in iter(makenv_process.stdout.readline, b""):
                 self.write(f"data: {line.decode('utf-8')}\n\n")
