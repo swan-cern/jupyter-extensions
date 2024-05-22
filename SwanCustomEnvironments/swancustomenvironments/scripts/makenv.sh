@@ -132,7 +132,7 @@ elif [[ $REQUIREMENTS == http* ]]; then
         exit 1
     fi
 else
-    >&2 _log "ERROR: Requirements not found."
+    >&2 _log "ERROR: Requirements not found (${REQUIREMENTS})."
     exit 1
 fi
 
