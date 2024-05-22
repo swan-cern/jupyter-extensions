@@ -7,7 +7,7 @@ from jupyter_server.utils import url_path_join
 
 import subprocess
 import re
-from os import environ, path
+from os import path
 
 
 class SwanCustomEnvironments(Configurable):
@@ -42,7 +42,7 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
             if match:
                 requirements = match.group(1)
         else:
-            requirements = path.join(environ["HOME"], requirements, "requirements.txt")
+            requirements = path.join(requirements, "requirements.txt")
 
         try:
             arguments = ["--env", env_name, "--req", requirements]
