@@ -35,15 +35,6 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         clear = self.get_query_argument("clear", default="true")
         accpy_version = self.get_query_argument("accpy", default=None)
 
-        if requirements.startswith("http"):
-            # Extract http/domain/user/repo_name from repository URL, getting rid of the branches, tags, etc.
-            repo_pattern = r'^(https?://[^/]+/[^/\s]+/[^/\s]+).*'
-            match = re.match(repo_pattern, requirements)
-            if match:
-                requirements = match.group(1)
-        else:
-            requirements = path.join(requirements, "requirements.txt")
-
         try:
             arguments = ["--env", env_name, "--req", requirements]
             if clear.lower() == "true":

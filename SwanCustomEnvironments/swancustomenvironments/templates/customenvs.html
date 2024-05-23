@@ -97,20 +97,25 @@ data-base-url="{{base_url | urlencode}}"
 	var base_url = document.body.getAttribute('data-base-url');
 	
 	const urlParams = new URLSearchParams(window.location.search);
+	var decoded_req = urlParams.get('req');
 	var env_name = encodeURIComponent(urlParams.get('env') || "");
-	var requirements = encodeURIComponent(urlParams.get('req') || "");
+	var requirements = encodeURIComponent(decoded_req || "");
 	var clear = encodeURIComponent(urlParams.get('clear') || "true");
 	var accpy_version = encodeURIComponent(urlParams.get('accpy') || "");
 	var custom_python = encodeURIComponent(urlParams.get('python') || "");
 	
-	var project_folder = `/tree/${requirements.split("/").pop()}`;
+	var project_folder = '/';
+	var path_folders = urlParams.get('req').split('/');
 	if (requirements.startsWith('http')) {
 		// Extract repository name from URL
 		const pattern = /^https?:\/\/[^/]+\/([^/\s]+)\/([^/\s]+)/;
 		const match = urlParams.get('req').match(pattern);
 		project_folder = match ? `/tree/SWAN_projects/${match[2]}` : '';
-	} 
-	
+	} else if (path_folders.length > 6) {
+		// Extract CERNBox path for EOS path requirements, e.g /eos/user/u/username/project/local/requirements.txt -> /tree/project/local
+		project_folder = `/tree/${path_folders.slice(5, -1).join('/')}`;
+	}
+
 	const user = base_url.split('/')[2];
 	var errors_detected = false;
 	var eventSource = new EventSource(`${base_url}api/customenvs?env=${env_name}&req=${requirements}&clear=${clear}&accpy=${accpy_version}&python=${custom_python}`);
