@@ -237,7 +237,7 @@ export OAUTH2_FILE=${OAUTH2_FILE}
 export OAUTH2_TOKEN=${OAUTH2_TOKEN}
 export KRB5CCNAME=${KRB5CCNAME}
 export KRB5CCNAME_NB_TERM=${KRB5CCNAME_NB_TERM}
-
+# Create virtual environment (acc-py or generic)
 if [ -n "$ACCPY_CUSTOM_VERSION" ]; then
     source ${ACCPY_BASE}/${ACCPY_CUSTOM_VERSION}/setup.sh
     if [ -d "${ENV_PATH}" ] && [ -n "${CLEAR_ENV}" ]; then
