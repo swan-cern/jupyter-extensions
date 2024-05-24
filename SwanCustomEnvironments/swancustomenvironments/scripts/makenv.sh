@@ -2,7 +2,7 @@
 
 # Author: Rodrigo Sobral 2024
 # Copyright CERN
-# Here the script is used to create a virtual environment and install the packages from a provided requirements file.
+# This script allows to create a venv virtual environment to use in notebooks and terminals. The environment contains the packages from a provided requirements file.
 
 # By default, we use the Python installed in the image
 ACCPY_BASE=$ACCPY_PATH/base
