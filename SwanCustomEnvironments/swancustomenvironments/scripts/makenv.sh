@@ -282,7 +282,7 @@ if [ -z "$ACCPY_CUSTOM_VERSION" ]; then
     echo '${ACTIVATE_BIN_TEMPLATE}' > ${ENV_PATH}/bin/activate
 fi
 
-# Check if the virtual environment gets activated automatically when the terminal is opened
+# Automatically activate the environment in the terminal
 if [ "$AUTOENV" = "true" ] || [ "$AUTOENV" = "on" ]; then
     echo -e "source /home/$USER/${ENV_NAME}/bin/activate\ncd $HOME" > /home/$USER/.bash_profile
 fi
