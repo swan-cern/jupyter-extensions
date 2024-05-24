@@ -255,7 +255,7 @@ fi
 # Make sure the Jupyter server finds the new environment kernel in /home/$USER/.local
 mkdir -p /home/$USER/.local/share/jupyter/kernels
 ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME} /home/$USER/.local/share/jupyter/kernels/${ENV_NAME}
-
+Activate the environment
 echo "Setting up the virtual environment..."
 source ${ENV_PATH}/bin/activate
 
