@@ -252,7 +252,7 @@ else
     fi
     ${PYTHON_PATH} -m venv ${ENV_PATH} ${CLEAR_ENV} --copies
 fi
-
+# Make sure the Jupyter server finds the new environment kernel in /home/$USER/.local
 mkdir -p /home/$USER/.local/share/jupyter/kernels
 ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME} /home/$USER/.local/share/jupyter/kernels/${ENV_NAME}
 
