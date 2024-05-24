@@ -266,7 +266,7 @@ fi
 Install packages in the environment
 echo "Installing packages from ${REQ_PATH}..."
 pip install -r ${REQ_PATH}
-
+# Install a Jupyter kernel for the environment
 python -m ipykernel install --name ${ENV_NAME} --display-name "Python (${ENV_NAME})" --prefix ${ENV_PATH}
 
 # Remove ipykernel package from the requirements file, if it was added
