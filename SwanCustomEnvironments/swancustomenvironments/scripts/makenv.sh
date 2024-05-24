@@ -263,7 +263,7 @@ source ${ENV_PATH}/bin/activate
 if [ -z "$ACCPY_CUSTOM_VERSION" ] && [ -z "$(grep -i 'ipykernel' ${REQ_PATH})" ]; then
     echo -e "\nipykernel" >> ${REQ_PATH}
 fi
-
+Install packages in the environment
 echo "Installing packages from ${REQ_PATH}..."
 pip install -r ${REQ_PATH}
 
