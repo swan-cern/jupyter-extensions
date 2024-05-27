@@ -20,6 +20,12 @@ To install the extension, execute:
 pip install swancustomenvironments
 ```
 
+For now, it's necessary to add the templates path to the Jupyter configuration file. This can be done by executing:
+
+```bash
+echo -e '\nc.ServerApp.extra_template_paths = ["/opt/conda/lib/python3.11/site-packages/swancustomenvironments/templates/"]' >> /home/${NB_USER}/.jupyter/jupyter_server_config.py
+```
+
 ## Uninstall
 
 To remove the extension, execute:

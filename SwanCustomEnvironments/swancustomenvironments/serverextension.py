@@ -11,6 +11,7 @@ from os import path
 
 
 class SwanCustomEnvironments(Configurable):
+    """General-purpose static configuration options that evolve the API for creating customized environments"""
 
     makenv_path = Unicode(
         path.join(path.dirname(__file__), "scripts/makenv.sh"),
@@ -20,6 +21,7 @@ class SwanCustomEnvironments(Configurable):
 
 
 class SwanCustomEnvironmentsApiHandler(APIHandler):
+    """API handler for creating custom environments"""
 
     config = None
 
@@ -31,32 +33,24 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         self.set_header("Content-Type", "text/event-stream")
 
         env_name = self.get_query_argument("env", default=None)
-        requirements = self.get_query_argument("req", default=None)
-        clear = self.get_query_argument("clear", default="true")
+        repository = self.get_query_argument("repo", default=None)
         accpy_version = self.get_query_argument("accpy", default=None)
 
-        try:
-            arguments = ["--env", env_name, "--req", requirements]
-            if clear.lower() == "true":
-                arguments.extend(["--clear"])
-            if accpy_version is not None:
-                arguments.extend(["--accpy", accpy_version])
-            
-            makenv_process = subprocess.Popen([self.config.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            
-            for line in iter(makenv_process.stdout.readline, b""):
-                self.write(f"data: {line.decode('utf-8')}\n\n")
-                self.flush()
-            
-        except Exception as e:
-            self.write(f"data: ERROR: {str(e)}\n\n")
+        arguments = ["--env", env_name, "--repo", repository]
+        if accpy_version is not None:
+            arguments.extend(["--accpy", accpy_version])
+        
+        makenv_process = subprocess.Popen([self.config.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        
+        for line in iter(makenv_process.stdout.readline, b""):
+            self.write(f"data: {line.decode('utf-8')}\n\n")
             self.flush()
-
+            
         self.finish("data: EOF\n\n")
 
 
 class SwanCustomEnvironmentsHandler(JupyterHandler):
-    """Render the downloads view"""
+    """Render the custom environment building view"""
 
     @web.authenticated
     def get(self):
@@ -69,10 +63,7 @@ class SwanCustomEnvironmentsHandler(JupyterHandler):
 
 def _load_jupyter_server_extension(serverapp):
     """
-    A server extension that installs extra handlers required for SWAN
-    and that are not served by the default ContentsManager API.
-    That are essentially all handlers required for downloads of Projects (open in SWAN).
-    Enabling this extension also configures the SWAN theme automatically.
+    A server extension that registers the custom environment building API and view
     """
 
     web_app = serverapp.web_app

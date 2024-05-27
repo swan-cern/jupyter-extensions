@@ -8,25 +8,25 @@ div#header, div#site {
     display: block;
 }
 #output-box {
-	display: block;
-	width: 1150px;
-	height: 300px;
-	overflow-y: scroll;
-	overflow-x: hidden;
-	white-space: pre-wrap;
-	text-align: left;
-	border: 1px solid #ccc;
-	background-color: #f7f7f7;
-	padding: 10px;
-	border-radius: 5px;
+    display: block;
+    width: 1150px;
+    height: 300px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    white-space: pre-wrap;
+    text-align: left;
+    border: 1px solid #ccc;
+    background-color: #f7f7f7;
+    padding: 10px;
+    border-radius: 5px;
 }
 #back_button {
-	display: none;
-	text-align: center;
+    display: none;
+    text-align: center;
     background-color: #fc6404;
-	position: absolute;
-	left: 50%;
-	transform: translateX(-50%);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     color: white;
     border: none;
     border-radius: 5px;
@@ -36,12 +36,12 @@ div#header, div#site {
     transition: background-color 0.3s ease;
 }
 #next_button {
-	display: none;
-	text-align: center;
+    display: none;
+    text-align: center;
     background-color: #0454a4;
-	position: absolute;
-	left: 50%;
-	transform: translateX(-50%);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     color: white;
     border: none;
     border-radius: 5px;
@@ -61,24 +61,24 @@ data-base-url="{{base_url | urlencode}}"
 {% block site %}
 
 <div class="container">
-	<div class="row">
-		<div class="swan-info">
-			<div id="swan-loader">
-				<div class="loader-circle">
-					<img src="{{hub_prefix}}static/swan/logos/{{swan_logo_filename}}">
-				</div>
-				<div class="loader-line-mask">
-					<div class="loader-line"></div>
-				</div>
-				<span class="text">Creating environment...</span>
-			</div>
-		</div>
-		<br><br>
-		<div id="output-box"></div>
-		<br>
-		<button id="back_button">Back</button>
-		<button id="next_button">Next</button>
-	</div>
+    <div class="row">
+        <div class="swan-info">
+            <div id="swan-loader">
+                <div class="loader-circle">
+                    <img src="{{hub_prefix}}static/swan/logos/{{swan_logo_filename}}">
+                </div>
+                <div class="loader-line-mask">
+                    <div class="loader-line"></div>
+                </div>
+                <span class="text">Creating environment...</span>
+            </div>
+        </div>
+        <br><br>
+        <div id="output-box"></div>
+        <br>
+        <button id="back_button">Back</button>
+        <button id="next_button">Next</button>
+    </div>
 </div>
 
 {% endblock %}
@@ -87,71 +87,67 @@ data-base-url="{{base_url | urlencode}}"
     {{super()}}
 
 <script type = "text/javascript" >
-	
-	function error(reason) {
-		var loader = document.getElementById('swan-loader');
-		loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
-		loader.getElementsByClassName('text')[0].innerHTML = 'Error creating environment';
-	}
+    
+    var base_url = document.body.getAttribute('data-base-url');
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    var env_name = urlParams.get('env') || "";
+    var repository = urlParams.get('repo') || "";
+    var accpy_version = urlParams.get('accpy') || "";
+    var notebook = urlParams.get('notebook') || "";
+    
+    var path_folders = repository.split('/');
+    var project_folder = notebook || '/';
+    if (!notebook) {
+        if (repository.startsWith('http')) {
+            // Extract repository name from URL
+            const pattern = /^https?:\/\/[^/]+\/([^/\s]+)\/([^/\s]+)/;
+            const match = repository.match(pattern);
+            project_folder = match ? `/tree/SWAN_projects/${match[2]}` : '';
+        } else {
+            // Extract CERNBox path for EOS path repository, e.g /eos/user/u/username/project/local -> /tree/project/local
+            const pattern = /\/eos\/user\/u\/username(\/.*)?/;
+            const match = repository.match(pattern);
+            project_folder = match && match[1] ? match[1] : '/'
+        }
+    }
 
-	var base_url = document.body.getAttribute('data-base-url');
-	
-	const urlParams = new URLSearchParams(window.location.search);
-	var decoded_req = urlParams.get('req');
-	var env_name = encodeURIComponent(urlParams.get('env') || "");
-	var requirements = encodeURIComponent(decoded_req || "");
-	var clear = encodeURIComponent(urlParams.get('clear') || "true");
-	var accpy_version = encodeURIComponent(urlParams.get('accpy') || "");
-	var custom_python = encodeURIComponent(urlParams.get('python') || "");
-	
-	var project_folder = '/';
-	var path_folders = urlParams.get('req').split('/');
-	if (requirements.startsWith('http')) {
-		// Extract repository name from URL
-		const pattern = /^https?:\/\/[^/]+\/([^/\s]+)\/([^/\s]+)/;
-		const match = urlParams.get('req').match(pattern);
-		project_folder = match ? `/tree/SWAN_projects/${match[2]}` : '';
-	} else if (path_folders.length > 6) {
-		// Extract CERNBox path for EOS path requirements, e.g /eos/user/u/username/project/local/requirements.txt -> /tree/project/local
-		project_folder = `/tree/${path_folders.slice(5, -1).join('/')}`;
-	}
+    var outputBox = document.getElementById('output-box');
+    var loader = document.getElementById('swan-loader');
+    var back_button = document.getElementById('back_button');
+    var next_button = document.getElementById('next_button');
+    var has_failed = false;
+    var eventSource = new EventSource(`${base_url}api/customenvs?env=${encodeURIComponent(env_name)}&repo=${encodeURIComponent(repository)}&accpy=${encodeURIComponent(accpy_version)}`);
+    
+    eventSource.onmessage = (event) => {
+        if (event.data === 'EOF') {
+            // Close SSE connection and update UI when done
+            eventSource.close();
+            loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
+            if (has_failed) {
+                loader.getElementsByClassName('text')[0].innerHTML = 'Error creating environment';
+                back_button.onclick = () => window.location = `/hub/home?changeconfig`;
+                back_button.style.display = 'block';
+            } else {
+                loader.getElementsByClassName('text')[0].innerHTML = 'Environment created';
+                next_button.onclick = () => window.location = `${base_url}lab${project_folder}` ;
+                next_button.style.display = 'block';
+            }
+        } else {
+            // Add output to output-box
+            outputBox.innerHTML += event.data + '<br>';
+            outputBox.scrollTop = outputBox.scrollHeight;
+            if (event.data.includes('ERROR')) {
+                has_failed = true;
+            }
+        }
+    };
 
-	const user = base_url.split('/')[2];
-	var errors_detected = false;
-	var eventSource = new EventSource(`${base_url}api/customenvs?env=${env_name}&req=${requirements}&clear=${clear}&accpy=${accpy_version}&python=${custom_python}`);
-	
-	eventSource.onmessage = function(event) {
-		if (event.data === 'EOF') {
-			// Close SSE connection and update UI when done
-			eventSource.close();
-			var loader = document.getElementById('swan-loader');
-			var back_button = document.getElementById('back_button');
-			var next_button = document.getElementById('next_button');
-			loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
-			if (errors_detected) {
-				loader.getElementsByClassName('text')[0].innerHTML = 'Error creating environment';
-				// arrow function on back_button click
-				back_button.onclick = () => window.location = `/hub/home?changeconfig`;
-				back_button.style.display = 'block';
-			} else {
-				loader.getElementsByClassName('text')[0].innerHTML = 'Environment created';
-				next_button.onclick = () => window.location = `/user/${user}/lab${project_folder}` ;
-				next_button.style.display = 'block';
-			}
-		} else {
-			// Add output to output-box
-			var outputBox = document.getElementById('output-box');
-			outputBox.innerHTML += event.data + '<br>';
-			outputBox.scrollTop = outputBox.scrollHeight;
-			if (event.data.includes('ERROR')) {
-				errors_detected = true;
-			}
-		}
-	};
-
-	eventSource.onerror = function(err) {
-		error(err.message);
-	};
+    eventSource.onerror = (err) => {
+        loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
+        loader.getElementsByClassName('text')[0].innerHTML = 'Error creating environment';
+    };
+    
 
 </script>
 {% endblock %}
