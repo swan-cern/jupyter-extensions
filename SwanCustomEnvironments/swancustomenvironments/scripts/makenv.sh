@@ -116,7 +116,7 @@ ENV_PATH="/home/$USER/${ENV_NAME}"
 
 # Create virtual environment (acc-py or generic)
 if [ -n "$ACCPY_VERSION" ]; then
-    source ${$ACCPY_PATH}/base/${ACCPY_VERSION}/setup.sh
+    source $ACCPY_PATH/base/${ACCPY_VERSION}/setup.sh
     if [ -d "${ENV_PATH}" ]; then
         rm -rf ${ENV_PATH}
     fi
