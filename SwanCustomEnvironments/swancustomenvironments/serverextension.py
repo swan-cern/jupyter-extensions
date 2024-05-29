@@ -6,6 +6,7 @@ from jupyter_server.base.handlers import JupyterHandler, APIHandler
 from jupyter_server.utils import url_path_join
 
 import subprocess
+import re
 from os import path
 
 
@@ -20,12 +21,7 @@ class SwanCustomEnvironments(Configurable):
 
 
 class SwanCustomEnvironmentsApiHandler(APIHandler):
-    """
-    API handler for creating custom environments
-    Runs a local script to create a custom environment and streams the output to the client
-    Environment name and repository URL are passed as query arguments and are mandatory
-    ACCPy version is optional (if not provided, generic python is used)
-    """
+    """API handler for creating custom environments"""
 
     config = None
 

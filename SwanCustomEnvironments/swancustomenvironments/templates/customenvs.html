@@ -96,22 +96,26 @@ data-base-url="{{base_url | urlencode}}"
     var accpy_version = urlParams.get('accpy') || "";
     var notebook = urlParams.get('notebook') || "";
     
-    var path_folders = repository.split('/');
     var project_folder = notebook || '/';
-    if (!notebook) {
+    if (notebook) {
+        // Extract the path to the notebook from the URL, e.g. /eos/user/u/username/project/notebook.ipynb -> /tree/project/notebook.ipynb
+        const pattern = /\/eos\/user\/[^\/]+\/[^\/]+(\/.*\.ipynb)$/;
+        const match = notebook.match(pattern);
+        project_folder = match && match[1] ? `/tree${match[1]}` : '/'
+    } else {
         if (repository.startsWith('http')) {
-            // Extract repository name from URL
+            // Extract repository name from URL, e.g. http://gitlab.cern.ch/username/project -> /tree/SWAN_projects/project
             const pattern = /^https?:\/\/[^/]+\/([^/\s]+)\/([^/\s]+)/;
             const match = repository.match(pattern);
             project_folder = match ? `/tree/SWAN_projects/${match[2]}` : '';
         } else {
             // Extract CERNBox path for EOS path repository, e.g /eos/user/u/username/project/local -> /tree/project/local
-            const pattern = /\/eos\/user\/u\/username(\/.*)?/;
+            const pattern = /^\/eos\/user\/([^/]+)\/([^/]+)(\/.*)?$/;
             const match = repository.match(pattern);
-            project_folder = match && match[1] ? match[1] : '/'
+            project_folder = match && match[3] ? `/tree/${match[3]}` : '/'
         }
     }
-
+    
     var outputBox = document.getElementById('output-box');
     var loader = document.getElementById('swan-loader');
     var back_button = document.getElementById('back_button');
