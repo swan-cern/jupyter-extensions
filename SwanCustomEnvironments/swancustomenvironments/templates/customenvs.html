@@ -94,22 +94,18 @@ data-base-url="{{base_url | urlencode}}"
     var env_name = urlParams.get('env') || "";
     var repository = urlParams.get('repo') || "";
     var accpy_version = urlParams.get('accpy') || "";
-    var notebook = urlParams.get('notebook') || "";
     
-    var path_folders = repository.split('/');
-    var project_folder = notebook || '/';
-    if (!notebook) {
-        if (repository.startsWith('http')) {
-            // Extract repository name from URL
-            const pattern = /^https?:\/\/[^/]+\/([^/\s]+)\/([^/\s]+)/;
-            const match = repository.match(pattern);
-            project_folder = match ? `/tree/SWAN_projects/${match[2]}` : '';
-        } else {
-            // Extract CERNBox path for EOS path repository, e.g /eos/user/u/username/project/local -> /tree/project/local
-            const pattern = /\/eos\/user\/u\/username(\/.*)?/;
-            const match = repository.match(pattern);
-            project_folder = match && match[1] ? match[1] : '/'
-        }
+    var project_folder = '/';
+    if (repository.startsWith('http')) {
+        // Extract repository name from URL
+        const pattern = /^https?:\/\/[^/]+\/([^/\s]+)\/([^/\s]+)/;
+        const match = repository.match(pattern);
+        project_folder = match ? `/tree/SWAN_projects/${match[2]}` : '';
+    } else {
+        // Extract CERNBox path for EOS path repository, e.g /eos/user/u/username/project/local -> /tree/project/local
+        const pattern = /^\/eos\/user\/([^/]+)\/([^/]+)(\/.*)?$/;
+        const match = repository.match(pattern);
+        project_folder = match && match[3] ? `/tree/${match[3]}` : '/'
     }
 
     var outputBox = document.getElementById('output-box');
