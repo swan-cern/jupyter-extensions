@@ -267,6 +267,7 @@ class SparkK8sConfiguration(SparkConfiguration):
 
         # Set K8s configuration
         conf.set('spark.kubernetes.namespace', os.environ.get('SPARK_USER'))
+        conf.set('spark.kubernetes.container.image', 'gitlab-registry.cern.ch/db/spark-service/docker-registry/swan:alma9-20240123')
         conf.set('spark.master', self._retrieve_k8s_master(os.environ.get('KUBECONFIG')))
 
         # Configure shuffle if running on K8s with Spark 3.x.x
