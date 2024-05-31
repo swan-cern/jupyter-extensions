@@ -267,6 +267,7 @@ class SparkK8sConfiguration(SparkConfiguration):
 
         # Set K8s configuration
         conf.set('spark.kubernetes.namespace', os.environ.get('SPARK_USER'))
+        conf.set('spark.kubernetes.container.image', 'gitlab-registry.cern.ch/db/spark-service/docker-registry/swan:alma9-20240123')
         conf.set('spark.master', self._retrieve_k8s_master(os.environ.get('KUBECONFIG')))
 
         # Configure shuffle if running on K8s with Spark 3.x.x
@@ -393,7 +394,6 @@ class SparkYarnConfiguration(SparkConfiguration):
             if grafana_url and app_id:
                 # if spark.cern.grafana.url is set, use cern spark monitoring dashboard
                 conn_config['sparkmetrics'] = grafana_url + \
-                                              '?orgId=1' + \
                                               '&var-ClusterName=' + self.get_cluster_name() + \
                                               '&var-UserName=' + self.get_spark_user() + \
                                               '&var-ApplicationId=' + app_id
