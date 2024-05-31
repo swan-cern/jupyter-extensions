@@ -10,6 +10,26 @@ _log () {
     fi
 }
 
+# Function to ensure a unique folder name, instead of overwriting an existing one
+define_repo_path() {
+    local folder_name=$1
+    local counter=0
+    
+    local INIT_REPO_PATH="$HOME/SWAN_projects/${folder_name}"
+    REPO_PATH="${INIT_REPO_PATH}"
+
+    # Loop to find a unique folder name
+    while [ -d "$REPO_PATH" ]; do
+        counter=$((counter + 1))
+        REPO_PATH="${INIT_REPO_PATH}_${counter}"
+    done
+
+    # Warn the backend of the new folder name
+    if [ $counter -ne 0 ]; then
+        echo "FOLDER_NAME_CHANGE:${folder_name}_${counter}"
+    fi
+}
+
 # Function for printing the help page
 print_help() {
     _log "Usage: makenv --env/-e NAME --repo/-r REPOSITORY [--accpy ACCPY_VERSION] [--help/-h]"
@@ -36,14 +56,14 @@ while [ $# -gt 0 ]; do
             shift
             shift
             ;;
-        --help|-h)
-            print_help
-            exit 0
-            ;;
         --accpy)
             ACCPY_VERSION=$2
             shift
             shift
+            ;;
+        --help|-h)
+            print_help
+            exit 0
             ;;
         *)
             >&2 _log "ERROR: Invalid argument: $1" && _log
@@ -86,12 +106,8 @@ elif [[ $REPOSITORY == http* ]]; then
     repo_name=${repo_name%.*}
     
     mkdir -p $HOME/SWAN_projects
-    REPO_PATH=$HOME/SWAN_projects/${repo_name}
 
-    # Checks if the repository already exists in the home directory
-    if [ -d "${REPO_PATH}" ]; then
-        rm -rf ${REPO_PATH}
-    fi
+    define_repo_path $repo_name
 
     # Clone the repository
     echo "Cloning the repository from ${REPOSITORY}..."
@@ -139,7 +155,6 @@ source ${ENV_PATH}/bin/activate
 
 # Install packages in the environment
 echo "Installing packages from ${REQ_PATH}..."
-# pip install ipykernel
 pip install ipykernel
 pip install -r ${REQ_PATH}
 
@@ -147,5 +162,3 @@ pip install -r ${REQ_PATH}
 python -m ipykernel install --name ${ENV_NAME} --display-name "Python (${ENV_NAME})" --prefix ${ENV_PATH}
 
 echo "source /home/$USER/${ENV_NAME}/bin/activate" > /home/$USER/.bash_profile
-
-echo "Virtual environment ${ENV_NAME} created successfully."

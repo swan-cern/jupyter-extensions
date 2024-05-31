@@ -125,16 +125,27 @@ data-base-url="{{base_url | urlencode}}"
                 back_button.onclick = () => window.location = `/hub/home?changeconfig`;
                 back_button.style.display = 'block';
             } else {
+                outputBox.innerHTML += `Virtual environment ${env_name} created successfully.<br>`;
+                outputBox.scrollTop = outputBox.scrollHeight;
                 loader.getElementsByClassName('text')[0].innerHTML = 'Environment created';
                 next_button.onclick = () => window.location = `${base_url}lab${project_folder}` ;
                 next_button.style.display = 'block';
             }
         } else {
-            // Add output to output-box
-            outputBox.innerHTML += event.data + '<br>';
-            outputBox.scrollTop = outputBox.scrollHeight;
-            if (event.data.includes('ERROR')) {
-                has_failed = true;
+            // Update project folder if script changes it (don't show in output box)
+            if (event.data.includes('FOLDER_NAME_CHANGE')) {
+                const new_folder = event.data.split(':')[1];
+                const folders = project_folder.split('/');
+                folders[folders.length - 1] = new_folder;
+                project_folder = folders.join('/');
+                
+            } else {
+                // Add output to output-box
+                outputBox.innerHTML += event.data + '<br>';
+                outputBox.scrollTop = outputBox.scrollHeight;
+                if (event.data.includes('ERROR')) {
+                    has_failed = true;
+                }
             }
         }
     };
