@@ -93,7 +93,7 @@ if [ -z "$REPOSITORY" ]; then
     >&2 _log "ERROR: No repository provided." && _log
     print_help
     exit 1
-# Checks if the provided repository source is found
+# Checks if the provided repository contains a requirements file
 elif [ -d $REPOSITORY ]; then
     REQ_PATH="${REPOSITORY}/requirements.txt"
     if [ ! -f "${REQ_PATH}" ]; then
