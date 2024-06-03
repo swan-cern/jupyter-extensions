@@ -22,7 +22,7 @@ class SwanCustomEnvironments(Configurable):
 class SwanCustomEnvironmentsApiHandler(APIHandler):
     """
     API handler for creating custom environments.
-    Runs a local script to create a custom environment and streams the output to the client
+    Runs a script to create the environment and streams its output to the frontend.
     Environment name and repository URL are passed as query arguments and are mandatory
     ACCPy version is optional (if not provided, generic python is used)
     """
