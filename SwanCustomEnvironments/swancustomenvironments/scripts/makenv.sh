@@ -88,7 +88,7 @@ if [ -n "$ACCPY_VERSION" ] && [ ! -e "$ACCPY_PATH/base/$ACCPY_VERSION" ]; then
     exit 1
 fi
 
-# Checks if a repository file is given
+# Checks if a repository is provided
 if [ -z "$REPOSITORY" ]; then
     >&2 _log "ERROR: No repository provided." && _log
     print_help
