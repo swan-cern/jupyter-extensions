@@ -125,7 +125,7 @@ data-base-url="{{base_url | urlencode}}"
                 back_button.onclick = () => window.location = `/hub/home?changeconfig`;
                 back_button.style.display = 'block';
             } else {
-                outputBox.innerHTML += `Virtual environment ${env_name} created successfully.<br>`;
+                outputBox.innerHTML += `Environment ${env_name} created successfully.<br>`;
                 outputBox.scrollTop = outputBox.scrollHeight;
                 loader.getElementsByClassName('text')[0].innerHTML = 'Environment created';
                 next_button.onclick = () => window.location = `${base_url}lab${project_folder}` ;
