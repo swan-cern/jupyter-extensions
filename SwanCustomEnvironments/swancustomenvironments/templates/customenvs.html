@@ -113,18 +113,22 @@ data-base-url="{{base_url | urlencode}}"
     var back_button = document.getElementById('back_button');
     var next_button = document.getElementById('next_button');
     var has_failed = false;
+    // Create EventSource to listen for updates from the backend
     var eventSource = new EventSource(`${base_url}api/customenvs?env=${encodeURIComponent(env_name)}&repo=${encodeURIComponent(repository)}&accpy=${encodeURIComponent(accpy_version)}`);
     
+    // Update UI based every time a message is received
     eventSource.onmessage = (event) => {
         if (event.data === 'EOF') {
             // Close SSE connection and update UI when done
             eventSource.close();
             loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
             if (has_failed) {
+                // Show error message if failed (and Back button to go back to spawner)
                 loader.getElementsByClassName('text')[0].innerHTML = 'Error creating environment';
                 back_button.onclick = () => window.location = `/hub/home?changeconfig`;
                 back_button.style.display = 'block';
             } else {
+                // Redirect to lab if successful (and Next button to go to lab)
                 outputBox.innerHTML += `Environment ${env_name} created successfully.<br>`;
                 outputBox.scrollTop = outputBox.scrollHeight;
                 loader.getElementsByClassName('text')[0].innerHTML = 'Environment created';
@@ -150,9 +154,11 @@ data-base-url="{{base_url | urlencode}}"
         }
     };
 
+    // Handle any errors that occur with the EventSource connection
     eventSource.onerror = (err) => {
         loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
         loader.getElementsByClassName('text')[0].innerHTML = 'Error creating environment';
+        back_button.style.display = 'block';
     };
     
 
