@@ -12,6 +12,7 @@ from os import path
 class SwanCustomEnvironments(Configurable):
     """General-purpose static configuration options that evolve the API for creating customized environments"""
 
+    # Path to the script used to create custom environments (/opt/conda/lib/pythonx.xx/site-packages/swancustomenvironments/scripts/makenv.sh)
     makenv_path = Unicode(
         path.join(path.dirname(__file__), "scripts/makenv.sh"),
         config=True,
@@ -20,20 +21,19 @@ class SwanCustomEnvironments(Configurable):
 
 
 class SwanCustomEnvironmentsApiHandler(APIHandler):
-    """
-    API handler for creating custom environments.
-    Runs a script to create the environment and streams its output to the frontend.
-    Environment name and repository URL are passed as query arguments and are mandatory
-    ACCPy version is optional (if not provided, generic python is used)
-    """
-
-    config = None
+    """API handler for creating custom environments"""
 
     def initialize(self):
         self.config = SwanCustomEnvironments(config=self.config)
 
     @web.authenticated
     def get(self):
+        """
+        Gets the arguments from the query string and runs the makenv.sh script with them.
+        env (str): The name of the environment to be created.
+        repo (str): The git URL or absolute unix path to the repository.
+        accpy (str): The version of Accpy to be installed in the environment (optional).
+        """
         self.set_header("Content-Type", "text/event-stream")
 
         env_name = self.get_query_argument("env", default=None)

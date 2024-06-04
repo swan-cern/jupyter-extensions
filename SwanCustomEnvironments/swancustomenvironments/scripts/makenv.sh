@@ -2,7 +2,7 @@
 
 # Author: Rodrigo Sobral 2024
 # Copyright CERN
-# This script allows to create a venv virtual environment to use in notebooks and terminals. The environment contains the packages from a provided repository.
+# This script allows to create an environment to use in notebooks and terminals. The environment contains the packages from a provided repository.
 
 _log () {
     if [ "$*" == "ERROR:"* ] || [ "$*" == "WARNING:"* ] || [ "${JUPYTER_DOCKER_STACKS_QUIET}" == "" ]; then
@@ -34,15 +34,15 @@ define_repo_path() {
 print_help() {
     _log "Usage: makenv --env/-e NAME --repo/-r REPOSITORY [--accpy ACCPY_VERSION] [--help/-h]"
     _log "Options:"
-    _log "  -e, --env NAME              Name of the custom virtual environment (mandatory)"
+    _log "  -e, --env NAME              Name of the custom environment (mandatory)"
     _log "  -r, --repo REPOSITORY       Path or http link for a public repository (mandatory)"
     _log "  -h, --help                  Print this help page"
     _log "  --accpy VERSION             Version of Acc-Py to be used"
 }
 
 # --------------------------------------------------------------------------------------------
-
 # Parse command line arguments
+
 while [ $# -gt 0 ]; do
     key="$1"
     case $key in
@@ -74,10 +74,11 @@ while [ $# -gt 0 ]; do
 done
 
 # --------------------------------------------------------------------------------------------
+# Validate input arguments
 
 # Checks if a name for the environment is given
 if [ -z "$ENV_NAME" ]; then
-    >&2 _log "ERROR: No virtual environment name provided." && _log
+    >&2 _log "ERROR: No environment name provided." && _log
     print_help
     exit 1
 fi
@@ -127,10 +128,11 @@ fi
 
 
 # --------------------------------------------------------------------------------------------
+# Create and set up the environment
 
 ENV_PATH="/home/$USER/${ENV_NAME}"
 
-# Create virtual environment (acc-py or generic)
+# Create environment (acc-py or generic)
 if [ -n "$ACCPY_VERSION" ]; then
     source $ACCPY_PATH/base/${ACCPY_VERSION}/setup.sh
     if [ -d "${ENV_PATH}" ]; then
@@ -140,7 +142,7 @@ if [ -n "$ACCPY_VERSION" ]; then
 else
     message="Creating"
     [ -d "${ENV_PATH}" ] && message="Recreating"
-    echo "${message} virtual environment ${ENV_NAME} using Generic Python..."
+    echo "${message} environment ${ENV_NAME} using Generic Python..."
     
     python -m venv ${ENV_PATH} --clear --copies
 fi
@@ -150,12 +152,13 @@ mkdir -p /home/$USER/.local/share/jupyter/kernels
 ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME} /home/$USER/.local/share/jupyter/kernels/${ENV_NAME}
 
 # Activate the environment
-echo "Setting up the virtual environment..."
+echo "Setting up the environment..."
 source ${ENV_PATH}/bin/activate
 
-# Install packages in the environment
+# Install packages in the environment and the same ipykernel that the Jupyter server uses
 echo "Installing packages from ${REQ_PATH}..."
-pip install ipykernel
+
+pip install ipykernel==`python -c "import ipykernel; print(ipykernel.__version__)"`
 pip install -r ${REQ_PATH}
 
 # Install a Jupyter kernel for the environment
