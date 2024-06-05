@@ -157,8 +157,7 @@ source ${ENV_PATH}/bin/activate
 
 # Install packages in the environment and the same ipykernel that the Jupyter server uses
 echo "Installing packages from ${REQ_PATH}..."
-
-pip install ipykernel==`python -c "import ipykernel; print(ipykernel.__version__)"`
+pip install ipykernel
 pip install -r ${REQ_PATH}
 
 # Install a Jupyter kernel for the environment
