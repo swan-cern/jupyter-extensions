@@ -51,14 +51,14 @@ class SwanShareHandler(APIHandler):
             self.finish(r.json())
 
 
-def load_jupyter_server_extension(nb_server_app):
+def _load_jupyter_server_extension(serverapp):
     """
     Called when the Jupyter server extension is loaded.
 
     Args:
         nb_server_app (NotebookWebApplication): handle to the Notebook webserver instance.
     """
-    web_app = nb_server_app.web_app
+    web_app = serverapp.web_app
     host_pattern = ".*$"
     route_pattern = url_path_join(
         web_app.settings["base_url"], r"/api/swanshare")
