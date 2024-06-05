@@ -23,6 +23,8 @@ class SwanCustomEnvironments(Configurable):
 class SwanCustomEnvironmentsApiHandler(APIHandler):
     """API handler for creating custom environments"""
 
+    config = None
+
     def initialize(self):
         self.config = SwanCustomEnvironments(config=self.config)
 
