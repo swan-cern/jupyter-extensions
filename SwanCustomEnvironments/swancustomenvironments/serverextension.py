@@ -28,6 +28,8 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
     ACCPy version is optional (if not provided, generic python is used)
     """
 
+    config = None
+
     def initialize(self):
         self.config = SwanCustomEnvironments(config=self.config)
 
