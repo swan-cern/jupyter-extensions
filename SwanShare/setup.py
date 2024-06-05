@@ -37,7 +37,11 @@ package_data_spec = {
 
 cmdclass = create_cmdclass("jsdeps", 
     package_data_spec=package_data_spec,
-    data_files_spec=[]
+    data_files_spec=[(
+        "etc/jupyter/jupyter_server_config.d",
+        "jupyter_server_config.d",
+        "swanshare.json",
+    )]
 )
 #data_files_spec=data_files_spec
 
