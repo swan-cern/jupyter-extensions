@@ -20,13 +20,18 @@ div#header, div#site {
     padding: 10px;
     border-radius: 5px;
 }
-#back_button {
+.button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-top: 20px;
+}
+#back_button { background-color: #fc6404; }
+#next_button { background-color: #0454a4; }
+#back_button, #next_button {
     display: none;
     text-align: center;
-    background-color: #fc6404;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
     color: white;
     border: none;
     border-radius: 5px;
@@ -34,22 +39,9 @@ div#header, div#site {
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    margin: 5px;
 }
-#next_button {
-    display: none;
-    text-align: center;
-    background-color: #0454a4;
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-}
+
 </style>
 {% endblock %}
 
