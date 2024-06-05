@@ -5,15 +5,13 @@ import os
 
 from jupyter_packaging import (
     create_cmdclass, install_npm, ensure_targets,
-    combine_commands, ensure_python, get_version,
+    combine_commands, get_version,
 )
 import setuptools
 
 name="swanshare"
 
 HERE = os.path.abspath(os.path.dirname(__file__))
-
-ensure_python(">=3.5")
 
 # Get our version
 version = get_version(os.path.join(name, "_version.py"))
@@ -31,10 +29,6 @@ package_data_spec = {
     ]
 }
 
-# data_files_spec = [
-#     ("share/jupyter/lab/extensions", lab_path, "*.tgz"),
-# ]
-
 cmdclass = create_cmdclass("jsdeps", 
     package_data_spec=package_data_spec,
     data_files_spec=[(
@@ -43,7 +37,6 @@ cmdclass = create_cmdclass("jsdeps",
         "swanshare.json",
     )]
 )
-#data_files_spec=data_files_spec
 
 cmdclass["jsdeps"] = combine_commands(
     install_npm(HERE, build_cmd="webpack"),
@@ -59,11 +52,13 @@ setup_args = dict(
     url="https://github.com/swan-cern/jupyter-extensions",
     author="SWAN Admins",
     description="Sharing for SWAN",
-    long_description= long_description,
+    long_description=long_description,
     long_description_content_type="text/markdown",
-    cmdclass= cmdclass,
+    cmdclass=cmdclass,
     packages=setuptools.find_packages(),
-    install_requires=[],
+    install_requires=[
+        'PyJWT'
+    ],
     zip_safe=False,
     include_package_data=True,
     license="AGPL-3.0",
@@ -72,11 +67,9 @@ setup_args = dict(
     classifiers=[
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.5",
-        "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Framework :: Jupyter",
     ],
 )
