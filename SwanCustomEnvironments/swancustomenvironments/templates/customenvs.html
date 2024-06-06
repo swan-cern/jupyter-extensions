@@ -20,16 +20,14 @@ div#header, div#site {
     padding: 10px;
     border-radius: 5px;
 }
-.button-container {
+#button-container {
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
     margin-top: 20px;
 }
-#back_button { background-color: #fc6404; }
-#next_button { background-color: #0454a4; }
-#back_button, #next_button {
+.action-buttons {
     display: none;
     text-align: center;
     color: white;
@@ -40,6 +38,44 @@ div#header, div#site {
     cursor: pointer;
     transition: background-color 0.3s ease;
     margin: 5px;
+}
+#back_button, #yes-button { background-color: #fc6404; }
+#next_button, #no-button { background-color: #0454a4; }
+
+#modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+#modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 5px;
+    text-align: center;
+}
+
+#modal-button-container {
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 5px;
 }
 
 </style>
@@ -53,6 +89,15 @@ data-base-url="{{base_url | urlencode}}"
 {% block site %}
 
 <div class="container">
+    <div id="modal">
+        <div id="modal-content">
+            <h2 id="modal-title"></h2>
+            <div id="modal-button-container">
+                <button id="yes-button">Yes</button>
+                <button id="no-button">No</button>
+            </div>
+        </div>
+    </div>
     <div class="row">
         <div class="swan-info">
             <div id="swan-loader">
@@ -67,10 +112,9 @@ data-base-url="{{base_url | urlencode}}"
         </div>
         <br><br>
         <div id="output-box"></div>
-        <br>
-        <div class="button-container">
-            <button id="back_button">Back</button>
-            <button id="next_button">Next</button>
+        <div id="button-container">
+            <button class="action-buttons" id="back_button">Back</button>
+            <button class="action-buttons" id="next_button">Next</button>
         </div>
     </div>
 </div>
@@ -80,70 +124,78 @@ data-base-url="{{base_url | urlencode}}"
 {% block script %}
     {{super()}}
 
-<script type = "text/javascript" >
-    
+<script type = "text/javascript">
+    const redirect2Config = () => {
+        window.location = `/hub/home?changeconfig`;
+    }
+    const redirect2Lab = (base_url, project_path) => {
+        window.location = `${base_url}lab${project_path}`;
+    }
+
     var base_url = document.body.getAttribute('data-base-url');
-    
+    var project_path = '/';
+
     const urlParams = new URLSearchParams(window.location.search);
     var env_name = urlParams.get('env') || "";
     var repository = urlParams.get('repo') || "";
     var accpy_version = urlParams.get('accpy') || "";
-    
-    var project_folder = '/';
-    if (repository.startsWith('http')) {
-        // Extract repository name from URL
-        const pattern = /^https?:\/\/[^/]+\/([^/\s]+)\/([^/\s]+)/;
-        const match = repository.match(pattern);
-        project_folder = match ? `/tree/SWAN_projects/${match[2]}` : '';
-    } else {
-        // Extract CERNBox path for EOS path repository, e.g /eos/user/u/username/project/local -> /tree/project/local
-        const pattern = /^\/eos\/user\/([^/]+)\/([^/]+)(\/.*)?$/;
-        const match = repository.match(pattern);
-        project_folder = match && match[3] ? `/tree/${match[3]}` : '/'
-    }
 
     var outputBox = document.getElementById('output-box');
     var loader = document.getElementById('swan-loader');
     var back_button = document.getElementById('back_button');
     var next_button = document.getElementById('next_button');
     var has_failed = false;
+
+    var modal = document.getElementById("modal");
+    var modalTitle = document.getElementById("modal-title");
+    var yesButton = document.getElementById("yes-button");
+    var noButton = document.getElementById("no-button");
+
     // Create EventSource to listen for updates from the backend
     var eventSource = new EventSource(`${base_url}api/customenvs?env=${encodeURIComponent(env_name)}&repo=${encodeURIComponent(repository)}&accpy=${encodeURIComponent(accpy_version)}`);
-    
+
     // Update UI based every time a message is received
     eventSource.onmessage = (event) => {
-        if (event.data === 'EOF') {
-            // Close SSE connection and update UI when done
+        const message_line = event.data;
+
+        // Close SSE connection -> update UI when done
+        if (message_line === 'EOF') {
             eventSource.close();
             loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
+
+            // Output has errors -> change title and show button for going back to spawner
             if (has_failed) {
-                // Show error message if failed (and Back button to go back to spawner)
                 loader.getElementsByClassName('text')[0].innerHTML = 'Error creating environment';
-                back_button.onclick = () => window.location = `/hub/home?changeconfig`;
+                back_button.onclick = () => redirect2Config();
                 back_button.style.display = 'block';
+
+            // Output is fine -> change title if successful (and Next button to go to lab)
             } else {
-                // Redirect to lab if successful (and Next button to go to lab)
                 outputBox.innerHTML += `Environment ${env_name} created successfully.<br>`;
                 outputBox.scrollTop = outputBox.scrollHeight;
                 loader.getElementsByClassName('text')[0].innerHTML = 'Environment created';
-                next_button.onclick = () => window.location = `${base_url}lab${project_folder}` ;
+                next_button.onclick = () => redirect2Lab(base_url, project_path);
                 next_button.style.display = 'block';
             }
+
+        // Get the project path from the output
+        } else if (message_line.startsWith('REPO_PATH')) {
+            project_path = `/tree${message_line.split(':')[1]}`;
+            
+
+        // Environment already exists -> pops up a modal
+        } else if (message_line.startsWith('ENVIRONMENT_ALREADY_EXISTS')) {
+            modalTitle.innerHTML = `${env_name} is created already. Do you want to reconfigure it?`;
+            yesButton.onclick = () => redirect2Config();
+            noButton.onclick = () => redirect2Lab(base_url, project_path);
+            modal.style.display = "block";
+
+        // Usual case -> update output box with the message received
         } else {
-            // Update project folder if script changes it (don't show in output box)
-            if (event.data.includes('FOLDER_NAME_CHANGE')) {
-                const new_folder = event.data.split(':')[1];
-                const folders = project_folder.split('/');
-                folders[folders.length - 1] = new_folder;
-                project_folder = folders.join('/');
-                
-            } else {
-                // Add output to output-box
-                outputBox.innerHTML += event.data + '<br>';
-                outputBox.scrollTop = outputBox.scrollHeight;
-                if (event.data.includes('ERROR')) {
-                    has_failed = true;
-                }
+            outputBox.innerHTML += message_line + '<br>';
+            outputBox.scrollTop = outputBox.scrollHeight;
+            if (message_line.includes('ERROR')) {
+                has_failed = true;
             }
         }
     };
@@ -154,7 +206,7 @@ data-base-url="{{base_url | urlencode}}"
         loader.getElementsByClassName('text')[0].innerHTML = 'Error creating environment';
         back_button.style.display = 'block';
     };
-    
+
 
 </script>
 {% endblock %}
