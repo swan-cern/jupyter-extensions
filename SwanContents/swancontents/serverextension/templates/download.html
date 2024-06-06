@@ -40,34 +40,48 @@ data-base-url="{{base_url | urlencode}}"
 
 <script type = "text/javascript" >
 
-    require(['jquery', 'base/js/utils'], function ($, utils) {
+  document.addEventListener("DOMContentLoaded", function() {
+    var base_url = document.body.getAttribute("data-baseUrl") || "";
+    var urlParams = new URLSearchParams(window.location.search);
+    var proj_url = urlParams.get('projurl');
 
-        var base_url = utils.get_body_data("baseUrl");
-        var proj_url = utils.get_url_param('projurl');
+    var settings = {
+        method: "GET",
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    };
 
-        var settings = {
-            processData : false,
-            type : "GET",
-            contentType: 'application/json',
-            dataType : "json",
-        };
-
-        utils.promising_ajax(base_url +  'api/contents/fetch?url=' + proj_url, settings)
-            .then(function (result) {
-                if (result && result.path) {
-                    window.location.replace(base_url + (result.type == 'directory' ? result.path.replace('SWAN_projects', 'projects') : 'notebooks/' + result.path))
-                } else {
-                    error('Error downloading project.');
-                }
-            }).catch(function (e) {
-            error(e.message || e.xhr_error || e.reason || e);
+    fetch(base_url + 'api/contents/fetch?url=' + encodeURIComponent(proj_url), settings)
+        .then(function(response) {
+            if (!response.ok) {
+                throw new Error('Network response was not ok ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(function(result) {
+            if (result && result.path) {
+                var redirectUrl = base_url + (result.type === 'directory' ? result.path.replace('SWAN_projects', 'projects') : 'notebooks/' + result.path);
+                window.location.replace(redirectUrl);
+            } else {
+                showError('Error downloading project.');
+            }
+        })
+        .catch(function(error) {
+            showError(error.message || error);
         });
 
-        function error(reason) {
-            $('#swan-loader .loader-line-mask').hide();
-            $('#swan-loader .text').html('<p class="extra">Error downloading Project: ' + reason + '</p>');
+    function showError(reason) {
+        var loaderMask = document.querySelector('#swan-loader .loader-line-mask');
+        if (loaderMask) {
+            loaderMask.style.display = 'none';
         }
-    });
+        var loaderText = document.querySelector('#swan-loader .text');
+        if (loaderText) {
+            loaderText.innerHTML = '<p class="extra">Error downloading Project: ' + reason + '</p>';
+        }
+      }
+  });
 
 </script>
 {% endblock %}
