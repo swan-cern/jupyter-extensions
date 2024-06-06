@@ -23,11 +23,6 @@ define_repo_path() {
         counter=$((counter + 1))
         REPO_PATH="${INIT_REPO_PATH}_${counter}"
     done
-
-    # Warn the backend of the new folder name
-    if [ $counter -ne 0 ]; then
-        echo "FOLDER_NAME_CHANGE:${folder_name}_${counter}"
-    fi
 }
 
 # Function for printing the help page
@@ -101,6 +96,7 @@ elif [ -d $REPOSITORY ]; then
         >&2 _log "ERROR: Requirements file not found (${REQ_PATH})."
         exit 1
     fi
+    _log "REPO_PATH:${REPOSITORY#$HOME}"
 elif [[ $REPOSITORY == http* ]]; then
     # Extract the repository name from the URL
     repo_name=$(basename $REPOSITORY)
@@ -111,7 +107,7 @@ elif [[ $REPOSITORY == http* ]]; then
     define_repo_path $repo_name
 
     # Clone the repository
-    echo "Cloning the repository from ${REPOSITORY}..."
+    _log "Cloning the repository from ${REPOSITORY}..."
     git clone $REPOSITORY -q "${REPO_PATH}" || { >&2 _log "ERROR: Failed to clone repository"; exit 1; }
 
     REQ_PATH=${REPO_PATH}/requirements.txt
@@ -121,6 +117,7 @@ elif [[ $REPOSITORY == http* ]]; then
         >&2 _log "ERROR: ${REQ_PATH} not found in ${REPO_PATH}."
         exit 1
     fi
+    _log "REPO_PATH:${REPO_PATH#$HOME}"
 else
     >&2 _log "ERROR: Invalid repository (${REPOSITORY})."
     exit 1
@@ -131,19 +128,17 @@ fi
 # Create and set up the environment
 
 ENV_PATH="/home/$USER/${ENV_NAME}"
+if [ -d "${ENV_PATH}" ]; then
+    _log "ENVIRONMENT_ALREADY_EXISTS:${ENV_PATH}"
+    exit 1
+fi
 
 # Create environment (acc-py or generic)
 if [ -n "$ACCPY_VERSION" ]; then
     source $ACCPY_PATH/base/${ACCPY_VERSION}/setup.sh
-    if [ -d "${ENV_PATH}" ]; then
-        rm -rf ${ENV_PATH}
-    fi
     acc-py venv ${ENV_PATH}
 else
-    message="Creating"
-    [ -d "${ENV_PATH}" ] && message="Recreating"
-    echo "${message} environment ${ENV_NAME} using Generic Python..."
-    
+    _log "Creating environment ${ENV_NAME} using Generic Python..."
     python -m venv ${ENV_PATH} --clear --copies
 fi
 
@@ -152,15 +147,15 @@ mkdir -p /home/$USER/.local/share/jupyter/kernels
 ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME} /home/$USER/.local/share/jupyter/kernels/${ENV_NAME}
 
 # Activate the environment
-echo "Setting up the environment..."
+_log "Setting up the environment..."
 source ${ENV_PATH}/bin/activate
 
 # Install packages in the environment and the same ipykernel that the Jupyter server uses
-echo "Installing packages from ${REQ_PATH}..."
+_log "Installing packages from ${REQ_PATH}..."
 pip install ipykernel
 pip install -r ${REQ_PATH}
 
 # Install a Jupyter kernel for the environment
 python -m ipykernel install --name ${ENV_NAME} --display-name "Python (${ENV_NAME})" --prefix ${ENV_PATH}
 
-echo "source /home/$USER/${ENV_NAME}/bin/activate" > /home/$USER/.bash_profile
+_log "source /home/$USER/${ENV_NAME}/bin/activate" > /home/$USER/.bash_profile

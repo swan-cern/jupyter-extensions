@@ -1,23 +1,10 @@
 from tornado import web
-from traitlets import Unicode
-from traitlets.config import Configurable
 
 from jupyter_server.base.handlers import JupyterHandler, APIHandler
 from jupyter_server.utils import url_path_join
 
 import subprocess
 from os import path
-
-
-class SwanCustomEnvironments(Configurable):
-    """General-purpose static configuration options that evolve the API for creating customized environments"""
-
-    # Path to the script used to create custom environments (/opt/conda/lib/pythonx.xx/site-packages/swancustomenvironments/scripts/makenv.sh)
-    makenv_path = Unicode(
-        path.join(path.dirname(__file__), "scripts/makenv.sh"),
-        config=True,
-        help='Path to the script used to create custom environments.'
-    )
 
 
 class SwanCustomEnvironmentsApiHandler(APIHandler):
@@ -28,10 +15,8 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
     ACCPy version is optional (if not provided, generic python is used)
     """
 
-    config = None
-
-    def initialize(self):
-        self.config = SwanCustomEnvironments(config=self.config)
+    # Path to the script used to create custom environments (/opt/conda/lib/pythonx.xx/site-packages/swancustomenvironments/scripts/makenv.sh)
+    makenv_path = path.join(path.dirname(__file__), "scripts/makenv.sh")
 
     @web.authenticated
     def get(self):
@@ -51,7 +36,7 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         if accpy_version is not None:
             arguments.extend(["--accpy", accpy_version])
         
-        makenv_process = subprocess.Popen([self.config.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        makenv_process = subprocess.Popen([self.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         
         for line in iter(makenv_process.stdout.readline, b""):
             self.write(f"data: {line.decode('utf-8')}\n\n")
