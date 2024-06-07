@@ -22,17 +22,15 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
     def get(self):
         """
         Gets the arguments from the query string and runs the makenv.sh script with them.
-        env (str): The name of the environment to be created.
         repo (str): The git URL or absolute unix path to the repository.
         accpy (str): The version of Accpy to be installed in the environment (optional).
         """
         self.set_header("Content-Type", "text/event-stream")
 
-        env_name = self.get_query_argument("env", default=None)
         repository = self.get_query_argument("repo", default=None)
         accpy_version = self.get_query_argument("accpy", default=None)
 
-        arguments = ["--env", env_name, "--repo", repository]
+        arguments = ["--repo", repository]
         if accpy_version is not None:
             arguments.extend(["--accpy", accpy_version])
         
