@@ -127,6 +127,8 @@ fi
 # --------------------------------------------------------------------------------------------
 # Create and set up the environment
 
+IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
+
 ENV_PATH="/home/$USER/${ENV_NAME}"
 if [ -d "${ENV_PATH}" ]; then
     _log "ENVIRONMENT_ALREADY_EXISTS:${ENV_PATH}"
@@ -152,7 +154,7 @@ source ${ENV_PATH}/bin/activate
 
 # Install packages in the environment and the same ipykernel that the Jupyter server uses
 _log "Installing packages from ${REQ_PATH}..."
-pip install ipykernel
+pip install ipykernel==${IPYKERNEL_VERSION}
 pip install -r ${REQ_PATH}
 
 # Install a Jupyter kernel for the environment
