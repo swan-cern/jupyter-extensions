@@ -134,9 +134,9 @@ data-base-url="{{base_url | urlencode}}"
 
     var base_url = document.body.getAttribute('data-base-url');
     var project_path = '/';
+    var env_name = `${base_url.split('/')[-1]}_env`;
 
     const urlParams = new URLSearchParams(window.location.search);
-    var env_name = urlParams.get('env') || "";
     var repository = urlParams.get('repo') || "";
     var accpy_version = urlParams.get('accpy') || "";
 
@@ -152,7 +152,7 @@ data-base-url="{{base_url | urlencode}}"
     var noButton = document.getElementById("no-button");
 
     // Create EventSource to listen for updates from the backend
-    var eventSource = new EventSource(`${base_url}api/customenvs?env=${encodeURIComponent(env_name)}&repo=${encodeURIComponent(repository)}&accpy=${encodeURIComponent(accpy_version)}`);
+    var eventSource = new EventSource(`${base_url}api/customenvs?repo=${encodeURIComponent(repository)}&accpy=${encodeURIComponent(accpy_version)}`);
 
     // Update UI based every time a message is received
     eventSource.onmessage = (event) => {
@@ -180,8 +180,14 @@ data-base-url="{{base_url | urlencode}}"
 
         // Get the project path from the output
         } else if (message_line.startsWith('REPO_PATH')) {
-            project_path = `/tree${message_line.split(':')[1]}`;
-            
+            const repo_path = message_line.split(':')[1];
+            if (repo_path && repo_path !== '/') {
+                project_path = `/tree${repo_path}`;
+            }
+
+    // Get the environment name from the output
+        } else if (message_line.startsWith('ENV_NAME')) {
+            env_name = message_line.split(':')[1];
 
         // Environment already exists -> pops up a modal
         } else if (message_line.startsWith('ENVIRONMENT_ALREADY_EXISTS')) {

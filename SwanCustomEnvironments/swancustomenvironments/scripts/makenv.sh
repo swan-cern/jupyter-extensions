@@ -27,9 +27,8 @@ define_repo_path() {
 
 # Function for printing the help page
 print_help() {
-    _log "Usage: makenv --env/-e NAME --repo/-r REPOSITORY [--accpy ACCPY_VERSION] [--help/-h]"
+    _log "Usage: makenv --repo/-r REPOSITORY [--accpy ACCPY_VERSION] [--help/-h]"
     _log "Options:"
-    _log "  -e, --env NAME              Name of the custom environment (mandatory)"
     _log "  -r, --repo REPOSITORY       Path or http link for a public repository (mandatory)"
     _log "  -h, --help                  Print this help page"
     _log "  --accpy VERSION             Version of Acc-Py to be used"
@@ -41,11 +40,6 @@ print_help() {
 while [ $# -gt 0 ]; do
     key="$1"
     case $key in
-        --env|-e)
-            ENV_NAME=$2
-            shift
-            shift
-            ;;
         --repo|-r)
             REPOSITORY=$2
             shift
@@ -71,13 +65,6 @@ done
 # --------------------------------------------------------------------------------------------
 # Validate input arguments
 
-# Checks if a name for the environment is given
-if [ -z "$ENV_NAME" ]; then
-    >&2 _log "ERROR: No environment name provided." && _log
-    print_help
-    exit 1
-fi
-
 # Checks if the provided Acc-Py version is valid
 if [ -n "$ACCPY_VERSION" ] && [ ! -e "$ACCPY_PATH/base/$ACCPY_VERSION" ]; then
     >&2 _log "ERROR: Invalid Acc-Py version."
@@ -89,6 +76,7 @@ if [ -z "$REPOSITORY" ]; then
     >&2 _log "ERROR: No repository provided." && _log
     print_help
     exit 1
+
 # Checks if the provided repository contains a requirements file
 elif [ -d $REPOSITORY ]; then
     REQ_PATH="${REPOSITORY}/requirements.txt"
@@ -96,7 +84,8 @@ elif [ -d $REPOSITORY ]; then
         >&2 _log "ERROR: Requirements file not found (${REQ_PATH})."
         exit 1
     fi
-    _log "REPO_PATH:${REPOSITORY#$HOME}"
+    REPO_PATH=$REPOSITORY
+
 elif [[ $REPOSITORY == http* ]]; then
     # Extract the repository name from the URL
     repo_name=$(basename $REPOSITORY)
@@ -117,7 +106,7 @@ elif [[ $REPOSITORY == http* ]]; then
         >&2 _log "ERROR: ${REQ_PATH} not found in ${REPO_PATH}."
         exit 1
     fi
-    _log "REPO_PATH:${REPO_PATH#$HOME}"
+
 else
     >&2 _log "ERROR: Invalid repository (${REPOSITORY})."
     exit 1
@@ -127,6 +116,14 @@ fi
 # --------------------------------------------------------------------------------------------
 # Create and set up the environment
 
+# The environment name is the last folder name of the repository
+ENV_NAME="$(basename $REPO_PATH)_env"
+_log "ENV_NAME:${ENV_NAME}"
+
+# The repository path is the path to the repository without the home directory
+_log "REPO_PATH:${REPO_PATH#$HOME}"
+
+# Get the ipykernel version that the Jupyter server uses
 IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
 
 ENV_PATH="/home/$USER/${ENV_NAME}"
@@ -155,9 +152,8 @@ source ${ENV_PATH}/bin/activate
 # Install packages in the environment and the same ipykernel that the Jupyter server uses
 _log "Installing packages from ${REQ_PATH}..."
 pip install ipykernel==${IPYKERNEL_VERSION}
-pip install -r ${REQ_PATH}
 
 # Install a Jupyter kernel for the environment
 python -m ipykernel install --name ${ENV_NAME} --display-name "Python (${ENV_NAME})" --prefix ${ENV_PATH}
 
-_log "source /home/$USER/${ENV_NAME}/bin/activate" > /home/$USER/.bash_profile
+echo -e "source /home/$USER/${ENV_NAME}/bin/activate\ncd ${REPO_PATH}" > /home/$USER/.bash_profile
