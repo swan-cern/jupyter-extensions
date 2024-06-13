@@ -39,8 +39,9 @@ div#header, div#site {
     transition: background-color 0.3s ease;
     margin: 5px;
 }
-#back_button, #yes-button { background-color: #fc6404; }
-#next_button, #no-button { background-color: #0454a4; }
+#back_button, #yes-button, #cancel_button { background-color: #fc6404; }
+#pause_button, #no-button { background-color: #757575; }
+#lab_button { background-color: #0454a4; }
 
 #modal {
     display: none;
@@ -62,20 +63,28 @@ div#header, div#site {
     width: 80%;
     max-width: 500px;
     border-radius: 5px;
-    text-align: center;
+    text-align: left; /* Align text to the left */
 }
 
 #modal-button-container {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+}
+
+#modal-button-container button {
     border: none;
     color: white;
     padding: 10px 20px;
     text-align: center;
     text-decoration: none;
-    display: inline-block;
     font-size: 16px;
     margin: 4px 2px;
     cursor: pointer;
     border-radius: 5px;
+}
+
+#no-button {
+    background-color: #757575; /* Ensuring the color is as specified */
 }
 
 </style>
@@ -91,10 +100,11 @@ data-base-url="{{base_url | urlencode}}"
 <div class="container">
     <div id="modal">
         <div id="modal-content">
-            <h2 id="modal-title"></h2>
+            <h2 id="modal-title" style="text-align: left;"></h2>
+            <p id="modal-description"></p>
             <div id="modal-button-container">
-                <button id="yes-button">Yes</button>
-                <button id="no-button">No</button>
+                <button id="yes-button">Restart Session</button>
+                <button id="no-button">Cancel</button>
             </div>
         </div>
     </div>
@@ -113,8 +123,10 @@ data-base-url="{{base_url | urlencode}}"
         <br><br>
         <div id="output-box"></div>
         <div id="button-container">
-            <button class="action-buttons" id="back_button">Back</button>
-            <button class="action-buttons" id="next_button">Next</button>
+            <button class="action-buttons" id="back_button">Restart session</button>
+            <button class="action-buttons" id="cancel_button">Cancel</button>
+            <button class="action-buttons" id="pause_button">Pause</button>
+            <button class="action-buttons" id="lab_button">Jupyter Lab</button>
         </div>
     </div>
 </div>
@@ -129,6 +141,7 @@ data-base-url="{{base_url | urlencode}}"
         window.location = `/hub/home?changeconfig`;
     }
     const redirect2Lab = (base_url, project_path) => {
+        console.log('Redirecting to lab: ', `${base_url}lab${project_path}`);
         window.location = `${base_url}lab${project_path}`;
     }
 
@@ -140,14 +153,20 @@ data-base-url="{{base_url | urlencode}}"
     var repository = urlParams.get('repo') || "";
     var accpy_version = urlParams.get('accpy') || "";
 
+    // Environment creation elements
     var outputBox = document.getElementById('output-box');
     var loader = document.getElementById('swan-loader');
     var back_button = document.getElementById('back_button');
-    var next_button = document.getElementById('next_button');
+    var cancel_button = document.getElementById('cancel_button');
+    var pause_button = document.getElementById('pause_button');
+    var lab_button = document.getElementById('lab_button');
     var has_failed = false;
+    var is_created = false;
 
+    // Modal elements
     var modal = document.getElementById("modal");
     var modalTitle = document.getElementById("modal-title");
+    var modalDescription = document.getElementById("modal-description");
     var yesButton = document.getElementById("yes-button");
     var noButton = document.getElementById("no-button");
 
@@ -169,13 +188,40 @@ data-base-url="{{base_url | urlencode}}"
                 back_button.onclick = () => redirect2Config();
                 back_button.style.display = 'block';
 
+            // Environment already exists -> ask user if they want to reconfigure it
+            } else if (is_created) {
+                modalTitle.innerHTML = `${env_name} is created already.`;
+                modalDescription.innerHTML = `Reconfiguring the environment will delete the current environment and allow you to configure a new one. Do you want to proceed?`;
+                yesButton.onclick = () => redirect2Config();
+                noButton.onclick = () => redirect2Lab(base_url, project_path);
+                modal.style.display = "block";
+
             // Output is fine -> change title if successful (and Next button to go to lab)
             } else {
-                outputBox.innerHTML += `Environment ${env_name} created successfully.<br>`;
-                outputBox.scrollTop = outputBox.scrollHeight;
+                let stop_clock = false, seconds = 3;
                 loader.getElementsByClassName('text')[0].innerHTML = 'Environment created';
-                next_button.onclick = () => redirect2Lab(base_url, project_path);
-                next_button.style.display = 'block';
+                outputBox.innerHTML += `Environment ${env_name} created successfully.<br>Redirecting to Jupyter lab in `;
+                outputBox.scrollTop = outputBox.scrollHeight;
+                cancel_button.style.display = 'block';
+                cancel_button.onclick = () => redirect2Config();
+                pause_button.style.display = 'block';
+                pause_button.onclick = () => {
+                    stop_clock = true
+                    lab_button.style.display = 'block';
+                    pause_button.style.display = 'none';
+                    lab_button.onclick = () => redirect2Lab(base_url, project_path);
+                };
+                const countdown = setInterval(() => {
+                    if (stop_clock) {
+                        clearInterval(countdown);
+                    } else if (seconds <= 0) {
+                        clearInterval(countdown);
+                        redirect2Lab(base_url, project_path);
+                    } else {
+                        outputBox.innerHTML += `${seconds}...`;
+                        seconds--;
+                    }
+                }, 1000);
             }
 
         // Get the project path from the output
@@ -185,16 +231,13 @@ data-base-url="{{base_url | urlencode}}"
                 project_path = `/tree${repo_path}`;
             }
 
-    // Get the environment name from the output
+        // Get the environment name from the output
         } else if (message_line.startsWith('ENV_NAME')) {
             env_name = message_line.split(':')[1];
 
         // Environment already exists -> pops up a modal
         } else if (message_line.startsWith('ENVIRONMENT_ALREADY_EXISTS')) {
-            modalTitle.innerHTML = `${env_name} is created already. Do you want to reconfigure it?`;
-            yesButton.onclick = () => redirect2Config();
-            noButton.onclick = () => redirect2Lab(base_url, project_path);
-            modal.style.display = "block";
+            is_created = true;
 
         // Usual case -> update output box with the message received
         } else {
