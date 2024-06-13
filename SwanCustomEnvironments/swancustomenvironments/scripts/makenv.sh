@@ -4,9 +4,11 @@
 # Copyright CERN
 # This script allows to create an environment to use in notebooks and terminals. The environment contains the packages from a provided repository.
 
+LOG_FILE=/tmp/makenv.log
+
 _log () {
     if [ "$*" == "ERROR:"* ] || [ "$*" == "WARNING:"* ] || [ "${JUPYTER_DOCKER_STACKS_QUIET}" == "" ]; then
-        echo "$@"
+        echo "$@" | tee -a ${LOG_FILE}
     fi
 }
 
@@ -14,15 +16,29 @@ _log () {
 define_repo_path() {
     local folder_name=$1
     local counter=0
-    
-    local INIT_REPO_PATH="$HOME/SWAN_projects/${folder_name}"
-    REPO_PATH="${INIT_REPO_PATH}"
+
+    local git_home="$HOME/SWAN_projects"
+    local tmp_folder_name=$folder_name
+
+    REPO_PATH="${git_home}/${tmp_folder_name}"
 
     # Loop to find a unique folder name
-    while [ -d "$REPO_PATH" ]; do
+    while [ -d "${REPO_PATH}" ]; do
+        PREV_REPO_PATH=$REPO_PATH
         counter=$((counter + 1))
-        REPO_PATH="${INIT_REPO_PATH}_${counter}"
+        tmp_folder_name="${folder_name}_${counter}"
+        REPO_PATH="${git_home}/${tmp_folder_name}"
     done
+}
+
+# Function to remove the repository (if it was cloned)
+remove_repo() {
+    if [ $1 -ne 0 ]; then
+        if [[ $REPOSITORY == http* ]]; then
+            rm -rf ${REPO_PATH}
+        fi
+        exit 1
+    fi
 }
 
 # Function for printing the help page
@@ -77,35 +93,22 @@ if [ -z "$REPOSITORY" ]; then
     print_help
     exit 1
 
-# Checks if the provided repository contains a requirements file
-elif [ -d $REPOSITORY ]; then
-    REQ_PATH="${REPOSITORY}/requirements.txt"
-    if [ ! -f "${REQ_PATH}" ]; then
-        >&2 _log "ERROR: Requirements file not found (${REQ_PATH})."
-        exit 1
-    fi
+# Checks if the provided local repository exists
+elif [ -d "$REPOSITORY" ]; then
     REPO_PATH=$REPOSITORY
 
+# Checks if the provided repository is a valid URL
 elif [[ $REPOSITORY == http* ]]; then
-    # Extract the repository name from the URL
+    # Extract the repository name
     repo_name=$(basename $REPOSITORY)
     repo_name=${repo_name%.*}
-    
-    mkdir -p $HOME/SWAN_projects
 
+    mkdir -p $HOME/SWAN_projects
     define_repo_path $repo_name
 
     # Clone the repository
     _log "Cloning the repository from ${REPOSITORY}..."
     git clone $REPOSITORY -q "${REPO_PATH}" || { >&2 _log "ERROR: Failed to clone repository"; exit 1; }
-
-    REQ_PATH=${REPO_PATH}/requirements.txt
-    # Check if requirements.txt exists in the repository
-    if [ ! -f "${REQ_PATH}" ]; then
-        rm -rf ${REPO_PATH}
-        >&2 _log "ERROR: ${REQ_PATH} not found in ${REPO_PATH}."
-        exit 1
-    fi
 
 else
     >&2 _log "ERROR: Invalid repository (${REPOSITORY})."
@@ -116,19 +119,26 @@ fi
 # --------------------------------------------------------------------------------------------
 # Create and set up the environment
 
-# The environment name is the last folder name of the repository
 ENV_NAME="$(basename $REPO_PATH)_env"
-_log "ENV_NAME:${ENV_NAME}"
-
-# The repository path is the path to the repository without the home directory
-_log "REPO_PATH:${REPO_PATH#$HOME}"
-
-# Get the ipykernel version that the Jupyter server uses
+ENV_PATH="/home/$USER/${ENV_NAME}"
+REQ_PATH="${REPO_PATH}/requirements.txt"
 IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
 
-ENV_PATH="/home/$USER/${ENV_NAME}"
+# Check if requirements.txt exists in the repository
+if [ ! -f "${REQ_PATH}" ]; then
+    >&2 _log "ERROR: Requirements file not found (${REQ_PATH})."
+    rm -rf ${REPO_PATH}
+    exit 1
+fi
+
+_log "ENV_NAME:${ENV_NAME}"
+
 if [ -d "${ENV_PATH}" ]; then
     _log "ENVIRONMENT_ALREADY_EXISTS:${ENV_PATH}"
+    if [[ $REPOSITORY == http* ]]; then
+        rm -rf ${REPO_PATH}
+        _log "REPO_PATH:${PREV_REPO_PATH#$HOME}"
+    fi
     exit 1
 fi
 
@@ -151,9 +161,16 @@ source ${ENV_PATH}/bin/activate
 
 # Install packages in the environment and the same ipykernel that the Jupyter server uses
 _log "Installing packages from ${REQ_PATH}..."
-pip install ipykernel==${IPYKERNEL_VERSION}
+pip install ipykernel==${IPYKERNEL_VERSION} 2>&1 | tee -a "${LOG_FILE}"
+remove_repo ${PIPESTATUS[0]}
+
+pip install -r "${REQ_PATH}" 2>&1 | tee -a "${LOG_FILE}"
+remove_repo ${PIPESTATUS[0]}
+
+_log "REPO_PATH:${REPO_PATH#$HOME}"
 
 # Install a Jupyter kernel for the environment
-python -m ipykernel install --name ${ENV_NAME} --display-name "Python (${ENV_NAME})" --prefix ${ENV_PATH}
+python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" 2>&1 | tee -a "${LOG_FILE}"
+remove_repo ${PIPESTATUS[0]}
 
 echo -e "source /home/$USER/${ENV_NAME}/bin/activate\ncd ${REPO_PATH}" > /home/$USER/.bash_profile
