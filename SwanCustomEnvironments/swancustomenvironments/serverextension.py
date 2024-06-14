@@ -10,7 +10,7 @@ from os import path
 class SwanCustomEnvironmentsApiHandler(APIHandler):
     """API handler for creating custom environments"""
 
-    # Path to the script used to create custom environments (/opt/conda/lib/pythonx.xx/site-packages/swancustomenvironments/scripts/makenv.sh)
+    # Path to the script used to create custom environments
     makenv_path = path.join(path.dirname(__file__), "scripts/makenv.sh")
 
     @web.authenticated
