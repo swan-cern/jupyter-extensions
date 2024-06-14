@@ -140,11 +140,7 @@ fi
 
 # --------------------------------------------------------------------------------------------
 # Create and set up the environment
-
 ENV_PATH="/home/$USER/${ENV_NAME}"
-REQ_PATH="${REPO_PATH}/requirements.txt"
-IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
-
 # Check if requirements.txt exists in the repository
 if [ ! -f "${REQ_PATH}" ]; then
     _log "ERROR: Requirements file not found (${REQ_PATH})."
