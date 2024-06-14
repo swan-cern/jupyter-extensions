@@ -4,7 +4,9 @@
 # Copyright CERN
 # This script allows to create an environment to use in notebooks and terminals. The environment contains the packages from a provided repository.
 
-LOG_FILE=/tmp/makenv.log
+
+LOG_FILE=/tmp/makenv.log # File to keep a backlog of this script output
+GIT_HOME="$HOME/SWAN_projects" # Path where git repositories are stored
 
 _log () {
     if [ "$*" == "ERROR:"* ] || [ "$*" == "WARNING:"* ] || [ "${JUPYTER_DOCKER_STACKS_QUIET}" == "" ]; then
@@ -17,28 +19,16 @@ define_repo_path() {
     local folder_name=$1
     local counter=0
 
-    local git_home="$HOME/SWAN_projects"
     local tmp_folder_name=$folder_name
 
-    REPO_PATH="${git_home}/${tmp_folder_name}"
+    REPO_PATH="/tmp/${tmp_folder_name}"
 
     # Loop to find a unique folder name
-    while [ -d "${REPO_PATH}" ]; do
-        PREV_REPO_PATH=$REPO_PATH
+    while [ -d "${GIT_HOME}/${tmp_folder_name}" ]; do
         counter=$((counter + 1))
         tmp_folder_name="${folder_name}_${counter}"
-        REPO_PATH="${git_home}/${tmp_folder_name}"
+        REPO_PATH="/tmp/${tmp_folder_name}"
     done
-}
-
-# Function to remove the repository (if it was cloned)
-remove_repo() {
-    if [ $1 -ne 0 ]; then
-        if [[ $REPOSITORY == http* ]]; then
-            rm -rf ${REPO_PATH}
-        fi
-        exit 1
-    fi
 }
 
 # Function for printing the help page
@@ -71,7 +61,7 @@ while [ $# -gt 0 ]; do
             exit 0
             ;;
         *)
-            >&2 _log "ERROR: Invalid argument: $1" && _log
+            _log "ERROR: Invalid argument: $1" && _log
             print_help
             exit 1
             ;;
@@ -83,19 +73,15 @@ done
 
 # Checks if the provided Acc-Py version is valid
 if [ -n "$ACCPY_VERSION" ] && [ ! -e "$ACCPY_PATH/base/$ACCPY_VERSION" ]; then
-    >&2 _log "ERROR: Invalid Acc-Py version."
+    _log "ERROR: Invalid Acc-Py version (${ACCPY_VERSION})."
     exit 1
 fi
 
 # Checks if a repository is provided
 if [ -z "$REPOSITORY" ]; then
-    >&2 _log "ERROR: No repository provided." && _log
+    _log "ERROR: No repository provided." && _log
     print_help
     exit 1
-
-# Checks if the provided local repository exists
-elif [ -d "$REPOSITORY" ]; then
-    REPO_PATH=$REPOSITORY
 
 # Checks if the provided repository is a valid URL
 elif [[ $REPOSITORY == http* ]]; then
@@ -103,15 +89,20 @@ elif [[ $REPOSITORY == http* ]]; then
     repo_name=$(basename $REPOSITORY)
     repo_name=${repo_name%.*}
 
-    mkdir -p $HOME/SWAN_projects
     define_repo_path $repo_name
 
     # Clone the repository
     _log "Cloning the repository from ${REPOSITORY}..."
-    git clone $REPOSITORY -q "${REPO_PATH}" || { >&2 _log "ERROR: Failed to clone repository"; exit 1; }
+    rm -rf "${REPO_PATH}" && git clone $REPOSITORY -q "${REPO_PATH}" || { _log "ERROR: Failed to clone repository"; exit 1; } | tee -a "${LOG_FILE}"
+    ENV_NAME="${repo_name}_env"
+
+# Checks if the provided local repository is an EOS path and actually exists
+elif [[ $REPOSITORY == /eos/user* ]] && [ -d "$REPOSITORY" ]; then
+    REPO_PATH=$REPOSITORY
+    ENV_NAME="$(basename $REPO_PATH)_env"
 
 else
-    >&2 _log "ERROR: Invalid repository (${REPOSITORY})."
+    _log "ERROR: Invalid repository (${REPOSITORY})."
     exit 1
 fi
 
@@ -119,26 +110,23 @@ fi
 # --------------------------------------------------------------------------------------------
 # Create and set up the environment
 
-ENV_NAME="$(basename $REPO_PATH)_env"
 ENV_PATH="/home/$USER/${ENV_NAME}"
 REQ_PATH="${REPO_PATH}/requirements.txt"
 IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
 
 # Check if requirements.txt exists in the repository
 if [ ! -f "${REQ_PATH}" ]; then
-    >&2 _log "ERROR: Requirements file not found (${REQ_PATH})."
-    rm -rf ${REPO_PATH}
+    _log "ERROR: Requirements file not found (${REQ_PATH})."
     exit 1
 fi
 
-_log "ENV_NAME:${ENV_NAME}"
+CURRENT_ENV_NAME=$(find "/home/$USER" -type d -name "*_env" | head -n 1 | cut -d '/' -f4)
+CURRENT_REPO_PATH=$(tail -n 1 "/home/$USER/.bash_profile" | cut -d ' ' -f2)
 
-if [ -d "${ENV_PATH}" ]; then
-    _log "ENVIRONMENT_ALREADY_EXISTS:${ENV_PATH}"
-    if [[ $REPOSITORY == http* ]]; then
-        rm -rf ${REPO_PATH}
-        _log "REPO_PATH:${PREV_REPO_PATH#$HOME}"
-    fi
+# Check if an environment already exists in the session
+if [ -n "${CURRENT_ENV_NAME}" ]; then
+    _log "ENVIRONMENT_ALREADY_EXISTS:${CURRENT_ENV_NAME}"
+    _log "REPO_PATH:${CURRENT_REPO_PATH#$HOME}"
     exit 1
 fi
 
@@ -148,8 +136,10 @@ if [ -n "$ACCPY_VERSION" ]; then
     acc-py venv ${ENV_PATH}
 else
     _log "Creating environment ${ENV_NAME} using Generic Python..."
-    python -m venv ${ENV_PATH} --clear --copies
+    python -m venv ${ENV_PATH}
 fi
+
+_log "ENV_NAME:${ENV_NAME}"
 
 # Make sure the Jupyter server finds the new environment kernel in /home/$USER/.local
 mkdir -p /home/$USER/.local/share/jupyter/kernels
@@ -161,16 +151,18 @@ source ${ENV_PATH}/bin/activate
 
 # Install packages in the environment and the same ipykernel that the Jupyter server uses
 _log "Installing packages from ${REQ_PATH}..."
-pip install ipykernel==${IPYKERNEL_VERSION} 2>&1 | tee -a "${LOG_FILE}"
-remove_repo ${PIPESTATUS[0]}
+pip install ipykernel==${IPYKERNEL_VERSION} | tee -a "${LOG_FILE}"
+pip install -r "${REQ_PATH}" | tee -a "${LOG_FILE}"
 
-pip install -r "${REQ_PATH}" 2>&1 | tee -a "${LOG_FILE}"
-remove_repo ${PIPESTATUS[0]}
+# Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder
+mkdir -p ${GIT_HOME}
+mv ${REPO_PATH} ${GIT_HOME}
+REPO_PATH="${GIT_HOME}/$(basename $REPO_PATH)"
 
 _log "REPO_PATH:${REPO_PATH#$HOME}"
 
 # Install a Jupyter kernel for the environment
-python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" 2>&1 | tee -a "${LOG_FILE}"
-remove_repo ${PIPESTATUS[0]}
+python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" | tee -a "${LOG_FILE}"
 
+# Ensure the terminal loads the environment and cds into the repository path
 echo -e "source /home/$USER/${ENV_NAME}/bin/activate\ncd ${REPO_PATH}" > /home/$USER/.bash_profile

@@ -19,13 +19,14 @@ div#header, div#site {
     background-color: #f7f7f7;
     padding: 10px;
     border-radius: 5px;
+    margin-top: 15px;
 }
 #button-container {
     display: flex;
     justify-content: center;
     align-items: center;
     position: relative;
-    margin-top: 20px;
+    margin-top: 25px;
 }
 .action-buttons {
     display: none;
@@ -39,9 +40,9 @@ div#header, div#site {
     transition: background-color 0.3s ease;
     margin: 5px;
 }
-#back_button, #yes-button, #cancel_button { background-color: #fc6404; }
-#pause_button, #no-button { background-color: #757575; }
-#lab_button { background-color: #0454a4; }
+#back-button, #modal-back-button { background-color: #fc6404; }
+#lab-button, #modal-lab-button { background-color: #0454a4; }
+#pause-button { background-color: #757575; }
 
 #modal {
     display: none;
@@ -55,6 +56,10 @@ div#header, div#site {
     background-color: rgba(0, 0, 0, 0.4);
 }
 
+#modal-title {
+    margin-top: 2.5px;
+}
+
 #modal-content {
     background-color: #fefefe;
     margin: 15% auto;
@@ -63,28 +68,24 @@ div#header, div#site {
     width: 80%;
     max-width: 500px;
     border-radius: 5px;
-    text-align: left; /* Align text to the left */
+    text-align: left;
 }
 
 #modal-button-container {
     display: flex;
-    justify-content: flex-end; /* Align buttons to the right */
+    justify-content: flex-end;
 }
 
 #modal-button-container button {
     border: none;
     color: white;
-    padding: 10px 20px;
+    padding: 7.5px 15px;
     text-align: center;
     text-decoration: none;
     font-size: 16px;
     margin: 4px 2px;
     cursor: pointer;
     border-radius: 5px;
-}
-
-#no-button {
-    background-color: #757575; /* Ensuring the color is as specified */
 }
 
 </style>
@@ -101,10 +102,10 @@ data-base-url="{{base_url | urlencode}}"
     <div id="modal">
         <div id="modal-content">
             <h2 id="modal-title" style="text-align: left;"></h2>
-            <p id="modal-description"></p>
+            <p id="modal-description">Restart the session to create a new environment, or go to JupyterLab to use the existing environment.</p>
             <div id="modal-button-container">
-                <button id="yes-button">Restart Session</button>
-                <button id="no-button">Cancel</button>
+                <button id="modal-back-button">Restart session</button>
+                <button id="modal-lab-button">JupyterLab</button>
             </div>
         </div>
     </div>
@@ -123,10 +124,9 @@ data-base-url="{{base_url | urlencode}}"
         <br><br>
         <div id="output-box"></div>
         <div id="button-container">
-            <button class="action-buttons" id="back_button">Restart session</button>
-            <button class="action-buttons" id="cancel_button">Cancel</button>
-            <button class="action-buttons" id="pause_button">Pause</button>
-            <button class="action-buttons" id="lab_button">Jupyter Lab</button>
+            <button class="action-buttons" id="back-button">Restart session</button>
+            <button class="action-buttons" id="pause-button">Pause</button>
+            <button class="action-buttons" id="lab-button">JupyterLab</button>
         </div>
     </div>
 </div>
@@ -137,17 +137,13 @@ data-base-url="{{base_url | urlencode}}"
     {{super()}}
 
 <script type = "text/javascript">
-    const redirect2Config = () => {
-        window.location = `/hub/home?changeconfig`;
-    }
-    const redirect2Lab = (base_url, project_path) => {
-        console.log('Redirecting to lab: ', `${base_url}lab${project_path}`);
-        window.location = `${base_url}lab${project_path}`;
-    }
+    const redirect2Config = () => window.location = `/hub/home?changeconfig`;
+    const redirect2Lab = (base_url, project_path) => window.location = `${base_url}lab${project_path}`;
 
     var base_url = document.body.getAttribute('data-base-url');
     var project_path = '/';
     var env_name = `${base_url.split('/')[-1]}_env`;
+    var has_failed = false, is_created = false;
 
     const urlParams = new URLSearchParams(window.location.search);
     var repository = urlParams.get('repo') || "";
@@ -156,24 +152,20 @@ data-base-url="{{base_url | urlencode}}"
     // Environment creation elements
     var outputBox = document.getElementById('output-box');
     var loader = document.getElementById('swan-loader');
-    var back_button = document.getElementById('back_button');
-    var cancel_button = document.getElementById('cancel_button');
-    var pause_button = document.getElementById('pause_button');
-    var lab_button = document.getElementById('lab_button');
-    var has_failed = false;
-    var is_created = false;
+    var back_button = document.getElementById('back-button');
+    var pause_button = document.getElementById('pause-button');
+    var lab_button = document.getElementById('lab-button');
 
     // Modal elements
     var modal = document.getElementById("modal");
     var modalTitle = document.getElementById("modal-title");
-    var modalDescription = document.getElementById("modal-description");
-    var yesButton = document.getElementById("yes-button");
-    var noButton = document.getElementById("no-button");
+    var modalBackButton = document.getElementById("modal-back-button");
+    var modalJupyter = document.getElementById("modal-lab-button");
 
     // Create EventSource to listen for updates from the backend
     var eventSource = new EventSource(`${base_url}api/customenvs?repo=${encodeURIComponent(repository)}&accpy=${encodeURIComponent(accpy_version)}`);
 
-    // Update UI based every time a message is received
+    // Update UI every time a message is received
     eventSource.onmessage = (event) => {
         const message_line = event.data;
 
@@ -190,20 +182,19 @@ data-base-url="{{base_url | urlencode}}"
 
             // Environment already exists -> ask user if they want to reconfigure it
             } else if (is_created) {
-                modalTitle.innerHTML = `${env_name} is created already.`;
-                modalDescription.innerHTML = `Reconfiguring the environment will delete the current environment and allow you to configure a new one. Do you want to proceed?`;
-                yesButton.onclick = () => redirect2Config();
-                noButton.onclick = () => redirect2Lab(base_url, project_path);
+                modalTitle.innerHTML = `This session already has an environment (${env_name})`;
+                modalBackButton.onclick = () => redirect2Config();
+                modalJupyter.onclick = () => redirect2Lab(base_url, project_path);
                 modal.style.display = "block";
 
             // Output is fine -> change title if successful (and Next button to go to lab)
             } else {
-                let stop_clock = false, seconds = 3;
+                let stop_clock = false, seconds = 5;
                 loader.getElementsByClassName('text')[0].innerHTML = 'Environment created';
-                outputBox.innerHTML += `Environment ${env_name} created successfully.<br>Redirecting to Jupyter lab in `;
+                outputBox.innerHTML += `Environment ${env_name} created successfully.<br>Redirecting to JupyterLab in `;
                 outputBox.scrollTop = outputBox.scrollHeight;
-                cancel_button.style.display = 'block';
-                cancel_button.onclick = () => redirect2Config();
+                back_button.onclick = () => redirect2Config();
+                back_button.style.display = 'block';
                 pause_button.style.display = 'block';
                 pause_button.onclick = () => {
                     stop_clock = true
@@ -238,14 +229,13 @@ data-base-url="{{base_url | urlencode}}"
         // Environment already exists -> pops up a modal
         } else if (message_line.startsWith('ENVIRONMENT_ALREADY_EXISTS')) {
             is_created = true;
+            env_name = message_line.split(':')[1];
 
         // Usual case -> update output box with the message received
         } else {
             outputBox.innerHTML += message_line + '<br>';
             outputBox.scrollTop = outputBox.scrollHeight;
-            if (message_line.includes('ERROR')) {
-                has_failed = true;
-            }
+            has_failed = message_line.includes('ERROR');
         }
     };
 

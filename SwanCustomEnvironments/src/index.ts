@@ -8,7 +8,7 @@ import {
  */
 const plugin: JupyterFrontEndPlugin<void> = {
   id: 'swancustomenvironments:plugin',
-  description: 'Extension to provide support for venvs',
+  description: 'Extension to provide support for custom environments',
   autoStart: true,
   activate: (app: JupyterFrontEnd) => {
     console.log('JupyterLab extension swancustomenvironments is activated!');
