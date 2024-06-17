@@ -77,12 +77,9 @@ class TokenRefresher(threading.Thread):
         return ttl
 
 
-def load_jupyter_server_extension(nb_server_app):
+def _load_jupyter_server_extension(serverapp):
     """
     Called when the Jupyter server extension is loaded.
-
-    Args:
-        nb_server_app (NotebookWebApplication): handle to the Notebook webserver instance.
     """
     log = logging.getLogger('tornado.swanoauthrenew')
     log.name = "SwanOauthRenew"
@@ -91,7 +88,7 @@ def load_jupyter_server_extension(nb_server_app):
 
     log.info("Loading Server Extension")
 
-    config = SwanOauthRenew(config=nb_server_app.config)
+    config = SwanOauthRenew(config=serverapp.config)
     n_files = len(config.files)
     
     if n_files > 0:
