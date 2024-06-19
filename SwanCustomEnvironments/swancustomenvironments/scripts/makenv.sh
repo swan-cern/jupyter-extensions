@@ -85,6 +85,7 @@ if [ -z "$REPOSITORY" ]; then
 
 # Checks if the provided repository is a valid URL
 elif [[ $REPOSITORY == http* ]]; then
+    REPO_TYPE="git"
     # Extract the repository name
     repo_name=$(basename $REPOSITORY)
     repo_name=${repo_name%.*}
@@ -97,13 +98,22 @@ elif [[ $REPOSITORY == http* ]]; then
     ENV_NAME="${repo_name}_env"
 
 # Checks if the provided local repository is an EOS path and actually exists
-elif [[ $REPOSITORY == /eos/user* ]] && [ -d "$REPOSITORY" ]; then
-    REPO_PATH=$REPOSITORY
-    ENV_NAME="$(basename $REPO_PATH)_env"
-
 else
-    _log "ERROR: Invalid repository (${REPOSITORY})."
-    exit 1
+    REPO_TYPE="eos"
+    # Replace the CERNBOX_HOME variable with the actual path
+    if [[ $REPOSITORY == \$CERNBOX_HOME* ]]; then
+        REPOSITORY=$(echo $REPOSITORY | sed "s|\$CERNBOX_HOME|$HOME|g")
+    fi
+
+    # Replace eventual multiple slashes with a single one
+    REPOSITORY=$(echo $REPOSITORY | sed 's|//*|/|g')
+    if [[ $REPOSITORY == /eos/user* ]] && [ -d "$REPOSITORY" ]; then
+        REPO_PATH=$REPOSITORY
+        ENV_NAME="$(basename $REPO_PATH)_env"
+    else
+        _log "ERROR: Invalid repository (${REPOSITORY})."
+        exit 1
+    fi
 fi
 
 
@@ -154,10 +164,12 @@ _log "Installing packages from ${REQ_PATH}..."
 pip install ipykernel==${IPYKERNEL_VERSION} | tee -a "${LOG_FILE}"
 pip install -r "${REQ_PATH}" | tee -a "${LOG_FILE}"
 
-# Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder
-mkdir -p ${GIT_HOME}
-mv ${REPO_PATH} ${GIT_HOME}
-REPO_PATH="${GIT_HOME}/$(basename $REPO_PATH)"
+if [ ${REPO_TYPE} == "git" ]; then
+    # Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder
+    mkdir -p ${GIT_HOME}
+    mv ${REPO_PATH} ${GIT_HOME}
+    REPO_PATH="${GIT_HOME}/$(basename $REPO_PATH)"
+fi
 
 _log "REPO_PATH:${REPO_PATH#$HOME}"
 
