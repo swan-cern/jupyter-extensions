@@ -77,6 +77,10 @@ if [ -n "$ACCPY_VERSION" ] && [ ! -e "$ACCPY_PATH/base/$ACCPY_VERSION" ]; then
     exit 1
 fi
 
+REPO_GIT_PATTERN='^https?:\/\/(github\.com|gitlab\.cern\.ch)\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$'
+REPO_EOS_PATTERN='^\/eos\/user\/[a-z](\/[^<>|\\:()&;,]+)+\/?$'
+
+
 # Checks if a repository is provided
 if [ -z "$REPOSITORY" ]; then
     _log "ERROR: No repository provided." && _log
@@ -84,7 +88,7 @@ if [ -z "$REPOSITORY" ]; then
     exit 1
 
 # Checks if the provided repository is a valid URL
-elif [[ $REPOSITORY == http* ]]; then
+elif [[ $REPOSITORY =~ $REPO_GIT_PATTERN ]]; then
     REPO_TYPE="git"
     # Extract the repository name
     repo_name=$(basename $REPOSITORY)
@@ -107,7 +111,7 @@ else
 
     # Replace eventual multiple slashes with a single one
     REPOSITORY=$(echo $REPOSITORY | sed 's|//*|/|g')
-    if [[ $REPOSITORY == /eos/user* ]] && [ -d "$REPOSITORY" ]; then
+    if [[ $REPOSITORY =~ $REPO_EOS_PATTERN ]] && [ -d "$REPOSITORY" ]; then
         REPO_PATH=$REPOSITORY
         ENV_NAME="$(basename $REPO_PATH)_env"
     else
