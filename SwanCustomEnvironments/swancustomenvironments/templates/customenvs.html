@@ -147,6 +147,7 @@ data-base-url="{{base_url | urlencode}}"
 
     const urlParams = new URLSearchParams(window.location.search);
     var repository = urlParams.get('repo') || "";
+    var repository_type = urlParams.get('repo_type') || "";
     var accpy_version = urlParams.get('accpy') || "";
 
     // Environment creation elements
@@ -163,7 +164,7 @@ data-base-url="{{base_url | urlencode}}"
     var modalJupyter = document.getElementById("modal-lab-button");
 
     // Create EventSource to listen for updates from the backend
-    var eventSource = new EventSource(`${base_url}api/customenvs?repo=${encodeURIComponent(repository)}&accpy=${encodeURIComponent(accpy_version)}`);
+    var eventSource = new EventSource(`${base_url}api/customenvs?repo=${encodeURIComponent(repository)}&repo_type=${encodeURIComponent(repository_type)}&accpy=${encodeURIComponent(accpy_version)}`);
 
     // Update UI every time a message is received
     eventSource.onmessage = (event) => {
