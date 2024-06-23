@@ -4,12 +4,11 @@
 # Copyright CERN
 # This script allows to create an environment to use in notebooks and terminals. The environment contains the packages from a provided repository.
 
-
 LOG_FILE=/tmp/makenv.log # File to keep a backlog of this script output
 GIT_HOME="$HOME/SWAN_projects" # Path where git repositories are stored
 
 _log () {
-    if [ "$*" == "ERROR:"* ] || [ "$*" == "WARNING:"* ] || [ "${JUPYTER_DOCKER_STACKS_QUIET}" == "" ]; then
+    if [[ "$*" == "ERROR:"* ]] || [[ "$*" == "WARNING:"* ]] || [[ -z "${JUPYTER_DOCKER_STACKS_QUIET}" ]]; then
         echo "$@" | tee -a ${LOG_FILE}
     fi
 }
@@ -33,11 +32,12 @@ define_repo_path() {
 
 # Function for printing the help page
 print_help() {
-    _log "Usage: makenv --repo/-r REPOSITORY [--accpy ACCPY_VERSION] [--help/-h]"
+    _log "Usage: makenv --repo/-r REPOSITORY [--repo_type TYPE] [--accpy ACCPY_VERSION] [--help/-h]"
     _log "Options:"
     _log "  -r, --repo REPOSITORY       Path or http link for a public repository (mandatory)"
-    _log "  -h, --help                  Print this help page"
+    _log "  --repo_type TYPE            Type of repository (git or eos) (mandatory)"
     _log "  --accpy VERSION             Version of Acc-Py to be used"
+    _log "  -h, --help                  Print this help page"
 }
 
 # --------------------------------------------------------------------------------------------
@@ -48,6 +48,11 @@ while [ $# -gt 0 ]; do
     case $key in
         --repo|-r)
             REPOSITORY=$2
+            shift
+            shift
+            ;;
+        --repo_type)
+            REPO_TYPE=$2
             shift
             shift
             ;;
@@ -78,8 +83,7 @@ if [ -n "$ACCPY_VERSION" ] && [ ! -e "$ACCPY_PATH/base/$ACCPY_VERSION" ]; then
 fi
 
 REPO_GIT_PATTERN='^https?:\/\/(github\.com|gitlab\.cern\.ch)\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$'
-REPO_EOS_PATTERN='^\/eos\/user\/[a-z](\/[^<>|\\:()&;,]+)+\/?$'
-
+REPO_EOS_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,]+)*\/?|\/eos\/user\/[a-z](\/[^<>|\\:()&;,]+)+\/?)$'
 
 # Checks if a repository is provided
 if [ -z "$REPOSITORY" ]; then
@@ -87,9 +91,13 @@ if [ -z "$REPOSITORY" ]; then
     print_help
     exit 1
 
+elif [ -z "$REPO_TYPE" ]; then
+    _log "ERROR: No repository type provided." && _log
+    print_help
+    exit 1
+
 # Checks if the provided repository is a valid URL
-elif [[ $REPOSITORY =~ $REPO_GIT_PATTERN ]]; then
-    REPO_TYPE="git"
+elif [[ "$REPO_TYPE" == "git" ]] && [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
     # Extract the repository name
     repo_name=$(basename $REPOSITORY)
     repo_name=${repo_name%.*}
@@ -98,28 +106,27 @@ elif [[ $REPOSITORY =~ $REPO_GIT_PATTERN ]]; then
 
     # Clone the repository
     _log "Cloning the repository from ${REPOSITORY}..."
-    rm -rf "${REPO_PATH}" && git clone $REPOSITORY -q "${REPO_PATH}" || { _log "ERROR: Failed to clone repository"; exit 1; } | tee -a "${LOG_FILE}"
+    rm -rf "${REPO_PATH}" && git clone "$REPOSITORY" -q "${REPO_PATH}" || { _log "ERROR: Failed to clone repository"; exit 1; } | tee -a "${LOG_FILE}"
     ENV_NAME="${repo_name}_env"
 
 # Checks if the provided local repository is an EOS path and actually exists
-else
-    REPO_TYPE="eos"
-    # Replace the CERNBOX_HOME variable with the actual path
+elif [[ "$REPO_TYPE" == "eos" ]] && [[ "$REPOSITORY" =~ $REPO_EOS_PATTERN ]] && [ -d "$REPOSITORY" ]; then
+    # Replace, if necessary, the CERNBOX_HOME variable with the actual path
     if [[ $REPOSITORY == \$CERNBOX_HOME* ]]; then
         REPOSITORY=$(echo $REPOSITORY | sed "s|\$CERNBOX_HOME|$HOME|g")
     fi
 
     # Replace eventual multiple slashes with a single one
     REPOSITORY=$(echo $REPOSITORY | sed 's|//*|/|g')
-    if [[ $REPOSITORY =~ $REPO_EOS_PATTERN ]] && [ -d "$REPOSITORY" ]; then
-        REPO_PATH=$REPOSITORY
-        ENV_NAME="$(basename $REPO_PATH)_env"
-    else
-        _log "ERROR: Invalid repository (${REPOSITORY})."
-        exit 1
-    fi
-fi
 
+    REPO_PATH=$REPOSITORY
+    ENV_NAME="$(basename $REPO_PATH)_env"
+
+# The repository is not a valid URL or EOS path
+else
+    _log "ERROR: Invalid ${REPO_TYPE} repository (${REPOSITORY})." && _log
+    exit 1
+fi
 
 # --------------------------------------------------------------------------------------------
 # Create and set up the environment
@@ -146,33 +153,33 @@ fi
 
 # Create environment (acc-py or generic)
 if [ -n "$ACCPY_VERSION" ]; then
-    source $ACCPY_PATH/base/${ACCPY_VERSION}/setup.sh
-    acc-py venv ${ENV_PATH}
+    source "$ACCPY_PATH/base/${ACCPY_VERSION}/setup.sh"
+    acc-py venv "${ENV_PATH}"
 else
     _log "Creating environment ${ENV_NAME} using Generic Python..."
-    python -m venv ${ENV_PATH}
+    python -m venv "${ENV_PATH}"
 fi
 
 _log "ENV_NAME:${ENV_NAME}"
 
 # Make sure the Jupyter server finds the new environment kernel in /home/$USER/.local
 mkdir -p /home/$USER/.local/share/jupyter/kernels
-ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME} /home/$USER/.local/share/jupyter/kernels/${ENV_NAME}
+ln -f -s "${ENV_PATH}/share/jupyter/kernels/${ENV_NAME}" /home/$USER/.local/share/jupyter/kernels/${ENV_NAME}
 
 # Activate the environment
 _log "Setting up the environment..."
-source ${ENV_PATH}/bin/activate
+source "${ENV_PATH}/bin/activate"
 
 # Install packages in the environment and the same ipykernel that the Jupyter server uses
 _log "Installing packages from ${REQ_PATH}..."
-pip install ipykernel==${IPYKERNEL_VERSION} | tee -a "${LOG_FILE}"
+pip install ipykernel=="${IPYKERNEL_VERSION}" | tee -a "${LOG_FILE}"
 pip install -r "${REQ_PATH}" | tee -a "${LOG_FILE}"
 
-if [ ${REPO_TYPE} == "git" ]; then
+if [[ "$REPO_TYPE" == "git" ]]; then
     # Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder
-    mkdir -p ${GIT_HOME}
-    mv ${REPO_PATH} ${GIT_HOME}
-    REPO_PATH="${GIT_HOME}/$(basename $REPO_PATH)"
+    mkdir -p "${GIT_HOME}"
+    mv "${REPO_PATH}" "${GIT_HOME}"
+    REPO_PATH="${GIT_HOME}/$(basename "$REPO_PATH")"
 fi
 
 _log "REPO_PATH:${REPO_PATH#$HOME}"
