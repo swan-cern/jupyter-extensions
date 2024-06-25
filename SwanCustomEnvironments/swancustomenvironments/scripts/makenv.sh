@@ -194,9 +194,6 @@ fi
 
 
 # Checks if the provided notebook is valid and exists
-if [[ $NOTEBOOK == \$CERNBOX_HOME* ]]; then
-    NOTEBOOK=$(echo $NOTEBOOK | sed "s|\$CERNBOX_HOME|$CERNBOX_HOME|g")
-fi
 if [ -n "$NOTEBOOK" ] && [[ ! "$NOTEBOOK" =~ $REPO_NOTEBOOK_PATTERN || ! -f "$NOTEBOOK" ]]; then
     _log "ERROR: Invalid notebook path (${NOTEBOOK})."
     exit 1
@@ -205,7 +202,7 @@ fi
 
 # If a notebook is provided, redirect the user to it, otherwise to the repository path
 if [ -n "$NOTEBOOK" ]; then
-    _log "REPO_PATH:${NOTEBOOK#$CERNBOX_HOME}"
+    _log "REPO_PATH:${NOTEBOOK}"
 else
     _log "REPO_PATH:${REPO_PATH#$CERNBOX_HOME}"
 fi

@@ -165,7 +165,7 @@ data-base-url="{{base_url | urlencode}}"
     var modalJupyter = document.getElementById("modal-lab-button");
 
     // Create EventSource to listen for updates from the backend
-    var eventSource = new EventSource(`${base_url}api/customenvs?repo=${encodeURIComponent(repository)}&repo_type=${encodeURIComponent(repo_type)}&notebook=${encodeURIComponent(notebook)}&accpy=${encodeURIComponent(accpy_version)}`);
+    var eventSource = new EventSource(url_escape(`${base_url}api/customenvs?repo=${repository}&repo_type=${repo_type}&notebook=${notebook}&accpy=${accpy_version}`));
 
     // Update UI every time a message is received
     eventSource.onmessage = (event) => {
@@ -221,7 +221,7 @@ data-base-url="{{base_url | urlencode}}"
         } else if (message_line.startsWith('REPO_PATH')) {
             const repo_path = message_line.split(':')[1];
             if (repo_path && repo_path !== '/') {
-                project_path = `/tree${repo_path}`;
+                project_path = `/tree/${repo_path}`;
             }
 
         // Get the environment name from the output
