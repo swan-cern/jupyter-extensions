@@ -55,11 +55,15 @@ data-ws-path="{{ws_path}}"
             terminal.term.fit();
         }
 
-        window.onresize = resize;
+        addEventListener("resize", resize);
 
-        terminal.socket.addEventListener('open', function () {
+            (async() => {
+            // waiting for variable
+            while(!window.hasOwnProperty("terminal")) {
+                await new Promise(resolve => setTimeout(resolve, 100));
+            }
             resize();
-        });
+        })();
     });
 
 </script>
