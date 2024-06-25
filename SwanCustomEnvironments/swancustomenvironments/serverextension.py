@@ -5,6 +5,7 @@ from jupyter_server.utils import url_path_join
 
 import subprocess
 from os import path
+from re import match
 
 
 class SwanCustomEnvironmentsApiHandler(APIHandler):
@@ -17,7 +18,7 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
 
     # Path to the script used to create custom environments
     makenv_path = path.join(path.dirname(__file__), "scripts/makenv.sh")
-
+    
     @web.authenticated
     def get(self):
         """
@@ -30,17 +31,20 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         repository = self.get_query_argument("repo", default=None)
         repository_type = self.get_query_argument("repo_type", default=None)
         accpy_version = self.get_query_argument("accpy", default=None)
+        notebook = self.get_query_argument("notebook", default='')
 
         arguments = ["--repo", repository, "--repo_type", repository_type]
-        if accpy_version is not None:
+        if accpy_version:
             arguments.extend(["--accpy", accpy_version])
+        if notebook:
+            arguments.extend(["--notebook", notebook])
         
         makenv_process = subprocess.Popen([self.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
         
         for line in iter(makenv_process.stdout.readline, b""):
             self.write(f"data: {line.decode('utf-8')}\n\n")
             self.flush()
-            
+
         self.finish("data: EOF\n\n")
 
 

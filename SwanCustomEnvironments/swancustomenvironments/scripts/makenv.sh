@@ -32,11 +32,12 @@ define_repo_path() {
 
 # Function for printing the help page
 print_help() {
-    _log "Usage: makenv --repo/-r REPOSITORY [--repo_type TYPE] [--accpy ACCPY_VERSION] [--help/-h]"
+    _log "Usage: makenv --repo/-r REPOSITORY [--repo_type TYPE] [--accpy ACCPY_VERSION] [--notebook NOTEBOOK] [--help/-h]"
     _log "Options:"
     _log "  -r, --repo REPOSITORY       Path or http link for a public repository (mandatory)"
     _log "  --repo_type TYPE            Type of repository (git or eos) (mandatory)"
     _log "  --accpy VERSION             Version of Acc-Py to be used"
+    _log "  --notebook NOTEBOOK         Path to the notebook to be opened"
     _log "  -h, --help                  Print this help page"
 }
 
@@ -61,6 +62,11 @@ while [ $# -gt 0 ]; do
             shift
             shift
             ;;
+        --notebook)
+            NOTEBOOK=$2
+            shift
+            shift
+            ;;
         --help|-h)
             print_help
             exit 0
@@ -76,14 +82,15 @@ done
 # --------------------------------------------------------------------------------------------
 # Validate input arguments
 
+REPO_GIT_PATTERN='^https?:\/\/(github\.com|gitlab\.cern\.ch)\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$'
+REPO_EOS_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,]+)*\/?|\/eos\/user\/[a-z](\/[^<>|\\:()&;,]+)+\/?)$'
+REPO_NOTEBOOK_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,]+)*\/?|\/eos\/user\/[a-z](\/[^<>|\\:()&;,]+)+)\/[^<>|\\:()&;,\/]+\.ipynb$'
+
 # Checks if the provided Acc-Py version is valid
 if [ -n "$ACCPY_VERSION" ] && [ ! -e "$ACCPY_PATH/base/$ACCPY_VERSION" ]; then
     _log "ERROR: Invalid Acc-Py version (${ACCPY_VERSION})."
     exit 1
 fi
-
-REPO_GIT_PATTERN='^https?:\/\/(github\.com|gitlab\.cern\.ch)\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$'
-REPO_EOS_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,]+)*\/?|\/eos\/user\/[a-z](\/[^<>|\\:()&;,]+)+\/?)$'
 
 # Checks if a repository is provided
 if [ -z "$REPOSITORY" ]; then
@@ -113,7 +120,7 @@ elif [[ "$REPO_TYPE" == "git" ]] && [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; th
 elif [[ "$REPO_TYPE" == "eos" ]] && [[ "$REPOSITORY" =~ $REPO_EOS_PATTERN ]]; then
     # Replace, if necessary, the CERNBOX_HOME variable with the actual path
     if [[ $REPOSITORY == \$CERNBOX_HOME* ]]; then
-        REPOSITORY=$(echo $REPOSITORY | sed "s|\$CERNBOX_HOME|$HOME|g")
+        REPOSITORY=$(echo $REPOSITORY | sed "s|\$CERNBOX_HOME|$CERNBOX_HOME|g")
     fi
 
     # Replace eventual multiple slashes with a single one
@@ -150,7 +157,7 @@ CURRENT_REPO_PATH=$(tail -n 1 "/home/$USER/.bash_profile" | cut -d ' ' -f2)
 # Check if an environment already exists in the session
 if [ -n "${CURRENT_ENV_NAME}" ]; then
     _log "ENVIRONMENT_ALREADY_EXISTS:${CURRENT_ENV_NAME}"
-    _log "REPO_PATH:${CURRENT_REPO_PATH#$HOME}"
+    _log "REPO_PATH:${CURRENT_REPO_PATH#$CERNBOX_HOME}"
     exit 1
 fi
 
@@ -185,7 +192,23 @@ if [[ "$REPO_TYPE" == "git" ]]; then
     REPO_PATH="${GIT_HOME}/$(basename "$REPO_PATH")"
 fi
 
-_log "REPO_PATH:${REPO_PATH#$HOME}"
+
+# Checks if the provided notebook is valid and exists
+if [[ $NOTEBOOK == \$CERNBOX_HOME* ]]; then
+    NOTEBOOK=$(echo $NOTEBOOK | sed "s|\$CERNBOX_HOME|$CERNBOX_HOME|g")
+fi
+if [ -n "$NOTEBOOK" ] && [[ ! "$NOTEBOOK" =~ $REPO_NOTEBOOK_PATTERN || ! -f "$NOTEBOOK" ]]; then
+    _log "ERROR: Invalid notebook path (${NOTEBOOK})."
+    exit 1
+
+fi
+
+# If a notebook is provided, redirect the user to it, otherwise to the repository path
+if [ -n "$NOTEBOOK" ]; then
+    _log "REPO_PATH:${NOTEBOOK#$CERNBOX_HOME}"
+else
+    _log "REPO_PATH:${REPO_PATH#$CERNBOX_HOME}"
+fi
 
 # Install a Jupyter kernel for the environment
 python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" | tee -a "${LOG_FILE}"
