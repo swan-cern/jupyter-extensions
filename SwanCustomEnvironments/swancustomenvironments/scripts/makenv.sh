@@ -83,8 +83,8 @@ done
 # Validate input arguments
 
 REPO_GIT_PATTERN='^https?:\/\/(github\.com|gitlab\.cern\.ch)\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$'
-REPO_EOS_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,]+)*\/?|\/eos\/user\/[a-z](\/[^<>|\\:()&;,]+)+\/?)$'
-REPO_NOTEBOOK_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,]+)*\/?|\/eos\/user\/[a-z](\/[^<>|\\:()&;,]+)+)\/[^<>|\\:()&;,\/]+\.ipynb$'
+REPO_EOS_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,\/]+)*\/?|\/eos\/user\/[a-z](\/[^<>|\\:()&;,\/]+)+\/?)$'
+REPO_NOTEBOOK_PATTERN='^([^<>|\\:()&;,\/]+\/)*[^<>|\\:()&;,\/]+\.ipynb$'
 
 # Checks if the provided Acc-Py version is valid
 if [ -n "$ACCPY_VERSION" ] && [ ! -e "$ACCPY_PATH/base/$ACCPY_VERSION" ]; then
@@ -192,19 +192,17 @@ if [[ "$REPO_TYPE" == "git" ]]; then
     REPO_PATH="${GIT_HOME}/$(basename "$REPO_PATH")"
 fi
 
+_log "REPO_PATH:${REPO_PATH#$CERNBOX_HOME}"
 
 # Checks if the provided notebook is valid and exists
-if [ -n "$NOTEBOOK" ] && [[ ! "$NOTEBOOK" =~ $REPO_NOTEBOOK_PATTERN || ! -f "$NOTEBOOK" ]]; then
-    _log "ERROR: Invalid notebook path (${NOTEBOOK})."
-    exit 1
-
-fi
-
-# If a notebook is provided, redirect the user to it, otherwise to the repository path
 if [ -n "$NOTEBOOK" ]; then
-    _log "REPO_PATH:${NOTEBOOK}"
-else
-    _log "REPO_PATH:${REPO_PATH#$CERNBOX_HOME}"
+    if [[ ! "$NOTEBOOK" =~ $REPO_NOTEBOOK_PATTERN || ! -f "$CERNBOX_HOME$NOTEBOOK" ]]; then
+        _log "ERROR: Invalid notebook path (${NOTEBOOK})."
+        exit 1
+    else
+        # If a notebook is provided, redirect the user to it, otherwise to the repository path
+        _log "REPO_PATH:${NOTEBOOK}"
+    fi
 fi
 
 # Install a Jupyter kernel for the environment
