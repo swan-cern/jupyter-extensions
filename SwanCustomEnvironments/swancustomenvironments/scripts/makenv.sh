@@ -128,7 +128,7 @@ elif [[ "$REPO_TYPE" == "eos" ]] && [[ "$REPOSITORY" =~ $REPO_EOS_PATTERN ]]; th
     ENV_NAME="$(basename $REPO_PATH)_env"
 
     if [ ! -d "${REPO_PATH}" ]; then
-        _log "ERROR: Invalid ${REPO_TYPE} repository (${REPOSITORY})." && _log
+        _log "ERROR: Invalid ${REPO_TYPE} repository (${REPO_PATH})." && _log
         exit 1
     fi
 
