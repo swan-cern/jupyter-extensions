@@ -116,8 +116,8 @@ elif [[ "$REPO_TYPE" == "eos" ]] && [[ "$REPOSITORY" =~ $REPO_EOS_PATTERN ]]; th
         REPOSITORY=$(echo $REPOSITORY | sed "s|\$CERNBOX_HOME|$CERNBOX_HOME|g")
     fi
 
-    # Replace eventual multiple slashes with a single one, remove the trailing slash, if any, and remove "../" and "./" 
-    REPO_PATH=$(echo $REPOSITORY | sed 's|/\+|/|g; s|/$||; s|\.\./||g; s|\./||g')
+    # Replace eventual multiple slashes with a single one, remove the trailing slash, if any, and remove every "../" and "./"
+    REPO_PATH=$(echo "$REPOSITORY" | sed 's|/$||; s|\.\./|/|g; s|\./|/|g; s|/\+|/|g')
     ENV_NAME="$(basename $REPO_PATH)_env"
 
     if [ ! -d "${REPO_PATH}" ]; then
