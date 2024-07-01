@@ -181,9 +181,9 @@ data-base-url="{{base_url | urlencode}}"
                 back_button.onclick = () => redirect2Config();
                 back_button.style.display = 'block';
 
-            // Environment already exists -> ask user if they want to reconfigure it
+            // Environment exists already -> ask user if they want to reconfigure it
             } else if (is_created) {
-                modalTitle.innerHTML = `This session already has an environment (${env_name})`;
+                modalTitle.innerHTML = `This session has already an environment named ${env_name}`;
                 modalBackButton.onclick = () => redirect2Config();
                 modalJupyter.onclick = () => redirect2Lab(base_url, project_path);
                 modal.style.display = "block";
