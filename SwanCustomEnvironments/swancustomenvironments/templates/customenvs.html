@@ -237,7 +237,9 @@ data-base-url="{{base_url | urlencode}}"
         } else {
             outputBox.innerHTML += message_line + '<br>';
             outputBox.scrollTop = outputBox.scrollHeight;
-            has_failed = message_line.includes('ERROR');
+            if (message_line.includes('ERROR')) {
+                has_failed = true;
+            }
         }
     };
 

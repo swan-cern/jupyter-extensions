@@ -123,8 +123,8 @@ elif [[ "$REPO_TYPE" == "eos" ]] && [[ "$REPOSITORY" =~ $REPO_EOS_PATTERN ]]; th
         REPOSITORY=$(echo $REPOSITORY | sed "s|\$CERNBOX_HOME|$CERNBOX_HOME|g")
     fi
 
-    # Replace eventual multiple slashes with a single one
-    REPO_PATH=$(echo $REPOSITORY | sed 's|//*|/|g')
+    # Replace eventual multiple slashes with a single one and remove the trailing slash, if any
+    REPO_PATH=$(echo $REPOSITORY | sed 's|/\+|/|g' | sed 's|/$||')
     ENV_NAME="$(basename $REPO_PATH)_env"
 
     if [ ! -d "${REPO_PATH}" ]; then
@@ -140,7 +140,11 @@ fi
 
 # --------------------------------------------------------------------------------------------
 # Create and set up the environment
+
 ENV_PATH="/home/$USER/${ENV_NAME}"
+REQ_PATH="${REPO_PATH}/requirements.txt"
+IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
+
 # Check if requirements.txt exists in the repository
 if [ ! -f "${REQ_PATH}" ]; then
     _log "ERROR: Requirements file not found (${REQ_PATH})."
