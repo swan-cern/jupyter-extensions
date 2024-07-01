@@ -76,14 +76,14 @@ done
 # --------------------------------------------------------------------------------------------
 # Validate input arguments
 
+REPO_GIT_PATTERN='^https?:\/\/(github\.com|gitlab\.cern\.ch)\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$'
+REPO_EOS_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,\/]+)*\/?|\/eos\/user\/[a-z](\/[^<>|\\:()&;,\/]+)+\/?)$'
+
 # Checks if the provided Acc-Py version is valid
 if [ -n "$ACCPY_VERSION" ] && [ ! -e "$ACCPY_PATH/base/$ACCPY_VERSION" ]; then
     _log "ERROR: Invalid Acc-Py version (${ACCPY_VERSION})."
     exit 1
 fi
-
-REPO_GIT_PATTERN='^https?:\/\/(github\.com|gitlab\.cern\.ch)\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$'
-REPO_EOS_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,]+)*\/?|\/eos\/user\/[a-z](\/[^<>|\\:()&;,]+)+\/?)$'
 
 # Checks if a repository is provided
 if [ -z "$REPOSITORY" ]; then
@@ -113,7 +113,7 @@ elif [[ "$REPO_TYPE" == "git" ]] && [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; th
 elif [[ "$REPO_TYPE" == "eos" ]] && [[ "$REPOSITORY" =~ $REPO_EOS_PATTERN ]]; then
     # Replace, if necessary, the CERNBOX_HOME variable with the actual path
     if [[ $REPOSITORY == \$CERNBOX_HOME* ]]; then
-        REPOSITORY=$(echo $REPOSITORY | sed "s|\$CERNBOX_HOME|$HOME|g")
+        REPOSITORY=$(echo $REPOSITORY | sed "s|\$CERNBOX_HOME|$CERNBOX_HOME|g")
     fi
 
     # Replace eventual multiple slashes with a single one and remove the trailing slash, if any
@@ -121,7 +121,7 @@ elif [[ "$REPO_TYPE" == "eos" ]] && [[ "$REPOSITORY" =~ $REPO_EOS_PATTERN ]]; th
     ENV_NAME="$(basename $REPO_PATH)_env"
 
     if [ ! -d "${REPO_PATH}" ]; then
-        _log "ERROR: Invalid ${REPO_TYPE} repository (${REPOSITORY})." && _log
+        _log "ERROR: Invalid ${REPO_TYPE} repository (${REPO_PATH})." && _log
         exit 1
     fi
 
@@ -150,7 +150,7 @@ CURRENT_REPO_PATH=$(tail -n 1 "/home/$USER/.bash_profile" | cut -d ' ' -f2)
 # Check if an environment already exists in the session
 if [ -n "${CURRENT_ENV_NAME}" ]; then
     _log "ENVIRONMENT_ALREADY_EXISTS:${CURRENT_ENV_NAME}"
-    _log "REPO_PATH:${CURRENT_REPO_PATH#$HOME}"
+    _log "REPO_PATH:${CURRENT_REPO_PATH#$CERNBOX_HOME}"
     exit 1
 fi
 
@@ -185,7 +185,7 @@ if [[ "$REPO_TYPE" == "git" ]]; then
     REPO_PATH="${GIT_HOME}/$(basename "$REPO_PATH")"
 fi
 
-_log "REPO_PATH:${REPO_PATH#$HOME}"
+_log "REPO_PATH:${REPO_PATH#$CERNBOX_HOME}"
 
 # Install a Jupyter kernel for the environment
 python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" | tee -a "${LOG_FILE}"
