@@ -5,20 +5,14 @@ from jupyter_server.utils import url_path_join
 
 import subprocess
 from os import path
-from re import match
 
 
 class SwanCustomEnvironmentsApiHandler(APIHandler):
-    """
-    API handler for creating custom environments
-    Runs a local script to create a custom environment and streams the output to the client
-    Environment name and repository URL are passed as query arguments and are mandatory
-    ACCPy version is optional (if not provided, generic python is used)
-    """
+    """API handler for creating custom environments"""
 
     # Path to the script used to create custom environments
     makenv_path = path.join(path.dirname(__file__), "scripts/makenv.sh")
-    
+
     @web.authenticated
     def get(self):
         """
