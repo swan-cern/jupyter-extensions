@@ -150,7 +150,7 @@ CURRENT_REPO_PATH=$(tail -n 1 "/home/$USER/.bash_profile" | cut -d ' ' -f2)
 # Check if an environment already exists in the session
 if [ -n "${CURRENT_ENV_NAME}" ]; then
     _log "ENVIRONMENT_ALREADY_EXISTS:${CURRENT_ENV_NAME}"
-    _log "REPO_PATH:${CURRENT_REPO_PATH#$CERNBOX_HOME}"
+    _log "REPO_PATH:${CURRENT_REPO_PATH#$HOME}"
     exit 1
 fi
 
@@ -185,7 +185,7 @@ if [[ "$REPO_TYPE" == "git" ]]; then
     REPO_PATH="${GIT_HOME}/$(basename "$REPO_PATH")"
 fi
 
-_log "REPO_PATH:${REPO_PATH#$CERNBOX_HOME}"
+_log "REPO_PATH:${REPO_PATH#$HOME}"
 
 # Install a Jupyter kernel for the environment
 python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" | tee -a "${LOG_FILE}"
