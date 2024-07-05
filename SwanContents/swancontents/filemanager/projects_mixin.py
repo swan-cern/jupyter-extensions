@@ -167,7 +167,14 @@ class ProjectsMixin(HasTraits):
             raise web.HTTPError(500, f"Unexpected error while creating a Project: {path} {e}") from e
         
         return self.get(path, content=False)
-        
+
+    def new(self, model=None, path=''):
+        if model and 'type' in model and 'ext' in model and \
+                model['type'] == 'directory' and model['ext'] == 'project':
+            model['is_project'] = True
+            model['ext'] = ''
+        return super().new(model, path)
+
 
     def new_untitled(self, path='', type='', ext=''):
         """ Create a new untitled file or directory in path
