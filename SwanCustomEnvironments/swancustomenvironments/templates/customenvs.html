@@ -38,7 +38,7 @@ div#header, div#site {
     font-size: 16px;
     cursor: pointer;
     transition: background-color 0.3s ease;
-    margin: 5px;
+    margin: 20px;
 }
 #back-button, #modal-back-button { background-color: #fc6404; }
 #lab-button, #modal-lab-button { background-color: #0454a4; }
@@ -147,6 +147,7 @@ data-base-url="{{base_url | urlencode}}"
 
     const urlParams = new URLSearchParams(window.location.search);
     var repository = urlParams.get('repo') || "";
+    var repository_type = urlParams.get('repo_type') || "";
     var accpy_version = urlParams.get('accpy') || "";
 
     // Environment creation elements
@@ -163,7 +164,7 @@ data-base-url="{{base_url | urlencode}}"
     var modalJupyter = document.getElementById("modal-lab-button");
 
     // Create EventSource to listen for updates from the backend
-    var eventSource = new EventSource(`${base_url}api/customenvs?repo=${encodeURIComponent(repository)}&accpy=${encodeURIComponent(accpy_version)}`);
+    var eventSource = new EventSource(`${base_url}api/customenvs?repo=${encodeURIComponent(repository)}&repo_type=${encodeURIComponent(repository_type)}&accpy=${encodeURIComponent(accpy_version)}`);
 
     // Update UI every time a message is received
     eventSource.onmessage = (event) => {
@@ -180,9 +181,9 @@ data-base-url="{{base_url | urlencode}}"
                 back_button.onclick = () => redirect2Config();
                 back_button.style.display = 'block';
 
-            // Environment already exists -> ask user if they want to reconfigure it
+            // Environment exists already -> ask user if they want to reconfigure it
             } else if (is_created) {
-                modalTitle.innerHTML = `This session already has an environment (${env_name})`;
+                modalTitle.innerHTML = `This session has already an environment named ${env_name}`;
                 modalBackButton.onclick = () => redirect2Config();
                 modalJupyter.onclick = () => redirect2Lab(base_url, project_path);
                 modal.style.display = "block";
