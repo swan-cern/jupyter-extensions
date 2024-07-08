@@ -1,0 +1,254 @@
+{% extends "page.html" %}
+
+{% block stylesheet %}
+{{super()}}
+<style type="text/css">
+/* disable initial hide */
+div#header, div#site {
+    display: block;
+}
+#output-box {
+    display: block;
+    width: 1150px;
+    height: 300px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    white-space: pre-wrap;
+    text-align: left;
+    border: 1px solid #ccc;
+    background-color: #f7f7f7;
+    padding: 10px;
+    border-radius: 5px;
+    margin-top: 15px;
+}
+#button-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    margin-top: 25px;
+}
+.action-buttons {
+    display: none;
+    text-align: center;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin: 20px;
+}
+#back-button, #modal-back-button { background-color: #fc6404; }
+#lab-button, #modal-lab-button { background-color: #0454a4; }
+#pause-button { background-color: #757575; }
+
+#modal {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+#modal-title {
+    margin-top: 2.5px;
+}
+
+#modal-content {
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    max-width: 500px;
+    border-radius: 5px;
+    text-align: left;
+}
+
+#modal-button-container {
+    display: flex;
+    justify-content: flex-end;
+}
+
+#modal-button-container button {
+    border: none;
+    color: white;
+    padding: 7.5px 15px;
+    text-align: center;
+    text-decoration: none;
+    font-size: 16px;
+    margin: 4px 2px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+</style>
+{% endblock %}
+
+{% block params %}
+{{super()}}
+data-base-url="{{base_url | urlencode}}"
+{% endblock %}
+
+{% block site %}
+
+<div class="container">
+    <div id="modal">
+        <div id="modal-content">
+            <h2 id="modal-title" style="text-align: left;"></h2>
+            <p id="modal-description">Restart the session to create a new environment, or go to JupyterLab to use the existing environment.</p>
+            <div id="modal-button-container">
+                <button id="modal-back-button">Restart session</button>
+                <button id="modal-lab-button">JupyterLab</button>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="swan-info">
+            <div id="swan-loader">
+                <div class="loader-circle">
+                    <img src="{{hub_prefix}}static/swan/logos/{{swan_logo_filename}}">
+                </div>
+                <div class="loader-line-mask">
+                    <div class="loader-line"></div>
+                </div>
+                <span class="text">Creating environment...</span>
+            </div>
+        </div>
+        <br><br>
+        <div id="output-box"></div>
+        <div id="button-container">
+            <button class="action-buttons" id="back-button">Restart session</button>
+            <button class="action-buttons" id="pause-button">Pause</button>
+            <button class="action-buttons" id="lab-button">JupyterLab</button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block script %}
+    {{super()}}
+
+<script type = "text/javascript">
+    const redirect2Config = () => window.location = `/hub/home?changeconfig`;
+    const redirect2Lab = (base_url, project_path) => window.location = `${base_url}lab${project_path}`;
+
+    var base_url = document.body.getAttribute('data-base-url');
+    var project_path = '/';
+    var env_name = `${base_url.split('/')[-1]}_env`;
+    var has_failed = false, is_created = false;
+
+    const urlParams = new URLSearchParams(window.location.search);
+    var repository = urlParams.get('repo') || "";
+    var repository_type = urlParams.get('repo_type') || "";
+    var accpy_version = urlParams.get('accpy') || "";
+
+    // Environment creation elements
+    var outputBox = document.getElementById('output-box');
+    var loader = document.getElementById('swan-loader');
+    var back_button = document.getElementById('back-button');
+    var pause_button = document.getElementById('pause-button');
+    var lab_button = document.getElementById('lab-button');
+
+    // Modal elements
+    var modal = document.getElementById("modal");
+    var modalTitle = document.getElementById("modal-title");
+    var modalBackButton = document.getElementById("modal-back-button");
+    var modalJupyter = document.getElementById("modal-lab-button");
+
+    // Create EventSource to listen for updates from the backend
+    var eventSource = new EventSource(`${base_url}api/customenvs?repo=${encodeURIComponent(repository)}&repo_type=${encodeURIComponent(repository_type)}&accpy=${encodeURIComponent(accpy_version)}`);
+
+    // Update UI every time a message is received
+    eventSource.onmessage = (event) => {
+        const message_line = event.data;
+
+        // Close SSE connection -> update UI when done
+        if (message_line === 'EOF') {
+            eventSource.close();
+            loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
+
+            // Output has errors -> change title and show button for going back to spawner
+            if (has_failed) {
+                loader.getElementsByClassName('text')[0].innerHTML = 'Error creating environment';
+                back_button.onclick = () => redirect2Config();
+                back_button.style.display = 'block';
+
+            // Environment exists already -> ask user if they want to reconfigure it
+            } else if (is_created) {
+                modalTitle.innerHTML = `This session has already an environment named ${env_name}`;
+                modalBackButton.onclick = () => redirect2Config();
+                modalJupyter.onclick = () => redirect2Lab(base_url, project_path);
+                modal.style.display = "block";
+
+            // Output is fine -> change title if successful (and Next button to go to lab)
+            } else {
+                let stop_clock = false, seconds = 5;
+                loader.getElementsByClassName('text')[0].innerHTML = 'Environment created';
+                outputBox.innerHTML += `Environment ${env_name} created successfully.<br>Redirecting to JupyterLab in `;
+                outputBox.scrollTop = outputBox.scrollHeight;
+                back_button.onclick = () => redirect2Config();
+                back_button.style.display = 'block';
+                pause_button.style.display = 'block';
+                pause_button.onclick = () => {
+                    stop_clock = true
+                    lab_button.style.display = 'block';
+                    pause_button.style.display = 'none';
+                    lab_button.onclick = () => redirect2Lab(base_url, project_path);
+                };
+                const countdown = setInterval(() => {
+                    if (stop_clock) {
+                        clearInterval(countdown);
+                    } else if (seconds <= 0) {
+                        clearInterval(countdown);
+                        redirect2Lab(base_url, project_path);
+                    } else {
+                        outputBox.innerHTML += `${seconds}...`;
+                        seconds--;
+                    }
+                }, 1000);
+            }
+
+        // Get the project path from the output
+        } else if (message_line.startsWith('REPO_PATH')) {
+            const repo_path = message_line.split(':')[1];
+            if (repo_path && repo_path !== '/') {
+                project_path = `/tree${repo_path}`;
+            }
+
+        // Get the environment name from the output
+        } else if (message_line.startsWith('ENV_NAME')) {
+            env_name = message_line.split(':')[1];
+
+        // Environment already exists -> pops up a modal
+        } else if (message_line.startsWith('ENVIRONMENT_ALREADY_EXISTS')) {
+            is_created = true;
+            env_name = message_line.split(':')[1];
+
+        // Usual case -> update output box with the message received
+        } else {
+            outputBox.innerHTML += message_line + '<br>';
+            outputBox.scrollTop = outputBox.scrollHeight;
+            if (message_line.includes('ERROR')) {
+                has_failed = true;
+            }
+        }
+    };
+
+    // Handle any errors that occur with the EventSource connection
+    eventSource.onerror = (err) => {
+        loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
+        loader.getElementsByClassName('text')[0].innerHTML = 'Error creating environment';
+        back_button.style.display = 'block';
+    };
+
+
+</script>
+{% endblock %}
