@@ -23,9 +23,10 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         self.set_header("Content-Type", "text/event-stream")
 
         repository = self.get_query_argument("repo", default=None)
+        repository_type = self.get_query_argument("repo_type", default=None)
         accpy_version = self.get_query_argument("accpy", default=None)
 
-        arguments = ["--repo", repository]
+        arguments = ["--repo", repository, "--repo_type", repository_type]
         if accpy_version is not None:
             arguments.extend(["--accpy", accpy_version])
         
