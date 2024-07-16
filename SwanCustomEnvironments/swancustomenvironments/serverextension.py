@@ -19,16 +19,20 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         Gets the arguments from the query string and runs the makenv.sh script with them.
         repo (str): The git URL or absolute unix path to the repository.
         accpy (str): The version of Accpy to be installed in the environment (optional).
+        notebook (str): The path to the notebook to be automatically opened in the environment (optional).
         """
         self.set_header("Content-Type", "text/event-stream")
 
         repository = self.get_query_argument("repo", default='')
         repository_type = self.get_query_argument("repo_type", default='')
         accpy_version = self.get_query_argument("accpy", default='')
+        notebook = self.get_query_argument("notebook", default='')
 
         arguments = ["--repo", repository, "--repo_type", repository_type]
-        if accpy_version == '':
+        if accpy_version != '':
             arguments.extend(["--accpy", accpy_version])
+        if notebook != '':
+            arguments.extend(["--notebook", notebook])
 
         makenv_process = subprocess.Popen([self.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
