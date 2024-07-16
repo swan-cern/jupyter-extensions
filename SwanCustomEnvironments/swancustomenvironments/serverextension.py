@@ -22,16 +22,16 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         """
         self.set_header("Content-Type", "text/event-stream")
 
-        repository = self.get_query_argument("repo", default=None)
-        repository_type = self.get_query_argument("repo_type", default=None)
-        accpy_version = self.get_query_argument("accpy", default=None)
+        repository = self.get_query_argument("repo", default='')
+        repository_type = self.get_query_argument("repo_type", default='')
+        accpy_version = self.get_query_argument("accpy", default='')
 
         arguments = ["--repo", repository, "--repo_type", repository_type]
-        if accpy_version is not None:
+        if accpy_version == '':
             arguments.extend(["--accpy", accpy_version])
-        
+
         makenv_process = subprocess.Popen([self.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        
+
         for line in iter(makenv_process.stdout.readline, b""):
             self.write(f"data: {line.decode('utf-8')}\n\n")
             self.flush()
