@@ -80,11 +80,11 @@ jobs:
         draft: false
         prerelease: false
 
-    - name: Invoke workflow in systemuser-image
+    - name: Invoke workflow in jupyter-images
       uses: benc-uk/workflow-dispatch@v1
       with:
-        workflow: SWAN CI/CD pipeline
-        ref: master
-        repo: swan-cern/systemuser-image
+        workflow: Update packages of Jupyter images
+        ref: main
+        repo: swan-cern/jupyter-images
         token: ${{ secrets.WORKFLOW_ACCESS_TOKEN }}
         inputs: '{ "package": "${{env.PACKAGE_NAME}}", "version": "${{env.PACKAGE_VERSION}}" }'
