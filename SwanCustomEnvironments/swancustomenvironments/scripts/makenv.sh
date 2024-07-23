@@ -87,9 +87,6 @@ done
 REPO_GIT_PATTERN='^https?:\/\/(github\.com|gitlab\.cern\.ch)\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)\/?$'
 # EOS path pattern: $CERNBOX_HOME/<folder1>/<folder2>/...(/?) or /eos/user/<lowercase_first_letter>/<username>/<folder1>?/<folder2>?/...(/?)
 REPO_EOS_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,\/]+)*\/?|\/eos\/user\/[a-z](\/[^<>|\\:()&;,\/]+)+\/?)$'
-# Notebook pattern: <folder1>?/<folder2>?/...?/<notebook_name>.ipynb
-REPO_NOTEBOOK_PATTERN='^([^<>|\\:()&;,\/]+\/)*[^<>|\\:()&;,\/]+\.ipynb$'
-
 
 # Checks if the provided Acc-Py version is valid
 if [ -n "$ACCPY_VERSION" ] && [ ! -e "$ACCPY_PATH/base/$ACCPY_VERSION" ]; then
@@ -200,13 +197,23 @@ fi
 _log "REPO_PATH:${REPO_PATH#$HOME}"
 
 # Checks if the provided notebook is valid and exists
+# Depending on the repository type, the root of notebook path is different
+# EOS HOME for eos repositories and the repository path for git repositories
 if [ -n "$NOTEBOOK" ]; then
-    if [[ ! "$NOTEBOOK" =~ $REPO_NOTEBOOK_PATTERN || ! -f "$CERNBOX_HOME$NOTEBOOK" ]]; then
-        _log "ERROR: Invalid notebook path (${NOTEBOOK})."
-        exit 1
-    else
-        # If a notebook is provided, redirect the user to it, otherwise to the repository path
-        _log "REPO_PATH:${NOTEBOOK}"
+    if [ "$REPO_TYPE" == "eos" ]; then
+        if [ -f "$HOME/$NOTEBOOK" ]; then
+            _log "REPO_PATH:/${NOTEBOOK}"
+        else
+            _log "WARNING: Invalid notebook path ($HOME/$NOTEBOOK)."
+            exit 1
+        fi
+    elif [ "$REPO_TYPE" == "git" ]; then
+        if [ -f "$REPO_PATH/$NOTEBOOK" ]; then
+            _log "REPO_PATH:${REPO_PATH#$HOME}/$NOTEBOOK"
+        else
+            _log "WARNING: Invalid notebook path ($REPO_PATH/$NOTEBOOK)."
+            exit 1
+        fi
     fi
 fi
 
