@@ -149,6 +149,7 @@ data-base-url="{{base_url | urlencode}}"
     var repository = urlParams.get('repo') || "";
     var repository_type = urlParams.get('repo_type') || "";
     var accpy_version = urlParams.get('accpy') || "";
+    var file = `/${urlParams.get('file') || ""}`;
 
     // Environment creation elements
     var outputBox = document.getElementById('output-box');
@@ -220,7 +221,7 @@ data-base-url="{{base_url | urlencode}}"
         } else if (message_line.startsWith('REPO_PATH')) {
             const repo_path = message_line.split(':')[1];
             if (repo_path && repo_path !== '/') {
-                project_path = `/tree${repo_path}`;
+                project_path = `/tree${repo_path}${file}`;
             }
 
         // Get the environment name from the output
