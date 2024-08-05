@@ -161,17 +161,17 @@ fi
 # Create environment (acc-py or generic)
 if [ -n "$ACCPY_VERSION" ]; then
     source $ACCPY_PATH/base/${ACCPY_VERSION}/setup.sh
-    acc-py venv ${ENV_PATH}
+    acc-py venv ${ENV_PATH} | tee -a "${LOG_FILE}"
 else
     _log "Creating environment ${ENV_NAME} using Generic Python..."
-    python -m venv ${ENV_PATH}
+    python -m venv ${ENV_PATH} | tee -a "${LOG_FILE}"
 fi
 
 _log "ENV_NAME:${ENV_NAME}"
 
 # Make sure the Jupyter server finds the new environment kernel in /home/$USER/.local
 mkdir -p /home/$USER/.local/share/jupyter/kernels
-ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME} /home/$USER/.local/share/jupyter/kernels/${ENV_NAME}
+ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME} /home/$USER/.local/share/jupyter/kernels/${ENV_NAME} | tee -a "${LOG_FILE}"
 
 # Activate the environment
 _log "Setting up the environment..."
