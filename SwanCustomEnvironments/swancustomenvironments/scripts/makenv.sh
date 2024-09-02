@@ -33,11 +33,12 @@ define_repo_path() {
 
 # Function for printing the help page
 print_help() {
-    _log "Usage: makenv --repo/-r REPOSITORY [--repo_type TYPE] [--accpy ACCPY_VERSION] [--help/-h]"
+    _log "Usage: makenv --repo REPOSITORY --repo_type TYPE --builder BUILDER --builder_version VERSION [--help/-h]"
     _log "Options:"
-    _log "  -r, --repo REPOSITORY       Path or http link for a public repository (mandatory)"
-    _log "  --repo_type TYPE            Type of repository (git or eos) (mandatory)"
-    _log "  --accpy VERSION             Version of Acc-Py to be used"
+    _log "  --repo REPOSITORY           Path or http link for a public repository"
+    _log "  --repo_type TYPE            Type of repository (git or eos)"
+    _log "  --builder BUILDER           Builder to create the environment"
+    _log "  --builder_version VERSION   Version of the builder to use (optional)"
     _log "  -h, --help                  Print this help page"
 }
 
@@ -47,18 +48,47 @@ print_help() {
 while [ $# -gt 0 ]; do
     key="$1"
     case $key in
-        --repo|-r)
+        --repo)
             REPOSITORY=$2
+            # Check if a repository was provided
+            if [ -z "$REPOSITORY" ]; then
+                _log "ERROR: No repository provided." && log
+                print_help
+                exit 1
+            fi
             shift
             shift
             ;;
         --repo_type)
             REPO_TYPE=$2
+            # Check if a repository type was provided
+            if [ -z "$REPO_TYPE" ]; then
+                _log "ERROR: No repository type provided." && log
+                print_help
+                exit 1
+            fi
             shift
             shift
             ;;
-        --accpy)
-            ACCPY_VERSION=$2
+        --builder)
+            BUILDER=$2
+            BUILDER_PATH="$(dirname "$0")/builders/${BUILDER}.sh"
+            # Check if a builder was provided
+            if [ -z "$BUILDER" ]; then
+                _log "ERROR: No builder provided." && log
+                print_help
+                exit 1
+            # Check if is a valid builder
+            elif [ ! -f "${BUILDER_PATH}" ]; then
+                _log "ERROR: Invalid builder (${BUILDER})." && log
+                print_help
+                exit 1
+            fi
+            shift
+            shift
+            ;;
+        --builder_version)
+            BUILDER_VERSION=$2
             shift
             shift
             ;;
@@ -67,7 +97,7 @@ while [ $# -gt 0 ]; do
             exit 0
             ;;
         *)
-            _log "ERROR: Invalid argument: $1" && _log
+            _log "ERROR: Invalid argument: $1" && log
             print_help
             exit 1
             ;;
@@ -82,25 +112,8 @@ REPO_GIT_PATTERN='^https?:\/\/(github\.com|gitlab\.cern\.ch)\/([a-zA-Z0-9_-]+)\/
 # EOS path pattern: $CERNBOX_HOME/<folder1>/<folder2>/...(/?) or /eos/user/<lowercase_first_letter>/<username>/<folder1>?/<folder2>?/...(/?)
 REPO_EOS_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,\/]+)*\/?|\/eos\/user\/[a-z](\/[^<>|\\:()&;,\/]+)+\/?)$'
 
-# Checks if the provided Acc-Py version is valid
-if [ -n "$ACCPY_VERSION" ] && [ ! -e "$ACCPY_PATH/base/$ACCPY_VERSION" ]; then
-    _log "ERROR: Invalid Acc-Py version (${ACCPY_VERSION})."
-    exit 1
-fi
-
-# Checks if a repository is provided
-if [ -z "$REPOSITORY" ]; then
-    _log "ERROR: No repository provided." && _log
-    print_help
-    exit 1
-
-elif [ -z "$REPO_TYPE" ]; then
-    _log "ERROR: No repository type provided." && _log
-    print_help
-    exit 1
-
 # Checks if the provided repository is a valid URL
-elif [[ "$REPO_TYPE" == "git" ]] && [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
+if [[ "$REPO_TYPE" == "git" ]] && [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
     # Extract the repository name
     repo_name=$(basename $REPOSITORY)
     repo_name=${repo_name%.*}
@@ -109,7 +122,7 @@ elif [[ "$REPO_TYPE" == "git" ]] && [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; th
 
     # Clone the repository
     _log "Cloning the repository from ${REPOSITORY}..."
-    rm -rf "${REPO_PATH}" && git clone $REPOSITORY -q "${REPO_PATH}" || { _log "ERROR: Failed to clone repository"; exit 1; } | tee -a "${LOG_FILE}"
+    rm -rf "${REPO_PATH}" && git clone $REPOSITORY -q "${REPO_PATH}" || { _log "ERROR: Failed to clone repository"; exit 1; } | tee -a ${LOG_FILE}
     ENV_NAME="${repo_name}_env"
 
 # Checks if the provided local repository is an EOS path and actually exists
@@ -147,39 +160,25 @@ if [ ! -f "${REQ_PATH}" ]; then
     exit 1
 fi
 
+# Check if an environment already exists in the session, avoiding multiple environments
 CURRENT_ENV_NAME=$(find "/home/$USER" -type d -name "*_env" | head -n 1 | cut -d '/' -f4)
 CURRENT_REPO_PATH=$(tail -n 1 "/home/$USER/.bash_profile" | cut -d ' ' -f2)
-
-# Check if an environment already exists in the session
 if [ -n "${CURRENT_ENV_NAME}" ]; then
     _log "ENVIRONMENT_ALREADY_EXISTS:${CURRENT_ENV_NAME}"
     _log "REPO_PATH:${CURRENT_REPO_PATH#$HOME}"
     exit 1
 fi
 
-# Create environment (acc-py or generic)
-if [ -n "$ACCPY_VERSION" ]; then
-    source $ACCPY_PATH/base/${ACCPY_VERSION}/setup.sh
-    acc-py venv ${ENV_PATH} | tee -a "${LOG_FILE}"
+if [ -n "${BUILDER_VERSION}" ]; then
+    _log "Creating environment ${ENV_NAME} using ${BUILDER} (${BUILDER_VERSION})..."
 else
-    _log "Creating environment ${ENV_NAME} using Generic Python..."
-    python -m venv ${ENV_PATH} | tee -a "${LOG_FILE}"
+    _log "Creating environment ${ENV_NAME} using ${BUILDER}..."
 fi
-
-_log "ENV_NAME:${ENV_NAME}"
-
+source "${BUILDER_PATH}"
+ 
 # Make sure the Jupyter server finds the new environment kernel in /home/$USER/.local
 mkdir -p /home/$USER/.local/share/jupyter/kernels
-ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME} /home/$USER/.local/share/jupyter/kernels/${ENV_NAME} | tee -a "${LOG_FILE}"
-
-# Activate the environment
-_log "Setting up the environment..."
-source ${ENV_PATH}/bin/activate
-
-# Install packages in the environment and the same ipykernel that the Jupyter server uses
-_log "Installing packages from ${REQ_PATH}..."
-pip install ipykernel==${IPYKERNEL_VERSION} | tee -a "${LOG_FILE}"
-pip install -r "${REQ_PATH}" | tee -a "${LOG_FILE}"
+ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME} /home/$USER/.local/share/jupyter/kernels/${ENV_NAME} | tee -a ${LOG_FILE}
 
 if [[ ${REPO_TYPE} == "git" ]]; then
     # Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder
@@ -188,10 +187,11 @@ if [[ ${REPO_TYPE} == "git" ]]; then
     REPO_PATH="${GIT_HOME}/$(basename $REPO_PATH)"
 fi
 
+_log "ENV_NAME:${ENV_NAME}"
 _log "REPO_PATH:${REPO_PATH#$HOME}"
 
-# Install a Jupyter kernel for the environment
-python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" | tee -a "${LOG_FILE}"
+# Setting JUPYTER_PATH prevents ipykernel installation from complaining about non-found kernelspec
+JUPYTER_PATH=${ENV_PATH}/share/jupyter python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" | tee -a ${LOG_FILE}
 
 # Ensure the terminal loads the environment and cds into the repository path
-echo -e "source /home/$USER/${ENV_NAME}/bin/activate\ncd ${REPO_PATH}" > /home/$USER/.bash_profile
+echo -e "${ACTIVATE_ENV_CMD}\ncd ${REPO_PATH}" >> /home/$USER/.bash_profile
