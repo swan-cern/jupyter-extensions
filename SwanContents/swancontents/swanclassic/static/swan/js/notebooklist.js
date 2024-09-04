@@ -1016,7 +1016,23 @@ define([
             fadein = readme.delay(70).fadeIn().promise();
         }
 
-        $.get(path, function (markdown) {
+        function get_jh_auth_header() {
+
+            var cookie = document.cookie.match("\\b_xsrf=([^;]*)\\b");
+            var xsrf = cookie ? cookie[1] : undefined;
+        
+            if (xsrf) {
+                return {
+                    'X-XSRFToken': xsrf
+                }
+            }
+            return {}
+        };
+
+        $.ajax({
+                url: path,
+                headers: util.get_jh_auth_header()
+            }).done(function (markdown) {
 
             var folder_path = path.replace(/\/readme.md/ig, '/');
 
