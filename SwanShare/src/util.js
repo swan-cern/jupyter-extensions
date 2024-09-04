@@ -97,9 +97,26 @@ function alert_success(modal, message) {
     }
 }
 
+/**
+ * Gets XSRF Token to call JH
+ */
+function get_jh_auth_header() {
+
+    var cookie = document.cookie.match("\\b_xsrf=([^;]*)\\b");
+    var xsrf = cookie ? cookie[1] : undefined;
+
+    if (xsrf) {
+        return {
+            'X-XSRFToken': xsrf
+        }
+    }
+    return {}
+};
+
 
 export default {
     alert_error: alert_error,
     alert_error_modal: alert_error_modal,
-    alert_success: alert_success
+    alert_success: alert_success,
+    get_jh_auth_header: get_jh_auth_header
 }

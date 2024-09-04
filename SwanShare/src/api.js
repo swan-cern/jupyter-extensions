@@ -4,6 +4,7 @@ import utils from 'base/js/utils';
 import configmod from 'services/config';
 import endpoints_default from './api_endpoints.json';
 
+import util from './util';
 /**
  * CERNBox API connector
  * Converts API calls in callable functions and hides the complexities of getting and keeping track of a token
@@ -51,19 +52,6 @@ function TokenError(message) {
 
 TokenError.prototype = Object.create(Error.prototype);
 
-function _get_auth_header() {
-
-    var cookie = document.cookie.match("\\b_xsrf=([^;]*)\\b");
-    var xsrf = cookie ? cookie[1] : undefined;
-
-    if (xsrf) {
-        return {
-            'X-XSRFToken': xsrf
-        }
-    }
-    return {}
-};
-
 /**
  * Execute the funcions passed as parameters with the auth token stored
  * If the token is invalid, get a new one with an iFrame to bypass SSO
@@ -89,7 +77,7 @@ var authtoken = {
         // Retrieve the user oauth token from jupyterhub
         $.ajax({
             url: base_url + 'api/swanshare?origin=' + window.location.origin,
-            headers: _get_auth_header()
+            headers: util.get_jh_auth_header()
         })
             .done(function(data) {
                 that._token = data;
