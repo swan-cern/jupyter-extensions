@@ -51,6 +51,19 @@ function TokenError(message) {
 
 TokenError.prototype = Object.create(Error.prototype);
 
+function _get_auth_header() {
+
+    var cookie = document.cookie.match("\\b_xsrf=([^;]*)\\b");
+    var xsrf = cookie ? cookie[1] : undefined;
+
+    if (xsrf) {
+        return {
+            'X-XSRFToken': xsrf
+        }
+    }
+    return {}
+};
+
 /**
  * Execute the funcions passed as parameters with the auth token stored
  * If the token is invalid, get a new one with an iFrame to bypass SSO
@@ -74,7 +87,10 @@ var authtoken = {
 
         var that = this;
         // Retrieve the user oauth token from jupyterhub
-        $.get( base_url + 'api/swanshare?origin=' + window.location.origin)
+        $.ajax({
+            url: base_url + 'api/swanshare?origin=' + window.location.origin,
+            headers: _get_auth_header()
+        })
             .done(function(data) {
                 that._token = data;
                 func(that._token.authtoken, config, success, failure);
