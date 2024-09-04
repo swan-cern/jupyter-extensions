@@ -1031,7 +1031,7 @@ define([
 
         $.ajax({
                 url: path,
-                headers: util.get_jh_auth_header()
+                headers: get_jh_auth_header()
             }).done(function (markdown) {
 
             var folder_path = path.replace(/\/readme.md/ig, '/');
