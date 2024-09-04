@@ -328,8 +328,10 @@ function start_notebook_view() {
                 folder_path = folder_path.replace('/notebooks/SWAN_projects/', '/api/contents/SWAN_projects/')
                     .split(encodeURI(Jupyter.notebook.notebook_name))[0];
 
-                $.get(folder_path, function (folder) {
-
+                $.ajax({
+                    url: folder_path,
+                    headers: util.get_jh_auth_header()
+                }).done(function (folder) {
                     if (folder.is_project) {
                         modal.show_share_modal(folder.path);
                     } else if (folder.type === 'directory' && folder.project) {
