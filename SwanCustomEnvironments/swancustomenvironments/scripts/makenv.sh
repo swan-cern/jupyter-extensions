@@ -177,8 +177,8 @@ fi
 source "${BUILDER_PATH}"
  
 # Make sure the Jupyter server finds the new environment kernel in /home/$USER/.local
-mkdir -p /home/$USER/.local/share/jupyter/kernels
-ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME} /home/$USER/.local/share/jupyter/kernels/${ENV_NAME} | tee -a ${LOG_FILE}
+# We modify the already existing Python3 kernel with the kernel.json of the environment
+ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME}/kernel.json /home/$USER/.local/share/jupyter/kernels/python3/kernel.json | tee -a ${LOG_FILE}
 
 if [[ ${REPO_TYPE} == "git" ]]; then
     # Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder
