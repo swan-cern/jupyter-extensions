@@ -175,7 +175,11 @@ else
     _log "Creating environment ${ENV_NAME} using ${BUILDER}..."
 fi
 source "${BUILDER_PATH}"
- 
+
+# Install environment kernel.
+# Setting JUPYTER_PATH prevents ipykernel installation from complaining about non-found kernelspec
+JUPYTER_PATH=${ENV_PATH}/share/jupyter python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" | tee -a ${LOG_FILE}
+
 # Make sure the Jupyter server finds the new environment kernel in /home/$USER/.local
 # We modify the already existing Python3 kernel with the kernel.json of the environment
 ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME}/kernel.json /home/$USER/.local/share/jupyter/kernels/python3/kernel.json | tee -a ${LOG_FILE}
@@ -189,9 +193,6 @@ fi
 
 _log "ENV_NAME:${ENV_NAME}"
 _log "REPO_PATH:${REPO_PATH#$HOME}"
-
-# Setting JUPYTER_PATH prevents ipykernel installation from complaining about non-found kernelspec
-JUPYTER_PATH=${ENV_PATH}/share/jupyter python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" | tee -a ${LOG_FILE}
 
 # Ensure the terminal loads the environment and cds into the repository path
 echo -e "${ACTIVATE_ENV_CMD}\ncd ${REPO_PATH}" >> /home/$USER/.bash_profile
