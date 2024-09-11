@@ -33,10 +33,10 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         makenv_process = subprocess.Popen([self.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         for line in iter(makenv_process.stdout.readline, b""):
-            self.write(f"data: {line.decode('utf-8')}\n\n")
+            self.write(line.decode('utf-8'))
             self.flush()
 
-        self.finish("data: EOF\n\n")
+        self.finish()
 
 
 class SwanCustomEnvironmentsHandler(JupyterHandler):
