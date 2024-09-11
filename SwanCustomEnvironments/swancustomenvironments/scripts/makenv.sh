@@ -174,7 +174,9 @@ if [ -n "${BUILDER_VERSION}" ]; then
 else
     _log "Creating environment ${ENV_NAME} using ${BUILDER}..."
 fi
-source "${BUILDER_PATH}"
+# To prevent builders (e.g. mamba) from caching files on EOS, which slows down the creation of the environment,
+# configure HOME to be the user's local directory
+HOME=/home/$USER source "${BUILDER_PATH}"
 
 # Install environment kernel.
 # Setting JUPYTER_PATH prevents ipykernel installation from complaining about non-found kernelspec
