@@ -235,8 +235,9 @@ data-base-url="{{base_url | urlencode}}"
                 }
 
                 // Decode the chunk into text and split by newlines
-                const chunked_lines = decoder.decode(value, { stream: true });
-                chunked_lines.split('\n').forEach(message_line => {
+                // Remove the last element (empty string) for avoiding an extra line break
+                const chunked_lines = decoder.decode(value, { stream: true }).split('\n').pop();
+                chunked_lines.forEach(message_line => {
                     if (message_line.startsWith('REPO_PATH')) {
                         const repo_path = message_line.split(':')[1];
                         if (repo_path && repo_path !== '/') {
@@ -260,8 +261,8 @@ data-base-url="{{base_url | urlencode}}"
                             has_failed = true;
                         }
                     }
+                    outputBox.innerHTML += '<br>';
                 });
-                outputBox.innerHTML += '<br>';
             }
         } catch (error) {
             trigger_visual_error(`Error reading stream: ${error}`);
