@@ -40,6 +40,20 @@ data-base-url="{{base_url | urlencode}}"
 
 <script type = "text/javascript" >
 
+  function get_headers() {
+      var headers = {
+          'Content-Type': 'application/json'
+      }
+
+      var cookie = document.cookie.match("\\b_xsrf=([^;]*)\\b");
+      var xsrf = cookie ? cookie[1] : undefined;
+      if (xsrf) {
+          headers['X-XSRFToken'] = xsrf // hub auth header
+      }
+
+      return headers
+  };
+
   document.addEventListener("DOMContentLoaded", function() {
     var base_url = document.body.getAttribute("data-baseUrl") || "";
     var urlParams = new URLSearchParams(window.location.search);
@@ -47,9 +61,7 @@ data-base-url="{{base_url | urlencode}}"
 
     var settings = {
         method: "GET",
-        headers: {
-            'Content-Type': 'application/json'
-        }
+        headers: get_headers()
     };
 
     fetch(base_url + 'api/contents/fetch?url=' + encodeURIComponent(proj_url), settings)
