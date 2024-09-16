@@ -236,7 +236,7 @@ data-base-url="{{base_url | urlencode}}"
 
                 // Decode the chunk into text and split by newlines
                 // Remove the last element (empty string) for avoiding an extra line break
-                const chunked_lines = decoder.decode(value, { stream: true }).split('\n').pop();
+                const chunked_lines = decoder.decode(value, { stream: true }).split('\n').slice(0, -1);
                 chunked_lines.forEach(message_line => {
                     if (message_line.startsWith('REPO_PATH')) {
                         const repo_path = message_line.split(':')[1];
