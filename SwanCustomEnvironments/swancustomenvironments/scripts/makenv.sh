@@ -9,8 +9,8 @@
 CURRENT_ENV_NAME=$(find "/home/$USER" -type d -name "*_env" | head -n 1 | cut -d '/' -f4)
 CURRENT_REPO_PATH=$(tail -n 1 "/home/$USER/.bash_profile" | cut -d ' ' -f2)
 if [ -n "${CURRENT_ENV_NAME}" ]; then
-    _log "ENVIRONMENT_ALREADY_EXISTS:${CURRENT_ENV_NAME}"
-    _log "REPO_PATH:${CURRENT_REPO_PATH#$HOME}"
+    echo "ENVIRONMENT_ALREADY_EXISTS:${CURRENT_ENV_NAME}"
+    echo "REPO_PATH:${CURRENT_REPO_PATH#$HOME}"
     exit 1
 fi
 
