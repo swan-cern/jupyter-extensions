@@ -113,37 +113,51 @@ REPO_GIT_PATTERN='^https?:\/\/(github\.com|gitlab\.cern\.ch)\/([a-zA-Z0-9_-]+)\/
 REPO_EOS_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,\/]+)*\/?|\/eos\/user\/[a-z](\/[^<>|\\:()&;,\/]+)+\/?)$'
 
 # Checks if the provided repository is a valid URL
-if [[ "$REPO_TYPE" == "git" ]] && [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
-    # Extract the repository name
-    repo_name=$(basename $REPOSITORY)
-    repo_name=${repo_name%.*}
+if [[ "$REPO_TYPE" == "git" ]]; then
+    if [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
+        # Extract the repository name
+        repo_name=$(basename $REPOSITORY)
+        repo_name=${repo_name%.*}
 
-    define_repo_path $repo_name
+        define_repo_path $repo_name
 
-    # Clone the repository
-    _log "Cloning the repository from ${REPOSITORY}..."
-    rm -rf "${REPO_PATH}" && git clone $REPOSITORY -q "${REPO_PATH}" || { _log "ERROR: Failed to clone repository"; exit 1; } | tee -a ${LOG_FILE}
-    ENV_NAME="${repo_name}_env"
-
-# Checks if the provided local repository is an EOS path and actually exists
-elif [[ "$REPO_TYPE" == "eos" ]] && [[ "$REPOSITORY" =~ $REPO_EOS_PATTERN ]]; then
-    # Replace, if necessary, the CERNBOX_HOME variable with the actual path
-    if [[ $REPOSITORY == \$CERNBOX_HOME* ]]; then
-        REPOSITORY=$(echo $REPOSITORY | sed "s|\$CERNBOX_HOME|$CERNBOX_HOME|g")
+        # Clone the repository
+        _log "Cloning the repository from ${REPOSITORY}..."
+        git clone $REPOSITORY -q "${REPO_PATH}"
+        if [ $? -ne 0 ]; then
+            _log "ERROR: Failed to clone Git repository"
+            exit 1
+        fi
+        ENV_NAME="${repo_name}_env"
+    else
+        _log "ERROR: Invalid Git repository (${REPOSITORY})." && _log
+        exit 1
     fi
 
-    # Replace eventual multiple slashes with a single one, remove the trailing slash, if any, and remove every "../" and "./"
-    REPO_PATH=$(echo "$REPOSITORY" | sed 's|/$||; s|\.\./|/|g; s|\./|/|g; s|/\+|/|g')
-    ENV_NAME="$(basename $REPO_PATH)_env"
+# Checks if the provided local repository is an EOS path and actually exists
+elif [[ "$REPO_TYPE" == "eos" ]]; then
+    if [[ "$REPOSITORY" =~ $REPO_EOS_PATTERN ]]; then
+        # Replace, if necessary, the CERNBOX_HOME variable with the actual path
+        if [[ $REPOSITORY == \$CERNBOX_HOME* ]]; then
+            REPOSITORY=$(echo $REPOSITORY | sed "s|\$CERNBOX_HOME|$CERNBOX_HOME|g")
+        fi
 
-    if [ ! -d "${REPO_PATH}" ]; then
-        _log "ERROR: Invalid ${REPO_TYPE} repository (${REPO_PATH})." && _log
+        # Replace eventual multiple slashes with a single one, remove the trailing slash, if any, and remove every "../" and "./"
+        REPO_PATH=$(echo "$REPOSITORY" | sed 's|/$||; s|\.\./|/|g; s|\./|/|g; s|/\+|/|g')
+        ENV_NAME="$(basename $REPO_PATH)_env"
+
+        if [ ! -d "${REPO_PATH}" ]; then
+            _log "ERROR: EOS repository not found (${REPO_PATH})." && _log
+            exit 1
+        fi
+    else
+        _log "ERROR: Invalid EOS repository (${REPOSITORY})." && _log
         exit 1
     fi
 
 # The repository is not a valid URL or EOS path
 else
-    _log "ERROR: Invalid ${REPO_TYPE} repository (${REPOSITORY})." && _log
+    _log "ERROR: Invalid repository type (${REPO_TYPE})." && _log
     exit 1
 fi
 
