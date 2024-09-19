@@ -5,6 +5,15 @@
 # This script allows to create an environment to use in notebooks and terminals. The environment contains the packages from a provided repository.
 
 
+# Check if an environment already exists in the session, avoiding multiple environments
+CURRENT_ENV_NAME=$(find "/home/$USER" -type d -name "*_env" | head -n 1 | cut -d '/' -f4)
+CURRENT_REPO_PATH=$(tail -n 1 "/home/$USER/.bash_profile" | cut -d ' ' -f2)
+if [ -n "${CURRENT_ENV_NAME}" ]; then
+    _log "ENVIRONMENT_ALREADY_EXISTS:${CURRENT_ENV_NAME}"
+    _log "REPO_PATH:${CURRENT_REPO_PATH#$HOME}"
+    exit 1
+fi
+
 LOG_FILE=/tmp/makenv.log # File to keep a backlog of this script output
 GIT_HOME="$HOME/SWAN_projects" # Path where git repositories are stored
 
@@ -171,15 +180,6 @@ IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
 # Check if requirements.txt exists in the repository
 if [ ! -f "${REQ_PATH}" ]; then
     _log "ERROR: Requirements file not found (${REQ_PATH})."
-    exit 1
-fi
-
-# Check if an environment already exists in the session, avoiding multiple environments
-CURRENT_ENV_NAME=$(find "/home/$USER" -type d -name "*_env" | head -n 1 | cut -d '/' -f4)
-CURRENT_REPO_PATH=$(tail -n 1 "/home/$USER/.bash_profile" | cut -d ' ' -f2)
-if [ -n "${CURRENT_ENV_NAME}" ]; then
-    _log "ENVIRONMENT_ALREADY_EXISTS:${CURRENT_ENV_NAME}"
-    _log "REPO_PATH:${CURRENT_REPO_PATH#$HOME}"
     exit 1
 fi
 
