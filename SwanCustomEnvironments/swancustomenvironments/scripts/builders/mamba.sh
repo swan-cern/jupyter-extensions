@@ -1,23 +1,15 @@
 #!/bin/bash
 
-# Create the environment and install packages
-mamba create -p ${ENV_PATH} --file ${REQ_PATH} -y | tee -a ${LOG_FILE}
+# Create the environment, install packages and the same ipykernel that the Jupyter server uses
+mamba create -p ${ENV_PATH} --file ${REQ_PATH} "ipykernel==${IPYKERNEL_VERSION}" -y | tee -a ${LOG_FILE}
 
 # Activate the environment
 _log "Setting up the environment..."
 
-# Needed to use mamba activate without creating a new shell process
+# Initialize mamba and send its activation script to the user's bash profile
 MAMBADIR=$(mktemp -d)
 HOME=${MAMBADIR} mamba init
-ACTIVATE_MAMBA_CMD="source ${MAMBADIR}/.bashrc"
-eval "${ACTIVATE_MAMBA_CMD}"
+echo "source ${MAMBADIR}/.bashrc" >> /home/$USER/.bash_profile
 
-# Then activate the environment using mamba
+# Construct the activation command
 ACTIVATE_ENV_CMD="mamba activate ${ENV_PATH}"
-eval "${ACTIVATE_ENV_CMD}"
-
-# Install the same ipykernel that the Jupyter server uses
-mamba install "ipykernel==${IPYKERNEL_VERSION}" -y | tee -a ${LOG_FILE}
-
-# Source the mamba init script in the user's bash profile
-echo "${ACTIVATE_MAMBA_CMD}" >> /home/$USER/.bash_profile
