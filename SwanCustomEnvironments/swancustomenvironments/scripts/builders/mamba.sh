@@ -9,7 +9,10 @@ _log "Setting up the environment..."
 # Initialize mamba and send its activation script to the user's bash profile
 MAMBADIR=$(mktemp -d)
 HOME=${MAMBADIR} mamba init
-echo "source ${MAMBADIR}/.bashrc" >> /home/$USER/.bash_profile
+ACTIVATE_MAMBA_CMD="source ${MAMBADIR}/.bashrc"
+echo ${ACTIVATE_MAMBA_CMD} >> /home/$USER/.bash_profile
+eval ${ACTIVATE_MAMBA_CMD}
 
-# Construct the activation command
+# Activate the environment
 ACTIVATE_ENV_CMD="mamba activate ${ENV_PATH}"
+eval ${ACTIVATE_ENV_CMD}
