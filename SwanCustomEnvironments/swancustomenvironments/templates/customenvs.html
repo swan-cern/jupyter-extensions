@@ -204,32 +204,9 @@ data-base-url="{{base_url | urlencode}}"
                         modal.style.display = "block";
                     }
 
-                    // Output is fine -> change title if successful (and Next button to go to lab)
+                    // Output is fine -> Redirect to JupyterLab
                     else {
-                        let stop_clock = false, seconds = 5;
-                        loader.getElementsByClassName('text')[0].innerHTML = 'Environment created';
-                        outputBox.innerHTML += `Environment ${env_name} created successfully.<br>Redirecting to JupyterLab in `;
-                        outputBox.scrollTop = outputBox.scrollHeight;
-                        back_button.onclick = () => redirect2Config();
-                        back_button.style.display = 'block';
-                        pause_button.style.display = 'block';
-                        pause_button.onclick = () => {
-                            stop_clock = true;
-                            lab_button.style.display = 'block';
-                            pause_button.style.display = 'none';
-                            lab_button.onclick = () => redirect2Lab(base_url, project_path);
-                        };
-                        const countdown = setInterval(() => {
-                            if (stop_clock) {
-                                clearInterval(countdown);
-                            } else if (seconds <= 0) {
-                                clearInterval(countdown);
-                                redirect2Lab(base_url, project_path);
-                            } else {
-                                outputBox.innerHTML += `${seconds}...`;
-                                seconds--;
-                            }
-                        }, 1000);
+                        redirect2Lab(base_url, project_path);
                     }
                     break; // Exit the loop after processing all data
                 }
