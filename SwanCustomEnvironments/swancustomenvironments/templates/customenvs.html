@@ -41,8 +41,7 @@ div#header, div#site {
     margin: 20px;
 }
 #back-button, #modal-back-button { background-color: #fc6404; }
-#lab-button, #modal-lab-button { background-color: #0454a4; }
-#pause-button { background-color: #757575; }
+#modal-lab-button { background-color: #0454a4; }
 
 #modal {
     display: none;
@@ -125,8 +124,6 @@ data-base-url="{{base_url | urlencode}}"
         <div id="output-box"></div>
         <div id="button-container">
             <button class="action-buttons" id="back-button">Restart session</button>
-            <button class="action-buttons" id="pause-button">Pause</button>
-            <button class="action-buttons" id="lab-button">JupyterLab</button>
         </div>
     </div>
 </div>
@@ -161,8 +158,6 @@ data-base-url="{{base_url | urlencode}}"
     var outputBox = document.getElementById('output-box');
     var loader = document.getElementById('swan-loader');
     var back_button = document.getElementById('back-button');
-    var pause_button = document.getElementById('pause-button');
-    var lab_button = document.getElementById('lab-button');
 
     // Modal elements
     var modal = document.getElementById("modal");
