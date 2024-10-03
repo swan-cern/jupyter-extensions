@@ -31,13 +31,30 @@ define_repo_path() {
     local tmp_folder_name=$folder_name
 
     REPO_PATH="/tmp/${tmp_folder_name}"
+    GIT_REPO_PATH="${GIT_HOME}/${tmp_folder_name}"
 
     # Loop to find a unique folder name
-    while [ -d "${GIT_HOME}/${tmp_folder_name}" ]; do
-        counter=$((counter + 1))
-        tmp_folder_name="${folder_name}_${counter}"
-        REPO_PATH="/tmp/${tmp_folder_name}"
+    while [ -d "${GIT_REPO_PATH}" ]; do
+        LOCAL_REPO_ORIGIN=$(cd "${GIT_REPO_PATH}" && [ -d ".git" ] && git remote get-url origin || echo "")
+        if [ "${LOCAL_REPO_ORIGIN%.git}" == "${REPOSITORY%.git}" ]; then
+            REPO_PATH="${GIT_REPO_PATH}"
+            break
+        else
+            counter=$((counter + 1))
+            tmp_folder_name="${folder_name}_${counter}"
+            REPO_PATH="/tmp/${tmp_folder_name}"
+            GIT_REPO_PATH="${GIT_HOME}/${tmp_folder_name}"
+        fi
     done
+}
+
+# Clone the repository from the provided URL
+clone_repository() {
+    _log "Cloning the repository from ${REPOSITORY}..."
+    git clone $REPOSITORY -q "${REPO_PATH}"
+    if [ $? -ne 0 ]; then
+        _log "ERROR: Failed to clone Git repository" && exit 1
+    fi
 }
 
 # Function for printing the help page
@@ -130,19 +147,13 @@ REPO_EOS_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,\/]+)*\/?|\/eos\/user\/[a-z](\
 if [[ "$REPO_TYPE" == "git" ]]; then
     if [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
         # Extract the repository name
-        repo_name=$(basename $REPOSITORY)
-        repo_name=${repo_name%.*}
+        REPO_NAME=$(basename "${REPOSITORY%.git}")
+        ENV_NAME="${REPO_NAME}_env"
 
-        define_repo_path $repo_name
-
-        # Clone the repository
-        _log "Cloning the repository from ${REPOSITORY}..."
-        git clone $REPOSITORY -q "${REPO_PATH}"
-        if [ $? -ne 0 ]; then
-            _log "ERROR: Failed to clone Git repository"
-            exit 1
+        define_repo_path $REPO_NAME
+        if [ ! -d "${GIT_REPO_PATH}" ]; then
+            clone_repository
         fi
-        ENV_NAME="${repo_name}_env"
     else
         _log "ERROR: Invalid Git repository (${REPOSITORY})." && _log
         exit 1
@@ -152,9 +163,7 @@ if [[ "$REPO_TYPE" == "git" ]]; then
 elif [[ "$REPO_TYPE" == "eos" ]]; then
     if [[ "$REPOSITORY" =~ $REPO_EOS_PATTERN ]]; then
         # Replace, if necessary, the CERNBOX_HOME variable with the actual path
-        if [[ $REPOSITORY == \$CERNBOX_HOME* ]]; then
-            REPOSITORY=$(echo $REPOSITORY | sed "s|\$CERNBOX_HOME|$CERNBOX_HOME|g")
-        fi
+        [[ $REPOSITORY == \$CERNBOX_HOME* ]] && REPOSITORY=$(echo "$REPOSITORY" | sed "s|\$CERNBOX_HOME|$CERNBOX_HOME|g")
 
         # Replace eventual multiple slashes with a single one, remove the trailing slash, if any, and remove every "../" and "./"
         REPO_PATH=$(echo "$REPOSITORY" | sed 's|/$||; s|\.\./|/|g; s|\./|/|g; s|/\+|/|g')
@@ -195,11 +204,7 @@ if [ ! -f "${REQ_PATH}" ]; then
     exit 1
 fi
 
-if [ -n "${BUILDER_VERSION}" ]; then
-    _log "Creating environment ${ENV_NAME} using ${BUILDER} (${BUILDER_VERSION})..."
-else
-    _log "Creating environment ${ENV_NAME} using ${BUILDER}..."
-fi
+_log "Creating environment ${ENV_NAME} using ${BUILDER}${BUILDER_VERSION:+ (${BUILDER_VERSION})}..."
 # To prevent builders (e.g. mamba) from caching files on EOS, which slows down the creation of the environment,
 # configure HOME to be the user's local directory
 HOME=/home/$USER source "${BUILDER_PATH}"
@@ -220,11 +225,11 @@ JUPYTER_PATH=${ENV_PATH}/share/jupyter python -m ipykernel install --name "${ENV
 # We modify the already existing Python3 kernel with the kernel.json of the environment
 ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME}/kernel.json /home/$USER/.local/share/jupyter/kernels/python3/kernel.json | tee -a ${LOG_FILE}
 
-if [[ ${REPO_TYPE} == "git" ]]; then
-    # Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder
+# Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder, if it was cloned (only applies to Git repositories)
+if [[ ${REPO_TYPE} == "git" ]] && [ ! -d "${GIT_REPO_PATH}" ]; then
     mkdir -p ${GIT_HOME}
     mv ${REPO_PATH} ${GIT_HOME}
-    REPO_PATH="${GIT_HOME}/$(basename $REPO_PATH)"
+    REPO_PATH="${GIT_REPO_PATH}"
 fi
 
 _log "ENV_NAME:${ENV_NAME}"
