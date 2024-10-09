@@ -152,9 +152,7 @@ if [[ "$REPO_TYPE" == "git" ]]; then
 elif [[ "$REPO_TYPE" == "eos" ]]; then
     if [[ "$REPOSITORY" =~ $REPO_EOS_PATTERN ]]; then
         # Replace, if necessary, the CERNBOX_HOME variable with the actual path
-        if [[ $REPOSITORY == \$CERNBOX_HOME* ]]; then
-            REPOSITORY=$(echo $REPOSITORY | sed "s|\$CERNBOX_HOME|$CERNBOX_HOME|g")
-        fi
+        [[ $REPOSITORY == \$CERNBOX_HOME* ]] && REPOSITORY=$(echo "$REPOSITORY" | sed "s|\$CERNBOX_HOME|$CERNBOX_HOME|g")
 
         # Replace eventual multiple slashes with a single one, remove the trailing slash, if any, and remove every "../" and "./"
         REPO_PATH=$(echo "$REPOSITORY" | sed 's|/$||; s|\.\./|/|g; s|\./|/|g; s|/\+|/|g')
@@ -195,11 +193,7 @@ if [ ! -f "${REQ_PATH}" ]; then
     exit 1
 fi
 
-if [ -n "${BUILDER_VERSION}" ]; then
-    _log "Creating environment ${ENV_NAME} using ${BUILDER} (${BUILDER_VERSION})..."
-else
-    _log "Creating environment ${ENV_NAME} using ${BUILDER}..."
-fi
+_log "Creating environment ${ENV_NAME} using ${BUILDER}${BUILDER_VERSION:+ (${BUILDER_VERSION})}..."
 # To prevent builders (e.g. mamba) from caching files on EOS, which slows down the creation of the environment,
 # configure HOME to be the user's local directory
 HOME=/home/$USER source "${BUILDER_PATH}"
