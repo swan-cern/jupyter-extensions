@@ -31,13 +31,32 @@ define_repo_path() {
     local tmp_folder_name=$folder_name
 
     REPO_PATH="/tmp/${tmp_folder_name}"
+    GIT_REPO_PATH="${GIT_HOME}/${tmp_folder_name}"
 
     # Loop to find a unique folder name
-    while [ -d "${GIT_HOME}/${tmp_folder_name}" ]; do
-        counter=$((counter + 1))
-        tmp_folder_name="${folder_name}_${counter}"
-        REPO_PATH="/tmp/${tmp_folder_name}"
+    while [ -d "${GIT_REPO_PATH}" ]; do
+        # The repository path will either correspond to an existing clone
+        # of the git repo or to a new directory where the repo will be cloned.
+        LOCAL_REPO_ORIGIN=$(cd "${GIT_REPO_PATH}" && [ -d ".git" ] && git remote get-url origin || echo "")
+        if [ "${LOCAL_REPO_ORIGIN%.git}" == "${REPOSITORY%.git}" ]; then
+            REPO_PATH="${GIT_REPO_PATH}"
+            break
+        else
+            counter=$((counter + 1))
+            tmp_folder_name="${folder_name}_${counter}"
+            REPO_PATH="/tmp/${tmp_folder_name}"
+            GIT_REPO_PATH="${GIT_HOME}/${tmp_folder_name}"
+        fi
     done
+}
+
+# Clone the repository from the provided URL
+clone_repository() {
+    _log "Cloning the repository from ${REPOSITORY}..."
+    git clone $REPOSITORY -q "${REPO_PATH}"
+    if [ $? -ne 0 ]; then
+        _log "ERROR: Failed to clone Git repository" && exit 1
+    fi
 }
 
 # Function for printing the help page
@@ -130,19 +149,16 @@ REPO_EOS_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,\/]+)*\/?|\/eos\/user\/[a-z](\
 if [[ "$REPO_TYPE" == "git" ]]; then
     if [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
         # Extract the repository name
-        repo_name=$(basename $REPOSITORY)
-        repo_name=${repo_name%.*}
+        REPO_NAME=$(basename "${REPOSITORY%.git}")
+        ENV_NAME="${REPO_NAME}_env"
 
-        define_repo_path $repo_name
-
-        # Clone the repository
-        _log "Cloning the repository from ${REPOSITORY}..."
-        git clone $REPOSITORY -q "${REPO_PATH}"
-        if [ $? -ne 0 ]; then
-            _log "ERROR: Failed to clone Git repository"
-            exit 1
+        # We look for an already existing clone of the git repo in a
+        # folder with the name of that repo. If we don't find any,
+        # the repository will be cloned again into a new directory.
+        define_repo_path $REPO_NAME
+        if [ ! -d "${GIT_REPO_PATH}" ]; then
+            clone_repository
         fi
-        ENV_NAME="${repo_name}_env"
     else
         _log "ERROR: Invalid Git repository (${REPOSITORY})." && _log
         exit 1
@@ -206,11 +222,11 @@ JUPYTER_PATH=${ENV_PATH}/share/jupyter python -m ipykernel install --name "${ENV
 # We modify the already existing Python3 kernel with the kernel.json of the environment
 ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME}/kernel.json /home/$USER/.local/share/jupyter/kernels/python3/kernel.json | tee -a ${LOG_FILE}
 
-if [[ ${REPO_TYPE} == "git" ]]; then
-    # Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder
+# Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder, if it was cloned (only applies to Git repositories)
+if [[ ${REPO_TYPE} == "git" ]] && [ ! -d "${GIT_REPO_PATH}" ]; then
     mkdir -p ${GIT_HOME}
     mv ${REPO_PATH} ${GIT_HOME}
-    REPO_PATH="${GIT_HOME}/$(basename $REPO_PATH)"
+    REPO_PATH="${GIT_REPO_PATH}"
 fi
 
 _log "ENV_NAME:${ENV_NAME}"
