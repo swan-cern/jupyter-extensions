@@ -29,7 +29,10 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         builder = self.get_query_argument("builder", default="")
         builder_version = self.get_query_argument("builder_version", default="")
 
-        arguments = ["--repo", repository, "--repo_type", repo_type, "--builder", builder, "--builder_version", builder_version]
+        arguments = ["--repo", repository, "--repo_type", repo_type, "--builder", builder]
+        if builder_version:
+            arguments.extend(("--builder_version", builder_version))
+
         makenv_process = subprocess.Popen([self.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
         for line in iter(makenv_process.stdout.readline, b""):
