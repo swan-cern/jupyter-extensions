@@ -42,12 +42,13 @@ define_repo_path() {
 
 # Function for printing the help page
 print_help() {
-    _log "Usage: makenv --repo REPOSITORY --repo_type TYPE --builder BUILDER --builder_version VERSION [--help/-h]"
+    _log "Usage: makenv --repo REPOSITORY --repo_type TYPE --builder BUILDER --builder_version VERSION --nxcals [--help/-h]"
     _log "Options:"
     _log "  --repo REPOSITORY           Path or http link for a public repository"
     _log "  --repo_type TYPE            Type of repository (git or eos)"
     _log "  --builder BUILDER           Builder to create the environment"
     _log "  --builder_version VERSION   Version of the builder to use (optional)"
+    _log "  --nxcals                    Install Nxcals extensions in the environment (optional)"
     _log "  -h, --help                  Print this help page"
 }
 
@@ -99,6 +100,10 @@ while [ $# -gt 0 ]; do
         --builder_version)
             BUILDER_VERSION=$2
             shift
+            shift
+            ;;
+        --nxcals)
+            INSTALL_NXCALS=true
             shift
             ;;
         --help|-h)
@@ -177,6 +182,13 @@ ENV_PATH="/home/$USER/${ENV_NAME}"
 REQ_PATH="${REPO_PATH}/requirements.txt"
 IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
 
+# Libraries need to be installed and not linked, due to their dependencies
+if [ -n "${INSTALL_NXCALS}" ]; then
+    SPARKCONNECTOR="sparkconnector==$(python3 -c 'import sparkconnector; print(sparkconnector.__version__)')"
+    SPARKMONITOR="sparkmonitor==$(python3 -c 'import sparkmonitor; print(sparkmonitor.__version__)')"
+    PY4J="py4j"
+fi
+
 # Check if requirements.txt exists in the repository
 if [ ! -f "${REQ_PATH}" ]; then
     _log "ERROR: Requirements file not found (${REQ_PATH})."
@@ -191,6 +203,14 @@ fi
 # To prevent builders (e.g. mamba) from caching files on EOS, which slows down the creation of the environment,
 # configure HOME to be the user's local directory
 HOME=/home/$USER source "${BUILDER_PATH}"
+
+
+# Symlink pyspark (and spark) into the environment to avoid having to install it in the environment
+if [ -n "${INSTALL_NXCALS}" ]; then
+    ENV_LIB=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
+    ln -s $SPARK_HOME/python/pyspark ${ENV_LIB}
+fi
+
 
 # Install environment kernel.
 # Setting JUPYTER_PATH prevents ipykernel installation from complaining about non-found kernelspec
