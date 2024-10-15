@@ -21,6 +21,7 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         repo_type (str): The type of repository (git or eos).
         builder (str): The builder used for creating the environment.
         builder_version (str): The version of the specified builder.
+        nxcals (bool): Whether to include NXCALS and Spark extensions in the environment.
         """
         self.set_header("Content-Type", "text/event-stream")
 
@@ -28,10 +29,13 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         repo_type = self.get_query_argument("repo_type", default="")
         builder = self.get_query_argument("builder", default="")
         builder_version = self.get_query_argument("builder_version", default="")
+        nxcals = self.get_query_argument("nxcals", default="")
 
         arguments = ["--repo", repository, "--repo_type", repo_type, "--builder", builder]
         if builder_version:
             arguments.extend(("--builder_version", builder_version))
+        if nxcals:
+            arguments.append("--nxcals")
 
         makenv_process = subprocess.Popen([self.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 

@@ -153,6 +153,7 @@ data-base-url="{{base_url | urlencode}}"
     var builder = urlParams.get('builder') || "";
     var builder_version = urlParams.get('builder_version') || "";
     var file = `/${urlParams.get('file') || ""}`;
+    var nxcals = urlParams.get('nxcals') || "";
 
     // Environment creation elements
     var outputBox = document.getElementById('output-box');
@@ -242,7 +243,7 @@ data-base-url="{{base_url | urlencode}}"
     }
 
 
-    fetch(`${base_url}api/customenvs?repo=${encodeURIComponent(repository)}&repo_type=${encodeURIComponent(repo_type)}&builder=${encodeURIComponent(builder)}&builder_version=${encodeURIComponent(builder_version)}`, {
+    fetch(`${base_url}api/customenvs?repo=${encodeURIComponent(repository)}&repo_type=${encodeURIComponent(repo_type)}&builder=${encodeURIComponent(builder)}&builder_version=${encodeURIComponent(builder_version)}&nxcals=${encodeURIComponent(nxcals)}`, {
         method: 'GET',
         headers: get_jh_auth_header(),
     })
