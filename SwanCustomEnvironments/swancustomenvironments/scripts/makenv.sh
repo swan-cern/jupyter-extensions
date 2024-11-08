@@ -19,7 +19,7 @@ GIT_HOME="$HOME/SWAN_projects" # Path where git repositories are stored
 
 _log () {
     if [ "$*" == "ERROR:"* ] || [ "$*" == "WARNING:"* ] || [ "${JUPYTER_DOCKER_STACKS_QUIET}" == "" ]; then
-        echo "$@" | tee -a ${LOG_FILE}
+        echo "$@" 2>&1 | tee -a ${LOG_FILE}
     fi
 }
 
@@ -140,11 +140,11 @@ if [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
     ENV_NAME="${REPO_NAME}_env"
 
     define_repo_path $REPO_NAME
-    # If the repo was not previously cloned, clone it.
+    # If the repo was not previous cloned yet, clone it.
     # Otherwise, use the existing one in the SWAN_projects folder
     if [ ! -d "${GIT_REPO_PATH}" ]; then
         _log "Cloning the repository from ${REPOSITORY}..."
-        git clone $REPOSITORY -q "${TMP_REPO_PATH}" | tee -a ${LOG_FILE}
+        git clone $REPOSITORY -q "${TMP_REPO_PATH}" 2>&1 | tee -a ${LOG_FILE}
         if [ $? -ne 0 ]; then
             _log "ERROR: Failed to clone Git repository" && exit 1
         fi
@@ -181,7 +181,7 @@ HOME=/home/$USER source "${BUILDER_PATH}"
 
 # Install environment kernel.
 # Setting JUPYTER_PATH prevents ipykernel installation from complaining about non-found kernelspec
-JUPYTER_PATH=${ENV_PATH}/share/jupyter python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" | tee -a ${LOG_FILE}
+JUPYTER_PATH=${ENV_PATH}/share/jupyter python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" 2>&1 | tee -a ${LOG_FILE}
 
 # Make sure the Jupyter server finds the new environment kernel in /home/$USER/.local
 # We modify the already existing Python3 kernel with the kernel.json of the environment
