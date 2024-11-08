@@ -149,7 +149,6 @@ data-base-url="{{base_url | urlencode}}"
 
     const urlParams = new URLSearchParams(window.location.search);
     var repository = urlParams.get('repo') || "";
-    var repo_type = urlParams.get('repo_type') || "";
     var builder = urlParams.get('builder') || "";
     var builder_version = urlParams.get('builder_version') || "";
     var file = `/${urlParams.get('file') || ""}`;
@@ -242,8 +241,7 @@ data-base-url="{{base_url | urlencode}}"
         }
     }
 
-
-    fetch(`${base_url}api/customenvs?repo=${encodeURIComponent(repository)}&repo_type=${encodeURIComponent(repo_type)}&builder=${encodeURIComponent(builder)}&builder_version=${encodeURIComponent(builder_version)}&nxcals=${encodeURIComponent(nxcals)}`, {
+    fetch(`${base_url}api/customenvs?repo=${encodeURIComponent(repository)}&builder=${encodeURIComponent(builder)}&builder_version=${encodeURIComponent(builder_version)}&nxcals=${encodeURIComponent(nxcals)}`, {
         method: 'GET',
         headers: get_jh_auth_header(),
     })
