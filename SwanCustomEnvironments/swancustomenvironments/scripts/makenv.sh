@@ -23,48 +23,38 @@ _log () {
     fi
 }
 
-# Function to ensure a unique folder name, instead of overwriting an existing one
+# Function to ensure a unique git repo name, instead of overwriting an existing one
 define_repo_path() {
     local folder_name=$1
     local counter=0
 
     local tmp_folder_name=$folder_name
 
-    REPO_PATH="/tmp/${tmp_folder_name}"
+    TMP_REPO_PATH="/tmp/${tmp_folder_name}"
     GIT_REPO_PATH="${GIT_HOME}/${tmp_folder_name}"
 
-    # Loop to find a unique folder name
+    # Main goal: Never overwrite an existing folder
+    # If the git folder already exists with same name and its remote points to the same URL, use it
+    # Otherwise, increment the counter and try again
     while [ -d "${GIT_REPO_PATH}" ]; do
-        # The repository path will either correspond to an existing clone
-        # of the git repo or to a new directory where the repo will be cloned.
         LOCAL_REPO_ORIGIN=$(cd "${GIT_REPO_PATH}" && [ -d ".git" ] && git remote get-url origin || echo "")
         if [ "${LOCAL_REPO_ORIGIN%.git}" == "${REPOSITORY%.git}" ]; then
-            REPO_PATH="${GIT_REPO_PATH}"
+            TMP_REPO_PATH="${GIT_REPO_PATH}"
             break
         else
             counter=$((counter + 1))
             tmp_folder_name="${folder_name}_${counter}"
-            REPO_PATH="/tmp/${tmp_folder_name}"
+            TMP_REPO_PATH="/tmp/${tmp_folder_name}"
             GIT_REPO_PATH="${GIT_HOME}/${tmp_folder_name}"
         fi
     done
 }
 
-# Clone the repository from the provided URL
-clone_repository() {
-    _log "Cloning the repository from ${REPOSITORY}..."
-    git clone $REPOSITORY -q "${REPO_PATH}"
-    if [ $? -ne 0 ]; then
-        _log "ERROR: Failed to clone Git repository" && exit 1
-    fi
-}
-
 # Function for printing the help page
 print_help() {
-    _log "Usage: makenv --repo REPOSITORY --repo_type TYPE --builder BUILDER --builder_version VERSION --nxcals [--help/-h]"
+    _log "Usage: makenv --repo REPOSITORY --builder BUILDER --builder_version VERSION [--help/-h]"
     _log "Options:"
     _log "  --repo REPOSITORY           Path or http link for a public repository"
-    _log "  --repo_type TYPE            Type of repository (git or eos)"
     _log "  --builder BUILDER           Builder to create the environment"
     _log "  --builder_version VERSION   Version of the builder to use (optional)"
     _log "  --nxcals                    Install NXCALS package and Spark extensions in the environment (optional)"
@@ -142,50 +132,25 @@ done
 
 # Git URL pattern: https://github.com/<username>/<repo_name>(/?) or https://gitlab.cern.ch/<username>/<repo_name>((/?)|(.git?))
 REPO_GIT_PATTERN='^https?:\/\/(github\.com|gitlab\.cern\.ch)\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)(\/|\.git)?$'
-# EOS path pattern: $CERNBOX_HOME/<folder1>/<folder2>/...(/?) or /eos/user/<lowercase_first_letter>/<username>/<folder1>?/<folder2>?/...(/?)
-REPO_EOS_PATTERN='^(\$CERNBOX_HOME(\/[^<>|\\:()&;,\/]+)*\/?|\/eos\/user\/[a-z](\/[^<>|\\:()&;,\/]+)+\/?)$'
 
 # Checks if the provided repository is a valid URL
-if [[ "$REPO_TYPE" == "git" ]]; then
-    if [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
-        # Extract the repository name
-        REPO_NAME=$(basename "${REPOSITORY%.git}")
-        ENV_NAME="${REPO_NAME}_env"
+if [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
+    # Extract the repository name
+    REPO_NAME=$(basename "${REPOSITORY%.git}")
+    ENV_NAME="${REPO_NAME}_env"
 
-        # We look for an already existing clone of the git repo in a
-        # folder with the name of that repo. If we don't find any,
-        # the repository will be cloned again into a new directory.
-        define_repo_path $REPO_NAME
-        if [ ! -d "${GIT_REPO_PATH}" ]; then
-            clone_repository
+    define_repo_path $REPO_NAME
+    # If the repo was not previously cloned, clone it.
+    # Otherwise, use the existing one in the SWAN_projects folder
+    if [ ! -d "${GIT_REPO_PATH}" ]; then
+        _log "Cloning the repository from ${REPOSITORY}..."
+        git clone $REPOSITORY -q "${TMP_REPO_PATH}" | tee -a ${LOG_FILE}
+        if [ $? -ne 0 ]; then
+            _log "ERROR: Failed to clone Git repository" && exit 1
         fi
-    else
-        _log "ERROR: Invalid Git repository (${REPOSITORY})." && _log
-        exit 1
     fi
-
-# Checks if the provided local repository is an EOS path and actually exists
-elif [[ "$REPO_TYPE" == "eos" ]]; then
-    if [[ "$REPOSITORY" =~ $REPO_EOS_PATTERN ]]; then
-        # Replace, if necessary, the CERNBOX_HOME variable with the actual path
-        [[ $REPOSITORY == \$CERNBOX_HOME* ]] && REPOSITORY=$(echo "$REPOSITORY" | sed "s|\$CERNBOX_HOME|$CERNBOX_HOME|g")
-
-        # Replace eventual multiple slashes with a single one, remove the trailing slash, if any, and remove every "../" and "./"
-        REPO_PATH=$(echo "$REPOSITORY" | sed 's|/$||; s|\.\./|/|g; s|\./|/|g; s|/\+|/|g')
-        ENV_NAME="$(basename $REPO_PATH)_env"
-
-        if [ ! -d "${REPO_PATH}" ]; then
-            _log "ERROR: EOS repository not found (${REPO_PATH})." && _log
-            exit 1
-        fi
-    else
-        _log "ERROR: Invalid EOS repository (${REPOSITORY})." && _log
-        exit 1
-    fi
-
-# The repository is not a valid URL or EOS path
 else
-    _log "ERROR: Invalid repository type (${REPO_TYPE})." && _log
+    _log "ERROR: Invalid Git repository (${REPOSITORY})." && _log
     exit 1
 fi
 
@@ -193,7 +158,7 @@ fi
 # Create and set up the environment
 
 ENV_PATH="/home/$USER/${ENV_NAME}"
-REQ_PATH="${REPO_PATH}/requirements.txt"
+REQ_PATH="${TMP_REPO_PATH}/requirements.txt"
 IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
 
 # Libraries need to be installed and not linked, due to their dependencies
@@ -222,15 +187,14 @@ JUPYTER_PATH=${ENV_PATH}/share/jupyter python -m ipykernel install --name "${ENV
 # We modify the already existing Python3 kernel with the kernel.json of the environment
 ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME}/kernel.json /home/$USER/.local/share/jupyter/kernels/python3/kernel.json | tee -a ${LOG_FILE}
 
-# Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder, if it was cloned (only applies to Git repositories)
-if [[ ${REPO_TYPE} == "git" ]] && [ ! -d "${GIT_REPO_PATH}" ]; then
+# Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder
+if [ ! -d "${GIT_REPO_PATH}" ]; then
     mkdir -p ${GIT_HOME}
-    mv ${REPO_PATH} ${GIT_HOME}
-    REPO_PATH="${GIT_REPO_PATH}"
+    mv ${TMP_REPO_PATH} ${GIT_HOME}
 fi
 
 _log "ENV_NAME:${ENV_NAME}"
-_log "REPO_PATH:${REPO_PATH#$HOME}"
+_log "REPO_PATH:${GIT_REPO_PATH#$HOME}"
 
 # Ensure the terminal loads the environment and cds into the repository path
-echo -e "${ACTIVATE_ENV_CMD}\ncd ${REPO_PATH}" >> /home/$USER/.bash_profile
+echo -e "${ACTIVATE_ENV_CMD}\ncd ${GIT_REPO_PATH}" >> /home/$USER/.bash_profile
