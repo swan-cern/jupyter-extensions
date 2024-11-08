@@ -9,7 +9,7 @@ fi
 
 # Set up Acc-Py and create the environment
 source "${ACCPY_PATH}/base/${BUILDER_VERSION}/setup.sh"
-acc-py venv ${ENV_PATH} | tee -a ${LOG_FILE}
+acc-py venv ${ENV_PATH} 2>&1 | tee -a ${LOG_FILE}
 
 # Activate the environment
 _log "Setting up the environment..."
