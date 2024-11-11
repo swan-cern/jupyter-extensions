@@ -1,5 +1,12 @@
 #!/bin/bash
 
+# If using NXCALS, we need to install the Spark extensions and the nxcals package.
+if [ -n "${INSTALL_NXCALS}" ]; then
+    SPARKCONNECTOR="sparkconnector==$(python -c 'import sparkconnector; print(sparkconnector.__version__)')"
+    SPARKMONITOR="sparkmonitor==$(python -c 'import sparkmonitor; print(sparkmonitor.__version__)')"
+    NXCALS="nxcals"
+fi
+
 # Set up Acc-Py and create the environment
 source "${ACCPY_PATH}/base/${BUILDER_VERSION}/setup.sh"
 acc-py venv ${ENV_PATH} | tee -a ${LOG_FILE}

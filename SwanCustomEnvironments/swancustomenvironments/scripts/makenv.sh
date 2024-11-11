@@ -196,13 +196,6 @@ ENV_PATH="/home/$USER/${ENV_NAME}"
 REQ_PATH="${REPO_PATH}/requirements.txt"
 IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
 
-# If using NXCALS, we need to install the Spark extensions and the nxcals package.
-if [ -n "${INSTALL_NXCALS}" ]; then
-    SPARKCONNECTOR="sparkconnector==$(python3 -c 'import sparkconnector; print(sparkconnector.__version__)')"
-    SPARKMONITOR="sparkmonitor==$(python3 -c 'import sparkmonitor; print(sparkmonitor.__version__)')"
-    NXCALS="nxcals"
-fi
-
 # Check if requirements.txt exists in the repository
 if [ ! -f "${REQ_PATH}" ]; then
     _log "ERROR: Requirements file not found (${REQ_PATH})."
