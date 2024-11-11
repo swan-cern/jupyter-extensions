@@ -1,5 +1,5 @@
 import os, subprocess, shutil, sys, uuid, time, base64, tempfile
-import requests
+import requests, re
 
 from pyspark import SparkConf, SparkContext
 from string import Formatter
@@ -132,11 +132,24 @@ class SparkConfiguration(object):
 
         # Extend conf adding logging of log4j to java options
         base_extra_java_options = "-Dlog4j.configuration=file:%s" % self.connector.log4j_file
-        extra_java_options = conf.get("spark.driver.extraJavaOptions")
-        if extra_java_options:
-            extra_java_options = base_extra_java_options + " " + extra_java_options
+        extra_java_options = " "
+
+        # For customenv sessions, load the default setting for spark.driver.extraJavaOptions from the
+        # spark-defaults.conf file in the environment, if it exists. Later, append the base_java_options.
+        # This is done to preserve the default setting and prevent base_java_options from completely
+        # replacing it. This is necessary e.g. for NXCALS node configuration.
+        if os.environ.get("SOFTWARE_SOURCE") == "customenv":
+            SPARK_DEFAULTS = os.environ.get(
+                "SPARK_DEFAULTS", 
+                os.path.join(os.environ.get("SPARK_HOME"), "conf", "spark-defaults.conf")
+            )
+            if os.path.exists(SPARK_DEFAULTS):
+                for line in open(SPARK_DEFAULTS).readlines():
+                    if line.startswith("spark.driver.extraJavaOptions"):
+                        extra_java_options = line.replace("spark.driver.extraJavaOptions", "").strip()
         else:
-            extra_java_options = base_extra_java_options
+            extra_java_options = conf.get("spark.driver.extraJavaOptions")
+        extra_java_options = f"{extra_java_options} {base_extra_java_options}"
         conf.set("spark.driver.extraJavaOptions", extra_java_options)
 
         # Extend conf ensuring that LD_LIBRARY_PATH on executors is the same as on the driver
