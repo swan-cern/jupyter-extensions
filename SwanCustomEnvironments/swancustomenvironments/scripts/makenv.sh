@@ -196,7 +196,7 @@ ENV_PATH="/home/$USER/${ENV_NAME}"
 REQ_PATH="${REPO_PATH}/requirements.txt"
 IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
 
-# Libraries need to be installed and not linked, due to their dependencies
+# If using NXCALS, we need to install the Spark extensions and the nxcals package.
 if [ -n "${INSTALL_NXCALS}" ]; then
     SPARKCONNECTOR="sparkconnector==$(python3 -c 'import sparkconnector; print(sparkconnector.__version__)')"
     SPARKMONITOR="sparkmonitor==$(python3 -c 'import sparkmonitor; print(sparkmonitor.__version__)')"
@@ -220,7 +220,33 @@ JUPYTER_PATH=${ENV_PATH}/share/jupyter python -m ipykernel install --name "${ENV
 
 # Make sure the Jupyter server finds the new environment kernel in /home/$USER/.local
 # We modify the already existing Python3 kernel with the kernel.json of the environment
-ln -f -s ${ENV_PATH}/share/jupyter/kernels/${ENV_NAME}/kernel.json /home/$USER/.local/share/jupyter/kernels/python3/kernel.json | tee -a ${LOG_FILE}
+KERNEL_JSON=${ENV_PATH}/share/jupyter/kernels/${ENV_NAME}/kernel.json
+ln -f -s ${KERNEL_JSON} /home/$USER/.local/share/jupyter/kernels/python3/kernel.json | tee -a ${LOG_FILE}
+
+# For NXCALS, configure the environment kernel and terminal with some variables to
+# ensure the connection with the cluster works properly.
+if [ -n "${INSTALL_NXCALS}" ]; then
+    # Kernel configuration
+    # - SPARK_HOME: needed to point to the SPARK installation provided by the nxcals package
+    # - PYSPARK_PYTHON: needed to point to the Python executable in the environment shipped to the cluster
+    # - PATH: needed to point to all the binaries in the environment
+    # - VIRTUAL_ENV: needed to point to the Python in the environment
+    export SPARK_HOME="${ENV_PATH}/nxcals-bundle"
+    export PYSPARK_PYTHON="./environment/bin/python"
+    NEW_KERNEL=$(mktemp)
+    jq --arg SPARK_HOME "${SPARK_HOME}" \
+    --arg PYSPARK_PYTHON "${PYSPARK_PYTHON}" \
+    --arg PATH "${PATH}" \
+    --arg VIRTUAL_ENV "${ENV_PATH}" \
+    '. + {env: {$SPARK_HOME, $PYSPARK_PYTHON, $PATH, $VIRTUAL_ENV}}' \
+    ${KERNEL_JSON} > ${NEW_KERNEL}
+    mv -f ${NEW_KERNEL} ${KERNEL_JSON} 2>&1 | tee -a ${LOG_FILE}
+
+    # Terminal configuration
+    # Only SPARK_HOME and PYSPARK_PYTHON are needed, since PATH and VIRTUAL_ENV are already
+    # set when activating the environment in the terminal.
+    echo -e "export SPARK_HOME=\"${SPARK_HOME}\"\nexport PYSPARK_PYTHON=\"${PYSPARK_PYTHON}\"" >> /home/$USER/.bash_profile
+fi
 
 # Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder, if it was cloned (only applies to Git repositories)
 if [[ ${REPO_TYPE} == "git" ]] && [ ! -d "${GIT_REPO_PATH}" ]; then
