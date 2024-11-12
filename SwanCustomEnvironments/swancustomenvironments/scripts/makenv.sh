@@ -189,14 +189,18 @@ if [ -n "${INSTALL_NXCALS}" ]; then
     # - PYSPARK_PYTHON: needed to point to the Python executable in the environment shipped to the cluster
     # - PATH: needed to point to all the binaries in the environment
     # - VIRTUAL_ENV: needed to point to the Python in the environment
+    # - SPARK_DRIVER_EXTRA_JAVA_OPTIONS: needed for gathering extraJavaOptions from the Spark default configuration, so it doesn't get overwritten by the SparkConnector
     export SPARK_HOME="${ENV_PATH}/nxcals-bundle"
     export PYSPARK_PYTHON="./environment/bin/python"
+    export SPARK_DRIVER_EXTRA_JAVA_OPTIONS=$(awk '/^spark.driver.extraJavaOptions/ {sub(/^spark.driver.extraJavaOptions /, ""); print}' ${SPARK_HOME}/conf/spark-defaults.conf)
+
     NEW_KERNEL=$(mktemp)
     jq --arg SPARK_HOME "${SPARK_HOME}" \
     --arg PYSPARK_PYTHON "${PYSPARK_PYTHON}" \
     --arg PATH "${PATH}" \
     --arg VIRTUAL_ENV "${ENV_PATH}" \
-    '. + {env: {$SPARK_HOME, $PYSPARK_PYTHON, $PATH, $VIRTUAL_ENV}}' \
+    --arg SPARK_DRIVER_EXTRA_JAVA_OPTIONS "${SPARK_DRIVER_EXTRA_JAVA_OPTIONS}" \
+    '. + {env: {$SPARK_HOME, $PYSPARK_PYTHON, $PATH, $VIRTUAL_ENV, $SPARK_DRIVER_EXTRA_JAVA_OPTIONS}}' \
     ${KERNEL_JSON} > ${NEW_KERNEL}
     mv -f ${NEW_KERNEL} ${KERNEL_JSON} 2>&1 | tee -a ${LOG_FILE}
 
