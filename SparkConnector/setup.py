@@ -73,6 +73,7 @@ setup_args = dict(
     install_requires=[
         # "jupyterlab>=4.0.0,<5",
         "swanportallocator",
+        "requests",
     ],
     zip_safe=False,
     include_package_data=True,
