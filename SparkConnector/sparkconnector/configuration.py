@@ -131,14 +131,15 @@ class SparkConfiguration(object):
             conf.set(name, value)
 
         # Fill extra_java_options as a concatenation of:
-        # 1. Options configured by the user via the UI of SparkConnector
-        # 2. SPARK_DRIVER_EXTRA_JAVA_OPTIONS variable, set for example to load required NXCALS settings
+        # 1. SPARK_DRIVER_EXTRA_JAVA_OPTIONS variable, set for example to load required NXCALS settings
+        # 2. Options configured by the user via the UI of SparkConnector
         # 3. Base Java options with log4j configuration
-        user_extra_java_options = conf.get("spark.driver.extraJavaOptions", "")
+        # User's options should take precedence over the base option
         env_extra_java_options = os.environ.get("SPARK_DRIVER_EXTRA_JAVA_OPTIONS", "").strip()
+        user_extra_java_options = conf.get("spark.driver.extraJavaOptions", "")
         logging_extra_java_options = "-Dlog4j2.configurationFile=%s" % self.connector.log4j_file
         
-        extra_java_options = f"{user_extra_java_options} {env_extra_java_options} {logging_extra_java_options}"
+        extra_java_options = f"{env_extra_java_options} {user_extra_java_options} {logging_extra_java_options}"
         conf.set("spark.driver.extraJavaOptions", extra_java_options)
 
         # Extend conf ensuring that LD_LIBRARY_PATH on executors is the same as on the driver
