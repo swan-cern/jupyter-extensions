@@ -1,21 +1,79 @@
-log4j.appender.console=org.apache.log4j.ConsoleAppender
-log4j.appender.console.target=System.err
-log4j.appender.console.layout=org.apache.log4j.PatternLayout
-log4j.appender.console.layout.ConversionPattern=%d{yy/MM/dd HH:mm:ss} %p %c{1}: %m%n
+# Root Logger
+rootLogger.level = WARN
+rootLogger.appenderRef.stdout.ref = STDOUT
+rootLogger.appenderRef.file.ref = LOGFILE
 
-log4j.rootCategory=WARN, console
+# Log to stdout
+appender.console.type = Console
+appender.console.name = STDOUT
+appender.console.layout.type = PatternLayout
+appender.console.layout.pattern = %d{yy/MM/dd HH:mm:ss} %p %c{1}: %m%n%ex
 
-log4j.logger.org.eclipse.jetty=WARN
-log4j.logger.org.apache.spark.repl.SparkIMain$exprTyper=INFO
-log4j.logger.org.apache.spark.repl.SparkILoop$SparkILoopInterpreter=INFO
+# Log to file
+appender.file.type = File
+appender.file.name = LOGFILE
+appender.file.layout.type = PatternLayout
+appender.file.layout.pattern = %d{yy/MM/dd HH:mm:ss} %p %c{1}: %m%n%ex
+
+# SparkMonitor logger
+logger.sparkmonitor.name = MONITOR
+logger.sparkmonitor.level = WARN
+logger.sparkmonitor.appenderRef.stdout.ref = STDOUT
 
 
-log4j.appender.file=org.apache.log4j.RollingFileAppender
-log4j.appender.file.layout=org.apache.log4j.PatternLayout
-log4j.appender.file.layout.ConversionPattern=%m%n
+# Spark Default Template
+# Set the default spark-shell/spark-sql log level to WARN. When running the
+# spark-shell/spark-sql, the log level for these classes is used to overwrite
+# the root logger's log level, so that the user can have different defaults
+# for the shell and regular Spark apps.
+logger.repl.name = org.apache.spark.repl.Main
+logger.repl.level = info
 
-log4j.logger.org.apache.spark.api.python.PythonGatewayServer=WARN
-log4j.logger.org.apache.spark=WARN, file
+# Settings to quiet third party logs that are too verbose
+logger.jetty1.name = org.sparkproject.jetty
+logger.jetty1.level = info
+logger.jetty2.name = org.sparkproject.jetty.util.component.AbstractLifeCycle
+logger.jetty2.level = error
+logger.replexprTyper.name = org.apache.spark.repl.SparkIMain$exprTyper
+logger.replexprTyper.level = info
+logger.replSparkILoopInterpreter.name = org.apache.spark.repl.SparkILoop$SparkILoopInterpreter
+logger.replSparkILoopInterpreter.level = info
+logger.parquet1.name = org.apache.parquet
+logger.parquet1.level = error
+logger.parquet2.name = parquet
+logger.parquet2.level = error
 
-log4j.logger.sparkmonitor.listener.JupyterSparkMonitorListener=WARN
-log4j.logger.sparkmonitor.listener=WARN, console
+# SPARK-9183: Settings to avoid annoying messages when looking up nonexistent UDFs in SparkSQL with Hive support
+logger.RetryingHMSHandler.name = org.apache.hadoop.hive.metastore.RetryingHMSHandler
+logger.RetryingHMSHandler.level = fatal
+logger.FunctionRegistry.name = org.apache.hadoop.hive.ql.exec.FunctionRegistry
+logger.FunctionRegistry.level = error
+
+
+# NXCALS
+# Silencing: WARN URLConfigurationSource: No URLs will be polled as dynamic configuration sources.
+logger.urlConf.name = com.netflix.config.sources.URLConfigurationSource
+logger.urlConf.level = error
+
+# Silencing: WARN NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
+logger.nativeCodeLoader.name = org.apache.hadoop.util.NativeCodeLoader
+logger.nativeCodeLoader.level = error
+
+# Silencing: WARN DomainSocketFactory: The short-circuit local reads feature cannot be used because libhadoop cannot be loaded.
+logger.domainSocketFactory.name = org.apache.hadoop.hdfs.shortcircuit.DomainSocketFactory
+logger.domainSocketFactory.level = error
+
+# Silencing: WARN Client: Same name resource added multiple times to distributed cache
+logger.sparkYarnClient.name = org.apache.spark.deploy.yarn.Client
+logger.sparkYarnClient.level = error
+
+# Silencing: WARN Client: Exception encountered while connecting to the server
+# org.apache.hadoop.ipc.RemoteException(org.apache.hadoop.ipc.StandbyException): Operation category READ is not supported in state standby.
+logger.hadoopIpcClient.name = org.apache.hadoop.ipc.Client
+logger.hadoopIpcClient.level = error
+
+
+# Silencing: WARN Client: Exception encountered while connecting to the server
+# org.apache.zookeeper.ClientCnxnSocketNIO.doIO(ClientCnxnSocketNIO.java:77): Unable to read additional data from server sessionid, likely server has closed socket
+logger.zookeeper.name = org.apache.zookeeper.ClientCnxn
+logger.zookeeper.level = ERROR

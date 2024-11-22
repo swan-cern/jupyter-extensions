@@ -12,7 +12,7 @@ class LogReader(Thread):
         Thread.__init__(self)
 
     def format_log_line(self, line):
-        return line.strip() + "\n\n"
+        return line.strip() + "\n"
 
     def tail(self, max_size=10*1024*1024):
         # Use rb mode to be able to seek backwards

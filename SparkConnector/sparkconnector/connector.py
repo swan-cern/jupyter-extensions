@@ -175,7 +175,7 @@ class SparkConnector:
     def create_properties_file(self, log_path):
         """ Creates a configuration file for Spark log4j """
 
-        fd, path = tempfile.mkstemp()
+        fd, path = tempfile.mkstemp(suffix='.properties')
         os.close(fd) # Reopen tempfile because mkstemp opens it in binary format
         f = open(path, 'w')
 
@@ -186,7 +186,7 @@ class SparkConnector:
         for line in f_configs:
             f.write(line)
 
-        f.write(u'log4j.appender.file.File=%s\n' % log_path)
+        f.write(u'appender.file.fileName=%s\n' % log_path)
 
         f_configs.close()
         f.close()

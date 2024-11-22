@@ -131,7 +131,7 @@ class SparkConfiguration(object):
             conf.set(name, value)
 
         # Extend conf adding logging of log4j to java options
-        base_extra_java_options = "-Dlog4j.configuration=file:%s" % self.connector.log4j_file
+        base_extra_java_options = "-Dlog4j2.configurationFile=%s" % self.connector.log4j_file
         extra_java_options = conf.get("spark.driver.extraJavaOptions")
         if extra_java_options:
             extra_java_options = base_extra_java_options + " " + extra_java_options
