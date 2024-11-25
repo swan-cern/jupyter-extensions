@@ -1,7 +1,11 @@
 #!/bin/bash
 
 # Create the environment, install packages and the same ipykernel that the Jupyter server uses
+set -o pipefail # Fail the script if any command fails
 mamba create -p ${ENV_PATH} --file ${REQ_PATH} "ipykernel==${IPYKERNEL_VERSION}" -y | tee -a ${LOG_FILE}
+if [ $? -ne 0 ]; then
+    exit 1
+fi
 
 # Activate the environment
 _log "Setting up the environment..."
