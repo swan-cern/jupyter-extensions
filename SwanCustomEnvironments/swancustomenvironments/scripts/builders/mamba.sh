@@ -2,6 +2,9 @@
 
 # Create the environment, install packages and the same ipykernel that the Jupyter server uses
 mamba create -p ${ENV_PATH} --file ${REQ_PATH} "ipykernel==${IPYKERNEL_VERSION}" -y
+if [ $? -ne 0 ]; then
+    exit 1
+fi
 
 # Activate the environment
 _log "Setting up the environment..."

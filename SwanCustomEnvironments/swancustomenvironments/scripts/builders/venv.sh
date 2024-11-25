@@ -11,3 +11,6 @@ eval "${ACTIVATE_ENV_CMD}"
 # Install packages in the environment and the same ipykernel that the Jupyter server uses
 _log "Installing packages from ${REQ_PATH}..."
 pip install -r "${REQ_PATH}" "ipykernel==${IPYKERNEL_VERSION}" 2>&1
+if [ $? -ne 0 ]; then
+    exit 1
+fi
