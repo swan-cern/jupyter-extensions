@@ -10,7 +10,7 @@ fi
 
 # Set up Acc-Py and create the environment
 source "${ACCPY_PATH}/base/${BUILDER_VERSION}/setup.sh"
-acc-py venv ${ENV_PATH} 2>&1 | tee -a ${LOG_FILE}
+acc-py venv ${ENV_PATH} 2>&1
 
 # Activate the environment
 _log "Setting up the environment..."
@@ -19,13 +19,13 @@ eval "${ACTIVATE_ENV_CMD}"
 
 # Install packages in the environment and the same ipykernel that the Jupyter server uses
 _log "Installing packages from ${REQ_PATH}..."
-pip install -r "${REQ_PATH}" "ipykernel==${IPYKERNEL_VERSION}" ${NXCALS} ${SPARKMONITOR} ${SPARKCONNECTOR_DEPENDENCIES} 2>&1 | tee -a ${LOG_FILE} # TODO
+pip install -r "${REQ_PATH}" "ipykernel==${IPYKERNEL_VERSION}" ${NXCALS} ${SPARKMONITOR} ${SPARKCONNECTOR_DEPENDENCIES} 2>&1 # TODO
 
 
 # -------------- HACK SECTION --------------
 # Install SPARKCONNECTOR_DEPENDENCIES separately, install SparkConnector without its dependencies and change the configuration file
 # TODO: Remove this when the SparkConnector package gets properly updated
 if [ -n "${INSTALL_NXCALS}" ]; then
-    pip install ${SPARKCONNECTOR} --no-deps 2>&1 | tee -a ${LOG_FILE}
-    wget https://raw.githubusercontent.com/swan-cern/jupyter-extensions/refs/heads/swan-on-tn/SparkConnector/sparkconnector/configuration.py -O ${ENV_PATH}/lib/python3.11/site-packages/sparkconnector/configuration.py 2>&1 | tee -a ${LOG_FILE}
+    pip install ${SPARKCONNECTOR} --no-deps 2>&1
+    wget https://raw.githubusercontent.com/swan-cern/jupyter-extensions/refs/heads/swan-on-tn/SparkConnector/sparkconnector/configuration.py -O ${ENV_PATH}/lib/python3.11/site-packages/sparkconnector/configuration.py 2>&1
 fi

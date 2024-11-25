@@ -14,12 +14,11 @@ if [ -n "${CURRENT_ENV_NAME}" ]; then
     exit 1
 fi
 
-LOG_FILE=/tmp/makenv.log # File to keep a backlog of this script output
 GIT_HOME="$HOME/SWAN_projects" # Path where git repositories are stored
 
 _log () {
     if [ "$*" == "ERROR:"* ] || [ "$*" == "WARNING:"* ] || [ "${JUPYTER_DOCKER_STACKS_QUIET}" == "" ]; then
-        echo "$@" 2>&1 | tee -a ${LOG_FILE}
+        echo "$@" 2>&1
     fi
 }
 
@@ -144,7 +143,7 @@ if [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
     # Otherwise, use the existing one in the SWAN_projects folder
     if [ ! -d "${GIT_REPO_PATH}" ]; then
         _log "Cloning the repository from ${REPOSITORY}..."
-        git clone $REPOSITORY -q "${TMP_REPO_PATH}" 2>&1 | tee -a ${LOG_FILE}
+        git clone $REPOSITORY -q "${TMP_REPO_PATH}" 2>&1
         if [ $? -ne 0 ]; then
             _log "ERROR: Failed to clone Git repository" && exit 1
         fi
@@ -174,12 +173,12 @@ HOME=/home/$USER source "${BUILDER_PATH}"
 
 # Install environment kernel.
 # Setting JUPYTER_PATH prevents ipykernel installation from complaining about non-found kernelspec
-JUPYTER_PATH=${ENV_PATH}/share/jupyter python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" 2>&1 | tee -a ${LOG_FILE}
+JUPYTER_PATH=${ENV_PATH}/share/jupyter python -m ipykernel install --name "${ENV_NAME}" --display-name "Python (${ENV_NAME})" --prefix "${ENV_PATH}" 2>&1
 
 # Make sure the Jupyter server finds the new environment kernel in /home/$USER/.local
 # We modify the already existing Python3 kernel with the kernel.json of the environment
 KERNEL_JSON=${ENV_PATH}/share/jupyter/kernels/${ENV_NAME}/kernel.json
-ln -f -s ${KERNEL_JSON} /home/$USER/.local/share/jupyter/kernels/python3/kernel.json | tee -a ${LOG_FILE}
+ln -f -s ${KERNEL_JSON} /home/$USER/.local/share/jupyter/kernels/python3/kernel.json
 
 # For NXCALS, configure the environment kernel and terminal with some variables to
 # ensure the connection with the cluster works properly.
@@ -202,7 +201,7 @@ if [ -n "${INSTALL_NXCALS}" ]; then
     --arg SPARK_DRIVER_EXTRA_JAVA_OPTIONS "${SPARK_DRIVER_EXTRA_JAVA_OPTIONS}" \
     '. + {env: {$SPARK_HOME, $PYSPARK_PYTHON, $PATH, $VIRTUAL_ENV, $SPARK_DRIVER_EXTRA_JAVA_OPTIONS}}' \
     ${KERNEL_JSON} > ${NEW_KERNEL}
-    mv -f ${NEW_KERNEL} ${KERNEL_JSON} 2>&1 | tee -a ${LOG_FILE}
+    mv -f ${NEW_KERNEL} ${KERNEL_JSON} 2>&1
 
     # Terminal configuration
     # Only SPARK_HOME and PYSPARK_PYTHON are needed, since PATH and VIRTUAL_ENV are already

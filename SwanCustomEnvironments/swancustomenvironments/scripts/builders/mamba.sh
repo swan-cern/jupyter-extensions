@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Create the environment, install packages and the same ipykernel that the Jupyter server uses
-mamba create -p ${ENV_PATH} --file ${REQ_PATH} "ipykernel==${IPYKERNEL_VERSION}" -y | tee -a ${LOG_FILE}
+mamba create -p ${ENV_PATH} --file ${REQ_PATH} "ipykernel==${IPYKERNEL_VERSION}" -y
 
 # Activate the environment
 _log "Setting up the environment..."
