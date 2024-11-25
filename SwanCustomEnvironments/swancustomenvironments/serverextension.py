@@ -13,6 +13,9 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
     # Path to the script used to create custom environments
     makenv_path = path.join(path.dirname(__file__), "scripts/makenv.sh")
 
+    # Path to the file where the log of the makenv.sh script is written
+    LOG_FILE = "/tmp/makenv.log"
+
     @web.authenticated
     def get(self):
         """
@@ -37,9 +40,12 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
 
         makenv_process = subprocess.Popen([self.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
-        for line in iter(makenv_process.stdout.readline, b""):
-            self.write(line.decode('utf-8'))
-            self.flush()
+        with open(self.LOG_FILE, "w") as log_file:
+            for line in iter(makenv_process.stdout.readline, b""):
+                line = line.decode('utf-8')
+                log_file.write(line) # send log to file (for debugging)
+                self.write(line) # send log to frontend
+                self.flush()
 
         self.finish()
 
