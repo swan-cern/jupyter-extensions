@@ -111,7 +111,7 @@ while [ $# -gt 0 ]; do
             shift
             ;;
         --nxcals)
-            INSTALL_NXCALS=true
+            USE_NXCALS=true
             shift
             ;;
         --help|-h)
@@ -157,13 +157,25 @@ fi
 # Create and set up the environment
 
 ENV_PATH="/home/$USER/${ENV_NAME}"
-REQ_PATH="${TMP_REPO_PATH}/requirements.txt"
+SWAN_ENV="/home/$USER/swan"
 IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
 
-# Check if requirements.txt exists in the repository
-if [ ! -f "${REQ_PATH}" ]; then
-    _log "ERROR: Requirements file not found (${REQ_PATH})."
-    exit 1
+if [ -f "${TMP_REPO_PATH}/requirements.txt" ]; then
+    # Fully resolved requirements (requirements.txt) take precedence
+    RESOLVED_REQ=true
+    REQ_PATH="${TMP_REPO_PATH}/requirements.txt"
+elif [ -f "${TMP_REPO_PATH}/requirements.in" ]; then
+    # If only requirements.in is present, proceed with high-level requirements
+    RESOLVED_REQ=false
+    REQ_PATH="${TMP_REPO_PATH}/requirements.in"
+else
+    # There are no requirements files (neither requirements.txt nor requirements.in) in the repository
+    _log "ERROR: No requirements file found. You must provide a requirements.in or requirements.txt file." && exit 1
+fi
+
+# Check if the requirements file contains the nxcals package, if the user activated the nxcals option
+if [ -n "${USE_NXCALS}" ] && ! grep -q "nxcals" "${REQ_PATH}"; then
+    _log "ERROR: The NXCALS cluster was selected but the requirements file (${REQ_PATH}) does not contain the nxcals package." && exit 1
 fi
 
 _log "Creating environment ${ENV_NAME} using ${BUILDER}${BUILDER_VERSION:+ (${BUILDER_VERSION})}..."
@@ -182,7 +194,7 @@ ln -f -s ${KERNEL_JSON} /home/$USER/.local/share/jupyter/kernels/python3/kernel.
 
 # For NXCALS, configure the environment kernel and terminal with some variables to
 # ensure the connection with the cluster works properly.
-if [ -n "${INSTALL_NXCALS}" ]; then
+if [ -n "${USE_NXCALS}" ]; then
     # Kernel configuration
     # - SPARK_HOME: needed to point to the SPARK installation provided by the nxcals package
     # - PYSPARK_PYTHON: needed to point to the Python executable in the environment shipped to the cluster
