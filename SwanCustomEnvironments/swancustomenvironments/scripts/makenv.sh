@@ -157,17 +157,24 @@ fi
 # Create and set up the environment
 
 ENV_PATH="/home/$USER/${ENV_NAME}"
-SWAN_ENV="/home/$USER/swan"
-IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
+IPYKERNEL="ipykernel==$(python -c 'import ipykernel; print(ipykernel.__version__)')"
 
 if [ -f "${TMP_REPO_PATH}/requirements.txt" ]; then
     # Fully resolved requirements (requirements.txt) take precedence
     RESOLVED_REQ=true
-    REQ_PATH="${TMP_REPO_PATH}/requirements.txt"
+    ORIGINAL_REQ_PATH="${TMP_REPO_PATH}/requirements.txt"
+    REQ_PATH=$(mktemp)
+    if [ -n "${USE_NXCALS}" ]; then
+        grep -v -E "sparkmonitor|sparkconnector|swanportallocator|requests|ipykernel" ${ORIGINAL_REQ_PATH} > ${REQ_PATH}
+    else
+        grep -v -E "ipykernel" ${ORIGINAL_REQ_PATH} > ${REQ_PATH}
+
+    fi
 elif [ -f "${TMP_REPO_PATH}/requirements.in" ]; then
     # If only requirements.in is present, proceed with high-level requirements
     RESOLVED_REQ=false
-    REQ_PATH="${TMP_REPO_PATH}/requirements.in"
+    ORIGINAL_REQ_PATH="${TMP_REPO_PATH}/requirements.in"
+    REQ_PATH="${ORIGINAL_REQ_PATH}"
 else
     # There are no requirements files (neither requirements.txt nor requirements.in) in the repository
     _log "ERROR: No requirements file found. You must provide a requirements.in or requirements.txt file." && exit 1
@@ -175,7 +182,7 @@ fi
 
 # Check if the requirements file contains the nxcals package, if the user activated the nxcals option
 if [ -n "${USE_NXCALS}" ] && ! grep -q "nxcals" "${REQ_PATH}"; then
-    _log "ERROR: The NXCALS cluster was selected but the requirements file (${REQ_PATH}) does not contain the nxcals package." && exit 1
+    _log "ERROR: The NXCALS cluster was selected but the requirements file (${ORIGINAL_REQ_PATH}) does not contain the nxcals package." && exit 1
 fi
 
 _log "Creating environment ${ENV_NAME} using ${BUILDER}${BUILDER_VERSION:+ (${BUILDER_VERSION})}..."
