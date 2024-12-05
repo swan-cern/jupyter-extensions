@@ -229,7 +229,7 @@ data-base-url="{{base_url | urlencode}}"
                     else {
                         outputBox.innerHTML += message_line;
                         outputBox.scrollTop = outputBox.scrollHeight;
-                        if (message_line.includes('ERROR')) {
+                        if (message_line.toUpperCase().includes('ERROR') || message_line.includes('No solution found')) {
                             has_failed = true;
                         }
                     }
