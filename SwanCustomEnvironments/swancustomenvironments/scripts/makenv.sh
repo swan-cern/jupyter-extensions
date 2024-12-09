@@ -157,8 +157,7 @@ fi
 # Create and set up the environment
 
 ENV_PATH="/home/$USER/${ENV_NAME}"
-SWAN_ENV="/home/$USER/swan"
-IPYKERNEL_VERSION=$(python -c "import ipykernel; print(ipykernel.__version__)")
+IPYKERNEL="ipykernel==$(python -c 'import ipykernel; print(ipykernel.__version__)')"
 
 if [ -f "${TMP_REPO_PATH}/requirements.txt" ]; then
     # Fully resolved requirements (requirements.txt) take precedence
