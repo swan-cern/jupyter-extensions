@@ -181,6 +181,9 @@ _log "Creating environment ${ENV_NAME} using ${BUILDER}${BUILDER_VERSION:+ (${BU
 # To prevent builders (e.g. mamba) from caching files on EOS, which slows down the creation of the environment,
 # configure HOME to be the user's local directory
 HOME=/home/$USER source "${BUILDER_PATH}"
+if [ $? -ne 0 ]; then
+    _log "ERROR: Failed to create the environment." && exit 1
+fi
 
 # Install environment kernel.
 # Setting JUPYTER_PATH prevents ipykernel installation from complaining about non-found kernelspec
