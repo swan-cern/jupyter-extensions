@@ -72,6 +72,7 @@ setup_args = dict(
     packages=setuptools.find_packages(),
     install_requires=[
         "swanportallocator",
+        "requests",
     ],
     zip_safe=False,
     include_package_data=True,
