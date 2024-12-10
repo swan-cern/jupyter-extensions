@@ -71,7 +71,6 @@ setup_args = dict(
     cmdclass= cmdclass,
     packages=setuptools.find_packages(),
     install_requires=[
-        "jupyterlab>=4.0.0,<5",
         "swanportallocator",
     ],
     zip_safe=False,
