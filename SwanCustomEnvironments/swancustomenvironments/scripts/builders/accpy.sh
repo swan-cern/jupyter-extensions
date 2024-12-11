@@ -4,7 +4,6 @@
 if [ -n "${USE_NXCALS}" ]; then
     SPARKCONNECTOR="sparkconnector==$(python -c 'import sparkconnector; print(sparkconnector.__version__)')"
     SPARKMONITOR="sparkmonitor==$(python -c 'import sparkmonitor; print(sparkmonitor.__version__)')"
-    SPARKCONNECTOR_DEPENDENCIES="swanportallocator requests" # TODO: Remove swanportallocator and requests installation when the SparkConnector package gets properly updated
 fi
 
 # Set up Acc-Py and create the environment
@@ -41,16 +40,14 @@ fi
 if [ -n "${USE_NXCALS}" ]; then
     # For NXCALS, enforce installation of our Spark extensions and their dependencies at certain versions
     if [ "${RESOLVED_REQ}" = true ]; then
-        uv pip install ${ACCPY_PIP_CONF} ${SPARKMONITOR} ${SPARKCONNECTOR_DEPENDENCIES} 2>&1
-        uv pip install ${ACCPY_PIP_CONF} ${SPARKCONNECTOR} --no-deps 2>&1
+        uv pip install ${ACCPY_PIP_CONF} ${SPARKMONITOR} ${SPARKCONNECTOR} 2>&1
     else
-        pip install ${SPARKMONITOR} ${SPARKCONNECTOR_DEPENDENCIES} 2>&1
-        pip install ${SPARKCONNECTOR} --no-deps 2>&1
+        pip install ${SPARKMONITOR} ${SPARKCONNECTOR} 2>&1
     fi
 
     # -------------- HACK SECTION --------------
-    # Install SPARKCONNECTOR_DEPENDENCIES separately, install SparkConnector without its dependencies and change the configuration file
-    # TODO: Remove this when the SparkConnector package gets properly updated
+    # Replace the configuration file
+    # TODO: Remove this when the SparkConnector includes the changes on the configuration file
     USER_PACKAGES_PATH=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
     wget https://raw.githubusercontent.com/swan-cern/jupyter-extensions/refs/heads/swan-on-tn/SparkConnector/sparkconnector/configuration.py -O ${USER_PACKAGES_PATH}/sparkconnector/configuration.py 2>&1
 fi
