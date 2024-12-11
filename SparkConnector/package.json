@@ -1,6 +1,6 @@
 {
   "name": "@swan-cern/sparkconnector",
-  "version": "3.0.5",
+  "version": "3.0.6",
   "description": "Helper to connect to CERN's Spark Clusters",
   "keywords": [
     "jupyter",
