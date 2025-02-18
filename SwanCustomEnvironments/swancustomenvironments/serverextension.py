@@ -1,4 +1,5 @@
 from tornado import web
+import asyncio
 
 from jupyter_server.base.handlers import JupyterHandler, APIHandler
 from jupyter_server.utils import url_path_join
@@ -16,8 +17,10 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
     # Path to the file where the log of the makenv.sh script is written
     LOG_FILE = "/tmp/makenv.log"
 
+    makenv_process = None
+
     @web.authenticated
-    def get(self):
+    async def get(self):
         """
         Gets the arguments from the query string and runs the makenv.sh script with them.
         repo (str): The git URL or absolute unix path to the repository.
@@ -26,7 +29,34 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         nxcals (bool): Whether to include NXCALS and Spark extensions in the environment.
         """
         self.set_header("Content-Type", "text/event-stream")
+        makenv_process = SwanCustomEnvironmentsApiHandler.makenv_process
+        
+        log_file = None
+        if makenv_process is None:
+            # The first get request will launch the execution of the makenv.sh script,
+            # to create the environment
+            makenv_process = self._launch_makenv()
+            SwanCustomEnvironmentsApiHandler.makenv_process = makenv_process
+            log_file = open(self.LOG_FILE, "w")
 
+        # The first and any subsequent get requests will read from the process
+        # and stream out its output
+        for line in iter(makenv_process.stdout.readline, b""):
+            line = line.decode("utf-8")
+            if log_file:
+                log_file.write(line)
+            self.write(line)
+            await self.flush()
+            # force a yield so that we can have multiple concurrent executions of get,
+            # e.g. from multiple tabs
+            await asyncio.sleep(0)
+
+        if log_file:
+            log_file.close()
+
+        self.finish()
+
+    def _launch_makenv(self) -> subprocess.Popen:
         repository = self.get_query_argument("repo", default="")
         builder = self.get_query_argument("builder", default="")
         builder_version = self.get_query_argument("builder_version", default="")
@@ -38,23 +68,14 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         if nxcals:
             arguments.append("--nxcals")
 
-        makenv_process = subprocess.Popen([self.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-
-        with open(self.LOG_FILE, "w") as log_file:
-            for line in iter(makenv_process.stdout.readline, b""):
-                line = line.decode('utf-8')
-                log_file.write(line) # send log to file (for debugging)
-                self.write(line) # send log to frontend
-                self.flush()
-
-        self.finish()
+        return subprocess.Popen([self.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
 
 
 class SwanCustomEnvironmentsHandler(JupyterHandler):
     """Render the custom environment building view"""
 
     @web.authenticated
-    def get(self):
+    async def get(self):
         self.write(
             self.render_template(
                 "customenvs.html",
