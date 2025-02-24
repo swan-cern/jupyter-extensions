@@ -38,6 +38,15 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
             makenv_process = self._launch_makenv()
             SwanCustomEnvironmentsApiHandler.makenv_process = makenv_process
             log_file = open(self.LOG_FILE, "w")
+        else:
+            ret_code = makenv_process.poll()
+            if ret_code is not None and ret_code != 0:
+                # If the process has finished with error, show the content of the log file
+                with open(self.LOG_FILE, "r") as log_file:
+                    for line in log_file:
+                        await self._send_line(line)
+                self.finish()
+                return
 
         # The first and any subsequent get requests will read from the process
         # and stream out its output
@@ -45,11 +54,7 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
             line = line.decode("utf-8")
             if log_file:
                 log_file.write(line)
-            self.write(line)
-            await self.flush()
-            # force a yield so that we can have multiple concurrent executions of get,
-            # e.g. from multiple tabs
-            await asyncio.sleep(0)
+            await self._send_line(line)
 
         if log_file:
             log_file.close()
@@ -69,6 +74,13 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
             arguments.append("--nxcals")
 
         return subprocess.Popen([self.makenv_path, *arguments], stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+
+    async def _send_line(self, line: str):
+        self.write(line)
+        await self.flush()
+        # force a yield so that we can have multiple concurrent executions of get,
+        # e.g. from multiple tabs
+        await asyncio.sleep(0)
 
 
 class SwanCustomEnvironmentsHandler(JupyterHandler):
