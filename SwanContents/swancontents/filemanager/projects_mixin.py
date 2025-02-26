@@ -62,10 +62,10 @@ class ProjectsMixin(HasTraits):
 
         return False
 
-    def _dir_model(self, path, content=True):
+    async def _dir_model(self, path, content=True):
         """ When returning the info of a folder, add the info of the project to which it belong to (if inside a Project) """
 
-        model = super()._dir_model(path, content)
+        model = await super()._dir_model(path, content)
         model['is_project'] = False
 
         try:
@@ -77,18 +77,18 @@ class ProjectsMixin(HasTraits):
 
         return model
 
-    def _proj_model(self, path, content=True):
+    async def _proj_model(self, path, content=True):
         """ Build a model for a directory
             if content is requested, will include a listing of the directory
             Now we can re-use the folder model because it's just a folder with 
             an extra bool inside
         """
 
-        model = super()._dir_model(path, content)
+        model = await super()._dir_model(path, content)
         model['is_project'] = True
         return model
 
-    def _save_project(self, os_path, model, path=''):
+    async def _save_project(self, os_path, model, path=''):
         """ Creates a project
             A project is just a folder with a hidden file inside it  
         """
@@ -99,7 +99,7 @@ class ProjectsMixin(HasTraits):
         # FIXME maybe not efficient with CS3 calls?
         create_file = not self.exists(os_path)
 
-        super()._save_directory(os_path, model, path)
+        await super()._save_directory(os_path, model, path)
 
         # FIXME if a folder already existed with this name, 
         # should we also tranform it into a project?
@@ -107,7 +107,7 @@ class ProjectsMixin(HasTraits):
             with self.perm_to_403():
                 self._save_file(os.path.join(os_path, self.swan_default_file), '', 'text')
 
-    def get(self, path, content=True, type=None, format=None):
+    async def get(self, path, content=True, type=None, format=None, require_hash=None):
         """ Get info from a path"""
 
         path = path.strip('/')
@@ -127,24 +127,24 @@ class ProjectsMixin(HasTraits):
                 raise web.HTTPError(400,
                                 u'%s is a project, not a %s' % (path, type), reason='bad type')
 
-            model = self._proj_model(path, content=content)
+            model = await self._proj_model(path, content=content)
 
         else:
-            model = super().get(path, content, type, format)
+            model = await super().get(path, content, type, format)
         return model
 
-    def save(self, model, path=''):
+    async def save(self, model, path=''):
         """ Save the file model and return the model with no content """
 
         chunk = model.get('chunk', None)
         if chunk is not None:
-            return super().save(model, path)
+            return await super().save(model, path)
 
         if 'type' not in model:
             raise web.HTTPError(400, u'No file type provided')
         
         if model['type'] != 'directory' or 'is_project' not in model or not model['is_project']:
-            return super().save(model, path)
+            return await super().save(model, path)
 
         path = path.strip('/')
         os_path = self._get_os_path(path)
@@ -200,13 +200,13 @@ class ProjectsMixin(HasTraits):
         return self.new(model, path)
         
 
-    def update(self, model, path):
+    async def update(self, model, path):
         """ Prevent users from using the name of SWAN projects folder"""
 
         if self._contains_swan_folder_name(self._get_os_path(path)):
             raise web.HTTPError(400, "The name %s is restricted" % self.swan_default_folder)
 
-        return super().update(model, path)
+        return await super().update(model, path)
 
 
     def move_folder(self, origin, dest, preserve=False):
