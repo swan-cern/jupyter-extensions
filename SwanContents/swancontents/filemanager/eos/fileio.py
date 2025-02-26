@@ -1,9 +1,10 @@
 from jupyter_server.services.contents.fileio import FileManagerMixin
 from jupyter_server.utils import url_path_join
 from tornado.web import HTTPError
-from contextlib import contextmanager
+from contextlib import contextmanager, asynccontextmanager
 import io, os, nbformat
 import subprocess
+import asyncio
 
 swan_sharing_folder = 'swan_sharing_folder/'
 
@@ -107,12 +108,11 @@ class SwanFileManagerMixin(FileManagerMixin):
         else:
             return super()._get_os_path(path)
 
-    def _save_notebook(self, os_path, nb, capture_validation_error=None):
+    async def _save_notebook(self, os_path, nb, capture_validation_error=None):
         """
         Save a notebook on EOS via FUSE with the default routine.
         Plus, store a copy of the same notebook on the host machine via docker volume.
         """
-        import time
         def write_notebook_to_local(path, content, encoding='utf-8'):
             try:
                 fout = io.open(path, 'w', encoding=encoding)
@@ -132,7 +132,7 @@ class SwanFileManagerMixin(FileManagerMixin):
                 return nbformat.v4.new_notebook()
 
         # If the path on the host is defined, save a copy of the notebook there
-        if ('USERDATA_PATH' in os.environ and os.path.isdir(os.environ['USERDATA_PATH'])):
+        if 'USERDATA_PATH' in os.environ and os.path.isdir(os.environ['USERDATA_PATH']):
             # Define the filename for the local copy
             dirname, basename = os.path.split(os_path)
             local_fname = "-".join([os.environ['USER'], "nb", str(int(time.time())), dirname.replace(os.sep, "-"), basename])
@@ -140,27 +140,22 @@ class SwanFileManagerMixin(FileManagerMixin):
 
             # Write the notebook locally and check for consistency
             local_retry = 10
-            write_notebook_to_local(local_path, nb)
-            for i in range(0, local_retry):
-                read_nb = read_notebook_from_local(local_path)
-                if (nb == read_nb):
+            # Use asyncio.to_thread to offload blocking I/O operations
+            await asyncio.to_thread(write_notebook_to_local, local_path, nb)
+            for i in range(local_retry):
+                read_nb = await asyncio.to_thread(read_notebook_from_local, local_path)
+                if nb == read_nb:
                     break
                 else:
-                    #time.sleep(0.1*2**i)    # Backoff on retry (100ms to 51.2s)
-                    time.sleep(0.5)
-                    write_notebook_to_local(local_path, nb)
+                    await asyncio.to_thread(write_notebook_to_local, local_path, nb)
 
-        # In all cases, save on eos via fuse
-        with self.atomic_writing(os_path, encoding="utf-8") as f:
-            nbformat.write(
-                nb,
-                f,
-                version=nbformat.NO_CONVERT,
-                capture_validation_error=capture_validation_error,
-            )
+        async with self.atomic_writing(os_path, encoding="utf-8") as f:
+            await asyncio.to_thread(nbformat.write, nb, f, version=nbformat.NO_CONVERT, capture_validation_error=capture_validation_error)
 
-    @contextmanager
-    def atomic_writing(self, os_path, *args, **kwargs):
+    
+
+    @asynccontextmanager
+    async def atomic_writing(self, os_path, *args, **kwargs):
         """Overload the default atomic_writing to use a different write method
         From the original documentation:
         wrapper around atomic_writing that turns permission errors to 403.
@@ -168,9 +163,15 @@ class SwanFileManagerMixin(FileManagerMixin):
         simply writes the file (whatever an old exists or not)"""
 
         if self.use_atomic_writing:
-            with self.perm_to_403(os_path):
-                with atomic_writing(os_path, *args, log=self.log, **kwargs) as f:
-                    yield f
+            self.perm_to_403(os_path)
+
+            # Run the synchronous atomic_writing function in a new thread
+            file = await asyncio.to_thread(None, atomic_writing, os_path, *args, **kwargs)
+
+            try:
+                yield file
+            except:
+                raise
+
         else:
-            # Return to the default behaviour
-            super().atomic_writing(os_path, *args, **kwargs)
+            yield await asyncio.to_thread(super().atomic_writing, os_path, *args, **kwargs)
