@@ -368,7 +368,8 @@ class SparkYarnConfiguration(SparkConfiguration):
 
         # Archive the local python packages and set spark.submit.pyFiles if the propagate python packages bundle is selected
         if conf.get('spark.cern.user.pyModules') is not None:
-           dir_name=os.environ['HOME']+'/.local/lib/python'+sys.version[0:3]+'/site-packages'
+           python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+           dir_name=os.environ['HOME']+'/.local/lib/python'+python_version+'/site-packages'
            filename = '/tmp/'+str(uuid.uuid4().hex)
            user_archive=shutil.make_archive(filename, 'zip', dir_name)
            if conf.get('spark.submit.pyFiles') is not None:
