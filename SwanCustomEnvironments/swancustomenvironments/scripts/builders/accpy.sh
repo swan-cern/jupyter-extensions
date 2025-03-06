@@ -26,28 +26,22 @@ if [ "${RESOLVED_REQ}" = true ]; then
     if [ $? -ne 0 ]; then
         return 1
     fi
-    # Enforce installation of our version of ipykernel and its dependencies
+    # Enforce installation of our version of ipykernel
     uv pip install ${ACCPY_PIP_CONF} ${IPYKERNEL} 2>&1
 else
     pip install -r "${REQ_PATH}" 2>&1
     if [ $? -ne 0 ]; then
         return 1
     fi
-    # Enforce installation of our version of ipykernel and its dependencies
+    # Enforce installation of our version of ipykernel
     pip install ${IPYKERNEL} 2>&1
 fi
 
 if [ -n "${USE_NXCALS}" ]; then
-    # For NXCALS, enforce installation of our Spark extensions and their dependencies at certain versions
+    # For NXCALS, enforce installation of our Spark extension versions
     if [ "${RESOLVED_REQ}" = true ]; then
         uv pip install ${ACCPY_PIP_CONF} ${SPARKMONITOR} ${SPARKCONNECTOR} 2>&1
     else
         pip install ${SPARKMONITOR} ${SPARKCONNECTOR} 2>&1
     fi
-
-    # -------------- HACK SECTION --------------
-    # Replace the configuration file
-    # TODO: Remove this when the SparkConnector includes the changes on the configuration file
-    USER_PACKAGES_PATH=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
-    wget https://raw.githubusercontent.com/swan-cern/jupyter-extensions/refs/heads/swan-on-tn/SparkConnector/sparkconnector/configuration.py -O ${USER_PACKAGES_PATH}/sparkconnector/configuration.py 2>&1
 fi
