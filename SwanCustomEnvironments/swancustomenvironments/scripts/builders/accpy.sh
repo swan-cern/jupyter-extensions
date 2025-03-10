@@ -44,10 +44,4 @@ if [ -n "${USE_NXCALS}" ]; then
     else
         pip install ${SPARKMONITOR} ${SPARKCONNECTOR} 2>&1
     fi
-
-    # -------------- HACK SECTION --------------
-    # Replace the configuration file
-    # TODO: Remove this when the SparkConnector includes the changes on the configuration file
-    USER_PACKAGES_PATH=$(python3 -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')
-    wget https://raw.githubusercontent.com/swan-cern/jupyter-extensions/refs/heads/swan-on-tn/SparkConnector/sparkconnector/configuration.py -O ${USER_PACKAGES_PATH}/sparkconnector/configuration.py 2>&1
 fi
