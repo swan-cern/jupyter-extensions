@@ -26,19 +26,19 @@ if [ "${RESOLVED_REQ}" = true ]; then
     if [ $? -ne 0 ]; then
         return 1
     fi
-    # Enforce installation of our version of ipykernel and its dependencies
+    # Enforce installation of our version of ipykernel
     uv pip install ${ACCPY_PIP_CONF} ${IPYKERNEL} 2>&1
 else
     pip install -r "${REQ_PATH}" 2>&1
     if [ $? -ne 0 ]; then
         return 1
     fi
-    # Enforce installation of our version of ipykernel and its dependencies
+    # Enforce installation of our version of ipykernel
     pip install ${IPYKERNEL} 2>&1
 fi
 
 if [ -n "${USE_NXCALS}" ]; then
-    # For NXCALS, enforce installation of our Spark extensions and their dependencies at certain versions
+    # For NXCALS, enforce installation of our Spark extension versions
     if [ "${RESOLVED_REQ}" = true ]; then
         uv pip install ${ACCPY_PIP_CONF} ${SPARKMONITOR} ${SPARKCONNECTOR} 2>&1
     else
