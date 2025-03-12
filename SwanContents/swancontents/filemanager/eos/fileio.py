@@ -1,7 +1,7 @@
-from jupyter_server.services.contents.fileio import FileManagerMixin
+from jupyter_server.services.contents.fileio import AsyncFileManagerMixin
 from jupyter_server.utils import url_path_join
 from tornado.web import HTTPError
-from contextlib import contextmanager
+from contextlib import contextmanager, asynccontextmanager
 import io, os, nbformat
 import subprocess
 
@@ -82,7 +82,7 @@ def atomic_writing(path, text=True, encoding='utf-8', log=None, **kwargs):
             subprocess.run(["setfattr","-x", "user.fusex.rename.version", dirname])
 
 
-class SwanFileManagerMixin(FileManagerMixin):
+class SwanFileManagerMixin(AsyncFileManagerMixin):
     """
     Mixin for ContentsAPI classes that interact with the filesystem.
 
