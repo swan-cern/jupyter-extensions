@@ -1,13 +1,14 @@
-from jupyter_server.services.contents.checkpoints import Checkpoints
+from jupyter_server.services.contents.checkpoints import AsyncCheckpoints
 from ..filemanager.eos.fileio import SwanFileManagerMixin
 import os
 import datetime
+from anyio.to_thread import run_sync
 from traitlets import Unicode, Int
 from tornado.web import HTTPError
 
 
 
-class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
+class EOSCheckpoints(SwanFileManagerMixin, AsyncCheckpoints):
     """
         Implements Checkpoints interface for EOS.
         This allows the creation of EOS versions, visible both from
@@ -37,7 +38,7 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
     latest_recorded = {}
 
 
-    def create_checkpoint(self, contents_mgr, path):
+    async def create_checkpoint(self, contents_mgr, path):
         """
             EOS creates automatically a version by using the atomic writing.
             So we just need to return the latest checkpoint created
@@ -45,7 +46,7 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
         self.log.info(f"Creating checkpoint for {path}")
         # To check if the version returned is new or already known (an error might have occurred)
         previous_recorded = self.latest_recorded[path] if path in self.latest_recorded else None
-        checkpoints = self.list_checkpoints(path)
+        checkpoints = await self.list_checkpoints(path)
 
         if not checkpoints:
             self.log.warning("No checkpoint was created")
@@ -62,11 +63,11 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
 
         return current_checkpoint
 
-    def restore_checkpoint(self, contents_mgr, checkpoint_id, path):
+    async def restore_checkpoint(self, contents_mgr, checkpoint_id, path):
         """ Replace the current file with a previous version"""
         checkpoint = self._get_checkpoint_info(path, checkpoint_id)
         try:
-            self._copy(checkpoint['checkpoint_path'], checkpoint['src_path'])
+            await self._copy(checkpoint['checkpoint_path'], checkpoint['src_path'])
         except: 
             # the version might no longer exist if it was cleaned (by default EOS should keep 10 versions)
             self._no_such_checkpoint(path, checkpoint_id)
@@ -80,7 +81,7 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
         """
         pass
 
-    def delete_checkpoint(self, checkpoint_id, path):
+    async def delete_checkpoint(self, checkpoint_id, path):
         """Remove a created version"""
         cp_path = self._get_checkpoint_info(path, checkpoint_id)['checkpoint_path']
 
@@ -89,14 +90,14 @@ class EOSCheckpoints(SwanFileManagerMixin, Checkpoints):
 
         self.log.debug("Unlinking checkpoint %s", cp_path)
         with self.perm_to_403():
-            os.unlink(cp_path)
+            await run_sync(os.unlink, cp_path)
 
-    def list_checkpoints(self, path):
+    async def list_checkpoints(self, path):
         """ On notebook opening, returns a list of all available versions. """
         base = self._get_checkpoint_base(path)
 
         try:
-            files = os.listdir(base['base_path'])
+            files = await run_sync(os.listdir, base['base_path'])
             files.sort()
             to_return = [self._get_checkpoint_return(file) for file in files]
             # Keep track of the latest version to compare when creating a new one

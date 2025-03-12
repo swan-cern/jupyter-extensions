@@ -1,5 +1,5 @@
 # from notebook import transutils #needs to be imported before Jupyter File Manager
-from jupyter_server.services.contents.largefilemanager import LargeFileManager
+from jupyter_server.services.contents.largefilemanager import AsyncLargeFileManager
 from .eos.fileio import SwanFileManagerMixin
 from .eos.handlers import SwanAuthenticatedFileHandler
 from .projects_mixin import ProjectsMixin
@@ -9,7 +9,7 @@ import os
 import shutil
 
 
-class SwanEosFileManager(ProjectsMixin, SwanFileManagerMixin, LargeFileManager):
+class SwanEosFileManager(ProjectsMixin, SwanFileManagerMixin, AsyncLargeFileManager):
     """
     SWAN File Manager Wrapper for content on EOS
     Adds "Project" as a new type of folder
