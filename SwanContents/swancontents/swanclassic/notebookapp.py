@@ -17,6 +17,9 @@ from jupyter_server.serverapp import load_handlers
 from traitlets import Unicode
 import datetime
 
+from contextlib import redirect_stdout
+import os
+
 
 class NotebookApp(ClassicNotebookApp):
     """
@@ -49,7 +52,13 @@ class NotebookApp(ClassicNotebookApp):
         handlers.extend(load_handlers("swancontents.swanclassic.handlers.cernbox"))
         handlers.extend(load_handlers("swancontents.swanclassic.handlers.notebookviewer"))
         self.handlers.extend(handlers)
-        super(NotebookApp, self).initialize_handlers()
+
+        # When initializing the handlers, there's a a `print` that gives a warning to
+        # upgrade to notebook 7. By sending the print to dev/null, we don't pollute 
+        # our container's logs
+        with open(os.devnull, 'w') as f:
+            with redirect_stdout(f):
+                super(NotebookApp, self).initialize_handlers()
 
     def initialize_settings(self):
         """
