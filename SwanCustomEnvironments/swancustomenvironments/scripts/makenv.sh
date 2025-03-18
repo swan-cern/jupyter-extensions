@@ -67,7 +67,7 @@ while [ $# -gt 0 ]; do
             REPOSITORY=$2
             # Check if a repository was provided
             if [ -z "$REPOSITORY" ]; then
-                _log "ERROR: No repository provided." && log
+                _log "ERROR: No repository provided." && _log
                 print_help
                 exit 1
             fi
@@ -78,7 +78,7 @@ while [ $# -gt 0 ]; do
             REPO_TYPE=$2
             # Check if a repository type was provided
             if [ -z "$REPO_TYPE" ]; then
-                _log "ERROR: No repository type provided." && log
+                _log "ERROR: No repository type provided." && _log
                 print_help
                 exit 1
             fi
@@ -90,12 +90,12 @@ while [ $# -gt 0 ]; do
             BUILDER_PATH="$(dirname "$0")/builders/${BUILDER}.sh"
             # Check if a builder was provided
             if [ -z "$BUILDER" ]; then
-                _log "ERROR: No builder provided." && log
+                _log "ERROR: No builder provided." && _log
                 print_help
                 exit 1
             # Check if is a valid builder
             elif [ ! -f "${BUILDER_PATH}" ]; then
-                _log "ERROR: Invalid builder (${BUILDER})." && log
+                _log "ERROR: Invalid builder (${BUILDER})." && _log
                 print_help
                 exit 1
             fi
@@ -116,7 +116,7 @@ while [ $# -gt 0 ]; do
             exit 0
             ;;
         *)
-            _log "ERROR: Invalid argument: $1" && log
+            _log "ERROR: Invalid argument: $1" && _log
             print_help
             exit 1
             ;;
@@ -226,7 +226,6 @@ if [ ! -d "${GIT_REPO_PATH}" ]; then
     mv ${TMP_REPO_PATH} ${GIT_HOME}
 fi
 
-_log "ENV_NAME:${ENV_NAME}"
 _log "REPO_PATH:${GIT_REPO_PATH#$HOME}"
 
 # Ensure the terminal loads the environment and cds into the repository path
