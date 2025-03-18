@@ -8,39 +8,27 @@ div#header, div#site {
     display: block;
 }
 #output-box {
-    display: block;
-    width: 1150px;
+    max-width: 90%;
     height: 300px;
-    overflow-y: scroll;
-    overflow-x: hidden;
+    overflow-y: auto;
     white-space: pre-wrap;
     text-align: left;
     border: 1px solid #ccc;
     background-color: #f7f7f7;
     padding: 10px;
     border-radius: 5px;
-    margin-top: 15px;
+    margin: 20px auto;
 }
 #button-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    position: relative;
-    margin-top: 25px;
 }
-.action-buttons {
+#back-button {
     display: none;
-    text-align: center;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    padding: 10px 20px;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    margin: 20px;
+    background-color: #fc6404;
+    margin-bottom: 20px;
 }
-#back-button { background-color: #fc6404; }
 </style>
 {% endblock %}
 
@@ -67,7 +55,7 @@ data-base-url="{{base_url | urlencode}}"
         <br><br>
         <div id="output-box"></div>
         <div id="button-container">
-            <button class="action-buttons" id="back-button">Restart session</button>
+            <button class="btn btn-danger btn-lg" id="back-button">Restart session</button>
         </div>
     </div>
 </div>
@@ -78,37 +66,27 @@ data-base-url="{{base_url | urlencode}}"
     {{super()}}
 
 <script type = "text/javascript">
-    const redirect2Config = () => window.location = `/hub/home?changeconfig`;
-    const redirect2Lab = (base_url, project_path) => window.location = `${base_url}lab${project_path}`;
-    const get_jh_auth_header = () => {
-        const cookie = document.cookie.match("\\b_xsrf=([^;]*)\\b");
-        const xsrf = cookie ? cookie[1] : undefined;
-        return xsrf ? {'X-XSRFToken': xsrf} : {}
-    };
-
-    var base_url = document.body.getAttribute('data-base-url');
-    var project_path = '/';
-    var env_name = `${base_url.split('/')[-1]}_env`;
-    var has_failed = false;
+    const base_url = document.body.dataset.baseUrl; // Use dataset for cleaner access
+    const outputBox = document.getElementById('output-box');
+    let has_failed = false, project_path = '/';
 
     const urlParams = new URLSearchParams(window.location.search);
-    var repository = urlParams.get('repo') || "";
-    var builder = urlParams.get('builder') || "";
-    var builder_version = urlParams.get('builder_version') || "";
-    var file = `/${urlParams.get('file') || ""}`;
-    var nxcals = urlParams.get('nxcals') || "";
+    const file = `/${urlParams.get('file') || ""}`;
 
-    // Environment creation elements
-    var outputBox = document.getElementById('output-box');
-    var loader = document.getElementById('swan-loader');
-    var back_button = document.getElementById('back-button');
+    const get_jh_auth_header = () => {
+        const xsrf = document.cookie.match(/\b_xsrf=([^;]*)\b/);
+        return xsrf ? { 'X-XSRFToken': xsrf[1] } : {};
+    };
 
     // Function to trigger a visual error in the loader
     const trigger_visual_error = (message) => {
+        const backButton = document.getElementById('back-button');
+        const loader = document.getElementById('swan-loader');
+
         loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
         loader.getElementsByClassName('text')[0].innerHTML = 'Error creating environment';
-        back_button.onclick = () => redirect2Config();
-        back_button.style.display = 'block';
+        backButton.onclick = () => window.location = '/hub/home?changeconfig';
+        backButton.style.display = 'block';
         console.error(message);
     };
 
@@ -122,18 +100,14 @@ data-base-url="{{base_url | urlencode}}"
 
                 // Exit the loop if no more data is available
                 if (done) {
-                    loader.getElementsByClassName('loader-line-mask')[0].style.display = 'none';
-
                     // Output has errors -> change title and show button for going back to spawner
-                    if (has_failed) {
-                        trigger_visual_error("Environment creation failed");
-                    }
+                    if (has_failed) trigger_visual_error("Environment creation failed");
 
                     // Output is fine -> Redirect to JupyterLab
-                    else {
-                        redirect2Lab(base_url, project_path);
-                    }
-                    break; // Exit the loop after processing all data
+                    else window.location = base_url + "lab" + project_path;
+
+                    // Exit the loop after processing all data
+                    break;
                 }
 
                 // Decode the chunk into text and split by newlines
@@ -143,20 +117,14 @@ data-base-url="{{base_url | urlencode}}"
                     if (message_line.startsWith('REPO_PATH')) {
                         const repo_path = message_line.split(':')[1];
                         if (repo_path && repo_path !== '/') {
-                            project_path = `/tree${repo_path}${file}`;
+                            project_path = "/tree" + repo_path + file;
                         }
-                    } 
-                    // Get the environment name from the output
-                    else if (message_line.startsWith('ENV_NAME')) {
-                        env_name = message_line.split(':')[1];
                     } 
                     // Usual case -> update output box with the message received
                     else {
                         outputBox.innerHTML += message_line;
                         outputBox.scrollTop = outputBox.scrollHeight;
-                        if (message_line.includes('ERROR')) {
-                            has_failed = true;
-                        }
+                        if (message_line.includes('ERROR')) has_failed = true;
                     }
                     outputBox.innerHTML += '<br>';
                 });
@@ -166,23 +134,13 @@ data-base-url="{{base_url | urlencode}}"
         }
     }
 
-    fetch(`${base_url}api/customenvs?repo=${encodeURIComponent(repository)}&builder=${encodeURIComponent(builder)}&builder_version=${encodeURIComponent(builder_version)}&nxcals=${encodeURIComponent(nxcals)}`, {
+    const params = ['repo', 'builder', 'builder_version', 'nxcals'].reduce((acc, key) => ({ ...acc, [key]: urlParams.get(key) || "" }), {});
+    fetch(base_url + "api/customenvs?" + new URLSearchParams(params).toString(), {
         method: 'GET',
-        headers: get_jh_auth_header(),
+        headers: get_jh_auth_header()
     })
-    .then(response => {
-        if (!response.ok) {
-            trigger_visual_error(`Network response was not ok: ${response.statusText}`);
-        } else {
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder("utf-8");
-            // Start reading the first chunk
-            render_data_chunks(reader, decoder);
-        }
-    })
-    .catch(error => {
-        trigger_visual_error(`Error fetching stream: ${error}`);
-    });
-
+    .then(response => response.ok ? response.body.getReader() : Promise.reject(response.statusText))
+    .then(reader => render_data_chunks(reader, new TextDecoder("utf-8")))
+    .catch(error => trigger_visual_error(`Error fetching stream: ${error}`));
 </script>
 {% endblock %}
