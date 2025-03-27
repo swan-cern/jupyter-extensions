@@ -176,7 +176,7 @@ class SparkLocalConfiguration(SparkConfiguration):
 
         sc = self.connector.ipython.user_ns.get('sc')
         if sc and isinstance(sc, SparkContext):
-            webui_url = 'http://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
+            webui_url = 'https://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
             conn_config['sparkwebui'] = webui_url
         return conn_config
 
@@ -334,7 +334,7 @@ class SparkK8sConfiguration(SparkConfiguration):
                                               '&var-UserName=' + self.get_spark_user() + \
                                               '&var-ApplicationId=' + sc._conf.get('spark.app.id')
 
-            webui_url = 'http://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
+            webui_url = 'https://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
             conn_config['sparkwebui'] = webui_url
 
         return conn_config
