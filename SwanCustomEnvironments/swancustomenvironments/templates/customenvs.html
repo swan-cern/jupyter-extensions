@@ -73,6 +73,9 @@ data-base-url="{{base_url | urlencode}}"
     const urlParams = new URLSearchParams(window.location.search);
     const file = `/${urlParams.get('file') || ""}`;
 
+    // Scroll to the output-box height
+    window.scrollTo(0, outputBox.scrollHeight);
+
     const get_jh_auth_header = () => {
         const xsrf = document.cookie.match(/\b_xsrf=([^;]*)\b/);
         return xsrf ? { 'X-XSRFToken': xsrf[1] } : {};
