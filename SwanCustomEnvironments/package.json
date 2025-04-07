@@ -1,6 +1,6 @@
 {
     "name": "swancustomenvironments",
-    "version": "0.0.25",
+    "version": "0.0.26",
     "description": "Extension to provide support for venvs",
     "keywords": [
         "jupyter",
