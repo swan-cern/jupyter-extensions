@@ -74,7 +74,10 @@ data-base-url="{{base_url | urlencode}}"
     const file = `/${urlParams.get('file') || ""}`;
 
     // Scroll to the output-box height
-    window.scrollTo(0, outputBox.scrollHeight);
+    outputBox.scrollIntoView({
+        behavior: "smooth",
+        block: "start" // aligns the top of the element with the top of the scroll area
+    });
 
     const get_jh_auth_header = () => {
         const xsrf = document.cookie.match(/\b_xsrf=([^;]*)\b/);
