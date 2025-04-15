@@ -105,7 +105,7 @@ class ProjectsMixin(HasTraits):
         # should we also tranform it into a project?
         if create_file:
             with self.perm_to_403():
-                self._save_file(os.path.join(os_path, self.swan_default_file), '', 'text')
+                await super()._save_file(os.path.join(os_path, self.swan_default_file), '', 'text')
 
     async def get(self, path, content=True, type=None, format=None, require_hash=None):
         """ Get info from a path"""
@@ -157,7 +157,7 @@ class ProjectsMixin(HasTraits):
         try:
             if not self._is_swan_root_folder(os_path):
                 raise web.HTTPError(400, "You can only create projects inside SWAN Projects")
-            self._save_project(os_path, model, path)
+            await self._save_project(os_path, model, path)
 
         except web.HTTPError:
             raise
@@ -166,17 +166,17 @@ class ProjectsMixin(HasTraits):
             self.log.error(u'Error while creating a Project: %s %s', path, e, exc_info=True)
             raise web.HTTPError(500, f"Unexpected error while creating a Project: {path} {e}") from e
         
-        return self.get(path, content=False)
+        return await self.get(path, content=False)
 
-    def new(self, model=None, path=''):
+    async def new(self, model=None, path=''):
         if model and 'type' in model and 'ext' in model and \
                 model['type'] == 'directory' and model['ext'] == 'project':
             model['is_project'] = True
             model['ext'] = ''
-        return super().new(model, path)
+        return await super().new(model, path)
 
 
-    def new_untitled(self, path='', type='', ext=''):
+    async def new_untitled(self, path='', type='', ext=''):
         """ Create a new untitled file or directory in path
             path must be a directory
             File extension can be specified.
@@ -184,20 +184,20 @@ class ProjectsMixin(HasTraits):
         """
         
         if type != 'directory' or ext != 'project':
-            return super().new_untitled(path, type=type, ext=ext)
+            return await super().new_untitled(path, type=type, ext=ext)
 
         path = path.strip('/')
-        if not self.dir_exists(path):
+        if not await self.dir_exists(path):
             raise web.HTTPError(404, 'No such directory: %s' % path)
 
         model = {
             'type': 'directory',
             'is_project': True
         }
-        name = self.increment_filename(self.untitled_project, path, insert=' ')
+        name = await self.increment_filename(self.untitled_project, path, insert=' ')
         path = f'{path}/{name}'
 
-        return self.new(model, path)
+        return await self.new(model, path)
         
 
     async def update(self, model, path):
@@ -209,7 +209,7 @@ class ProjectsMixin(HasTraits):
         return await super().update(model, path)
 
 
-    def move_folder(self, origin, dest, preserve=False):
+    async def move_folder(self, origin, dest, preserve=False):
         """ Move a folder to a new location, but renames it if it already exists """
 
         # If the name exists, get a new one
@@ -222,11 +222,11 @@ class ProjectsMixin(HasTraits):
         self._move(origin, dest, preserve)
 
         # Make the folder a SWAN Project
-        self._save_file(os.path.join(dest, self.swan_default_file), '', 'text')
+        await self._save_file(os.path.join(dest, self.swan_default_file), '', 'text')
 
         return dest
 
-    def download(self, url):
+    async def download(self, url):
         """ Downloads a Project from git or cernbox """
 
         model = {}
@@ -245,7 +245,7 @@ class ProjectsMixin(HasTraits):
             dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, repo_name_no_ext)
 
             model['type'] = 'directory'
-            model['path'] = self.move_folder(tmp_dir_name, dest_dir_name)
+            model['path'] = await self.move_folder(tmp_dir_name, dest_dir_name)
 
         elif is_file_on_eos(url):
             # Opened from "Open in SWAN" button
@@ -264,7 +264,7 @@ class ProjectsMixin(HasTraits):
                 dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name_no_ext)
 
                 model['type'] = 'file'
-                model['path'] = os.path.join(self.move_folder(tmp_dir_name, dest_dir_name), file_name)
+                model['path'] = os.path.join(await self.move_folder(tmp_dir_name, dest_dir_name), file_name)
 
         elif url.startswith('local:'):
             path = url[6:]
@@ -275,7 +275,7 @@ class ProjectsMixin(HasTraits):
                 dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name)
 
                 model['type'] = 'directory'
-                model['path'] = self.move_folder(path, dest_dir_name, preserve=True)
+                model['path'] = await self.move_folder(path, dest_dir_name, preserve=True)
 
             elif os.path.isfile(path):
 
@@ -284,7 +284,7 @@ class ProjectsMixin(HasTraits):
                 dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name_no_ext)
 
                 model['type'] = 'file'
-                model['path'] = os.path.join(self.move_folder(tmp_dir_name, dest_dir_name), file_name)
+                model['path'] = os.path.join(await self.move_folder(tmp_dir_name, dest_dir_name), file_name)
 
             else:
                 raise web.HTTPError(404, u'File or directory does not exist: %s' % path)
@@ -318,7 +318,7 @@ class ProjectsMixin(HasTraits):
             dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name_no_ext)
 
             model['type'] = 'file'
-            model['path'] = os.path.join(self.move_folder(tmp_dir_name, dest_dir_name), file_name)
+            model['path'] = os.path.join(await self.move_folder(tmp_dir_name, dest_dir_name), file_name)
 
         model['path'] = model['path'].replace(self.root_dir, '').strip('/')
 
