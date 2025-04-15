@@ -506,6 +506,7 @@ define([
                     path: path
                 }, path, url);
                 that.update_swan_location(path);
+                window.location.reload();
             }
 
             function new_project_error(modal, message, exception) {
