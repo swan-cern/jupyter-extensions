@@ -140,7 +140,7 @@ if [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
     # Otherwise, use the existing one in the SWAN_projects folder
     if [ ! -d "${GIT_REPO_PATH}" ]; then
         _log "Cloning the repository from ${REPOSITORY}..."
-        git clone $REPOSITORY -q "${TMP_REPO_PATH}" 2>&1
+        timeout 45s git clone $REPOSITORY -q "${TMP_REPO_PATH}" 2>&1
         if [ $? -ne 0 ]; then
             _log "ERROR: Failed to clone Git repository" && exit 1
         fi
