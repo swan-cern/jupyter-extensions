@@ -58,6 +58,7 @@ data-base-url="{{base_url | urlencode}}"
     var base_url = document.body.getAttribute("data-baseUrl") || "";
     var urlParams = new URLSearchParams(window.location.search);
     var proj_url = urlParams.get('projurl');
+    const use_jupyterlab_field = urlParams.get('use-jupyterlab');
 
     var settings = {
         method: "GET",
@@ -73,7 +74,8 @@ data-base-url="{{base_url | urlencode}}"
         })
         .then(function(result) {
             if (result && result.path) {
-                var redirectUrl = base_url + (result.type === 'directory' ? result.path.replace('SWAN_projects', 'projects') : 'notebooks/' + result.path);
+                const classic_ui_path = result.type === 'directory' ? result.path.replace('SWAN_projects', 'projects') : 'notebooks/' + result.path;
+                const redirectUrl = base_url + (use_jupyterlab_field === 'checked' ? 'lab/tree/' + result.path : classic_ui_path);
                 window.location.replace(redirectUrl);
             } else {
                 showError('Error downloading project.');
