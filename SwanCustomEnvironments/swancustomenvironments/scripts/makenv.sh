@@ -74,17 +74,6 @@ while [ $# -gt 0 ]; do
             shift
             shift
             ;;
-        --repo_type)
-            REPO_TYPE=$2
-            # Check if a repository type was provided
-            if [ -z "$REPO_TYPE" ]; then
-                _log "ERROR: No repository type provided." && _log
-                print_help
-                exit 1
-            fi
-            shift
-            shift
-            ;;
         --builder)
             BUILDER=$2
             BUILDER_PATH="$(dirname "$0")/builders/${BUILDER}.sh"
