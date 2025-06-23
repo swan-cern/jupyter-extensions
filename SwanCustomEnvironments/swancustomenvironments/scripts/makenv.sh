@@ -19,7 +19,7 @@ _log () {
     fi
 }
 
-# Function to ensure a unique git repo name, instead of overwriting an existing one
+# Function to ensure a unique git repository name, instead of overwriting an existing one
 define_repo_path() {
     local folder_name=$1
     local counter=0
@@ -48,9 +48,9 @@ define_repo_path() {
 
 # Function for printing the help page
 print_help() {
-    _log "Usage: makenv --repo REPOSITORY --builder BUILDER --builder_version VERSION [--help/-h]"
+    _log "Usage: makenv --repository REPOSITORY --builder BUILDER --builder_version VERSION [--help/-h]"
     _log "Options:"
-    _log "  --repo REPOSITORY           Path or http link for a public repository"
+    _log "  --repository REPOSITORY     Path or http link for a public repository"
     _log "  --builder BUILDER           Builder to create the environment"
     _log "  --builder_version VERSION   Version of the builder to use (optional)"
     _log "  --nxcals                    Install NXCALS package and Spark extensions in the environment (optional)"
@@ -63,7 +63,7 @@ print_help() {
 while [ $# -gt 0 ]; do
     key="$1"
     case $key in
-        --repo)
+        --repository)
             REPOSITORY=$2
             # Check if a repository was provided
             if [ -z "$REPOSITORY" ]; then
@@ -125,7 +125,7 @@ if [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
     ENV_NAME="${REPO_NAME}_env"
 
     define_repo_path $REPO_NAME
-    # If the repo was not previous cloned yet, clone it.
+    # If the repository was not previous cloned yet, clone it.
     # Otherwise, use the existing one in the SWAN_projects folder
     if [ ! -d "${GIT_REPO_PATH}" ]; then
         _log "Cloning the repository from ${REPOSITORY}..."

@@ -23,7 +23,7 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
     async def get(self):
         """
         Gets the arguments from the query string and runs the makenv.sh script with them.
-        repo (str): The git URL or absolute unix path to the repository.
+        repository (str): The git URL or absolute unix path to the repository.
         builder (str): The builder used for creating the environment.
         builder_version (str): The version of the specified builder.
         nxcals (bool): Whether to include NXCALS and Spark extensions in the environment.
@@ -40,12 +40,12 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
 
     def _launch_makenv(self) -> Popen:
         """Launches the makenv.sh script as a subprocess."""
-        repository = self.get_query_argument("repo", default="")
+        repository = self.get_query_argument("repository", default="")
         builder = self.get_query_argument("builder", default="")
         builder_version = self.get_query_argument("builder_version", default="")
         nxcals = self.get_query_argument("nxcals", default="")
 
-        arguments = ["--repo", repository, "--builder", builder]
+        arguments = ["--repository", repository, "--builder", builder]
         if builder_version:
             arguments.extend(("--builder_version", builder_version))
         if nxcals:
