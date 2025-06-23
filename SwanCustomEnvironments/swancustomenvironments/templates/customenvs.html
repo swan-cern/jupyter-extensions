@@ -140,7 +140,7 @@ data-base-url="{{base_url | urlencode}}"
         }
     }
 
-    const params = ['repo', 'builder', 'builder_version', 'nxcals'].reduce((acc, key) => ({ ...acc, [key]: urlParams.get(key) || "" }), {});
+    const params = ['repository', 'builder', 'builder_version', 'nxcals'].reduce((acc, key) => ({ ...acc, [key]: urlParams.get(key) || "" }), {});
     fetch(base_url + "api/customenvs?" + new URLSearchParams(params).toString(), {
         method: 'GET',
         headers: get_jh_auth_header()
