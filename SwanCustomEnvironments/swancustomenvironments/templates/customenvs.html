@@ -71,7 +71,7 @@ data-base-url="{{base_url | urlencode}}"
     let has_failed = false, project_path = '/';
 
     const urlParams = new URLSearchParams(window.location.search);
-    const file = `/${urlParams.get('file') || ""}`;
+    const file = `/${urlParams.get('file') || ""}`.replace(/\.\.\//g, '').replace(/\.\.\\/g, '');
 
     // Scroll to the output-box height
     outputBox.scrollIntoView({
