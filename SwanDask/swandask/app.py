@@ -12,6 +12,8 @@ from tornado import ioloop, web
 # Otherwise, we would need to configure the templates
 from jupyter_server.base.handlers import JupyterHandler, APIHandler
 JupyterHandler.write_error = APIHandler.write_error
+from traitlets.config import Configurable
+from jupyter_server.auth import IdentityProvider
 
 class WebApp:
     pass
@@ -46,11 +48,15 @@ def main():
     # Prevent 403 errors when querying the dashboard server
     _set_dashboard_whitelist()
 
+    # Create a dummy Configurable parent for the IdentityProvider
+    identity_provider = IdentityProvider(parent=Configurable())
+
     # If no remote access allowed, Jupyter will check if we're serving from https://localhost
     app = web.Application(
         base_url=args.base_url,
         allow_remote_access=True,
         cookie_secret=urandom(32),
+        identity_provider=identity_provider
     )
 
     server_app = WebApp()
