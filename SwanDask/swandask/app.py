@@ -2,6 +2,7 @@ import argparse
 import logging
 import socket
 from functools import partialmethod
+from os import urandom
 
 from dask_labextension import load_jupyter_server_extension
 from dask_labextension.dashboardhandler import DaskDashboardHandler
@@ -46,7 +47,11 @@ def main():
     _set_dashboard_whitelist()
 
     # If no remote access allowed, Jupyter will check if we're serving from https://localhost
-    app = web.Application(base_url=args.base_url, allow_remote_access=True)
+    app = web.Application(
+        base_url=args.base_url,
+        allow_remote_access=True,
+        cookie_secret=urandom(32),
+    )
 
     server_app = WebApp()
     server_app.web_app = app
