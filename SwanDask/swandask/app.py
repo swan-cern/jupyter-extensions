@@ -2,6 +2,7 @@ import argparse
 import logging
 import socket
 from functools import partialmethod
+import os
 
 from dask_labextension import load_jupyter_server_extension
 from dask_labextension.dashboardhandler import DaskDashboardHandler
@@ -36,6 +37,14 @@ def main():
     parser.add_argument("--base_url", default="/", action="store", dest="base_url")
     args = parser.parse_args()
 
+    jupyter_runtime_dir = os.path.join(os.environ.get("JUPYTER_RUNTIME_DIR", "/tmp"), "jupyter_cookie_secret")
+    if not os.path.exists(jupyter_runtime_dir):
+        raise FileNotFoundError(f"Jupyter cookie secret file not found at {jupyter_runtime_dir}")
+    with open(jupyter_runtime_dir, "rb") as f:
+        cookie_secret = f.read()
+    if not cookie_secret:
+        raise ValueError("Jupyter cookie secret file is empty")
+
     log = logging.getLogger("tornado.swandask")
     log.name = "SwanDask"
     log.setLevel(logging.INFO)
@@ -46,7 +55,11 @@ def main():
     _set_dashboard_whitelist()
 
     # If no remote access allowed, Jupyter will check if we're serving from https://localhost
-    app = web.Application(base_url=args.base_url, allow_remote_access=True)
+    app = web.Application(
+        base_url=args.base_url,
+        allow_remote_access=True,
+        cookie_secret=cookie_secret,
+    )
 
     server_app = WebApp()
     server_app.web_app = app
