@@ -180,6 +180,7 @@ JUPYTER_PATH=${ENV_PATH}/share/jupyter python -m ipykernel install --name "${ENV
 KERNEL_JSON=${ENV_PATH}/share/jupyter/kernels/${ENV_NAME}/kernel.json
 ln -f -s ${KERNEL_JSON} /home/$USER/.local/share/jupyter/kernels/python3/kernel.json
 
+TMP_KERNEL=$(mktemp)
 # For NXCALS, configure the environment kernel and terminal with some variables to
 # ensure the connection with the cluster works properly.
 if [ -n "${USE_NXCALS}" ]; then
@@ -193,21 +194,23 @@ if [ -n "${USE_NXCALS}" ]; then
     export PYSPARK_PYTHON="./environment/bin/python"
     export SPARK_DRIVER_EXTRA_JAVA_OPTIONS=$(awk '/^spark.driver.extraJavaOptions/ {sub(/^spark.driver.extraJavaOptions /, ""); print}' ${SPARK_HOME}/conf/spark-defaults.conf)
 
-    NEW_KERNEL=$(mktemp)
     jq --arg SPARK_HOME "${SPARK_HOME}" \
     --arg PYSPARK_PYTHON "${PYSPARK_PYTHON}" \
     --arg PATH "${PATH}" \
     --arg VIRTUAL_ENV "${ENV_PATH}" \
     --arg SPARK_DRIVER_EXTRA_JAVA_OPTIONS "${SPARK_DRIVER_EXTRA_JAVA_OPTIONS}" \
     '. + {env: {$SPARK_HOME, $PYSPARK_PYTHON, $PATH, $VIRTUAL_ENV, $SPARK_DRIVER_EXTRA_JAVA_OPTIONS}}' \
-    ${KERNEL_JSON} > ${NEW_KERNEL}
-    mv -f ${NEW_KERNEL} ${KERNEL_JSON} 2>&1
+    ${KERNEL_JSON} > ${TMP_KERNEL}
 
     # Terminal configuration
     # Only SPARK_HOME and PYSPARK_PYTHON are needed, since PATH and VIRTUAL_ENV are already
     # set when activating the environment in the terminal.
     echo -e "export SPARK_HOME=\"${SPARK_HOME}\"\nexport PYSPARK_PYTHON=\"${PYSPARK_PYTHON}\"" >> /home/$USER/.bash_profile
+else
+    # Configure the PATH to point to all the binaries in the environment
+    jq --arg PATH "${PATH}" '. + {env: {$PATH}}' ${KERNEL_JSON} > ${TMP_KERNEL}
 fi
+mv -f ${TMP_KERNEL} ${KERNEL_JSON} 2>&1
 
 # Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder
 if [ ! -d "${GIT_REPO_PATH}" ]; then
