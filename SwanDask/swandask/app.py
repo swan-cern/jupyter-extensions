@@ -7,13 +7,25 @@ from dask_labextension import load_jupyter_server_extension
 from dask_labextension.dashboardhandler import DaskDashboardHandler
 from tornado import ioloop, web
 
-# Prevent exceptions from trying to create an html error response
-# Otherwise, we would need to configure the templates
+from traitlets.config import Configurable
+from jupyter_server.auth import IdentityProvider
 from jupyter_server.base.handlers import JupyterHandler, APIHandler
-JupyterHandler.write_error = APIHandler.write_error
+
 
 class WebApp:
     pass
+
+
+def _patch_handlers():
+    # Prevent exceptions from trying to create an html error response
+    # Otherwise, we would need to configure the templates
+    JupyterHandler.write_error = APIHandler.write_error
+
+    # The endpoint is already protected by jupyter-server-proxy
+    # So we fake a logged in user to prevent the extension from failing
+    # with lack of valid auth
+    JupyterHandler._jupyter_current_user = "nobody"
+
 
 def _set_dashboard_whitelist():
     '''
@@ -42,11 +54,22 @@ def main():
     log.propagate = True
     log.info(f"Running SwanDask on port {args.port} with base url {args.base_url}")
 
+    # Patch the Jupyter and tornado handlers to avoid configuring all
+    # parameters in the web.Application bellow
+    _patch_handlers()
+
     # Prevent 403 errors when querying the dashboard server
     _set_dashboard_whitelist()
 
-    # If no remote access allowed, Jupyter will check if we're serving from https://localhost
-    app = web.Application(base_url=args.base_url, allow_remote_access=True)
+    # Create a dummy IdentityProvider
+    # We don't use it, but this way we remove a warning of deprecation
+    identity_provider = IdentityProvider(parent=Configurable())
+
+    app = web.Application(
+        base_url=args.base_url,
+        allow_remote_access=True,
+        identity_provider=identity_provider
+    )
 
     server_app = WebApp()
     server_app.web_app = app
