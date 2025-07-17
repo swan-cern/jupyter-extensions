@@ -7,8 +7,6 @@ from dask_labextension import load_jupyter_server_extension
 from dask_labextension.dashboardhandler import DaskDashboardHandler
 from tornado import ioloop, web
 
-from traitlets.config import Configurable
-from jupyter_server.auth import IdentityProvider
 from jupyter_server.base.handlers import JupyterHandler, APIHandler
 
 
@@ -63,7 +61,13 @@ def main():
 
     # Create a dummy IdentityProvider
     # We don't use it, but this way we remove a warning of deprecation
-    identity_provider = IdentityProvider(parent=Configurable())
+    # This requires Jupyter Server > 2, so it will fail if older
+    try:
+        from jupyter_server.auth import IdentityProvider
+        from traitlets.config import Configurable
+        identity_provider = IdentityProvider(parent=Configurable())
+    except:
+        identity_provider = None
 
     app = web.Application(
         base_url=args.base_url,
