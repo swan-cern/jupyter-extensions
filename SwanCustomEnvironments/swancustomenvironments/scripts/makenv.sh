@@ -116,10 +116,10 @@ done
 # Validate input arguments
 
 # Git URL pattern: https://github.com/<username>/<repo_name>(/?) or https://gitlab.cern.ch/<username>/<repo_name>((/?)|(.git?))
-REPO_GIT_PATTERN='^https?:\/\/(github\.com|gitlab\.cern\.ch)\/([a-zA-Z0-9_-]+)\/([a-zA-Z0-9_-]+)(\/|\.git)?$'
+REPO_HTTP_PATTERN="^https?://(github\.com|gitlab\.cern\.ch)/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+(/|\.git)?$"
 
 # Checks if the provided repository is a valid URL
-if [[ "$REPOSITORY" =~ $REPO_GIT_PATTERN ]]; then
+if [[ "$REPOSITORY" =~ $REPO_HTTP_PATTERN ]]; then
     # Extract the repository name
     REPO_NAME=$(basename "${REPOSITORY%.git}")
     ENV_NAME="${REPO_NAME}_env"
