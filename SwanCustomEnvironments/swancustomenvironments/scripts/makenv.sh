@@ -19,6 +19,36 @@ _log () {
     fi
 }
 
+save_ssh_host() {
+    local tmp_repo="$1"
+
+    # Skip if HTTP(S)
+    if [[ "$tmp_repo" =~ ^https?:// ]]; then
+        return
+    fi
+
+    local host port=22  # default SSH port
+
+    # Case 1: ssh://git@host:port/path.git (used for gitlab.cern.ch with custom port)
+    if [[ "$tmp_repo" =~ ^ssh://[^@]+@([^:/]+):([0-9]+)/ ]]; then
+        host="${BASH_REMATCH[1]}"
+        port="${BASH_REMATCH[2]}"
+    # Case 2: scp-style (git@host:path.git) e.g. git@github.com:owner/tmp_repo.git (used for github.com with default port)
+    elif [[ "$tmp_repo" =~ ^[^@]+@([^:]+): ]]; then
+        host="${BASH_REMATCH[1]}"
+    else
+        _log "ERROR: Could not parse SSH repository URL: $repo"
+        return
+    fi
+
+    # Check if the host is not in known_hosts yet
+    if ssh -T -o BatchMode=yes -p "$port" "git@$host" 2>&1 | grep -q "verification failed"; then
+        # Add the host to known_hosts
+        mkdir -p ~/.ssh
+        ssh-keyscan -p "$port" "$host" >> ~/.ssh/known_hosts 2>/dev/null
+    fi
+}
+
 # Function to ensure a unique git repository name, instead of overwriting an existing one
 define_repo_path() {
     local folder_name=$1
@@ -117,9 +147,10 @@ done
 
 # Git URL pattern: https://github.com/<username>/<repo_name>(/?) or https://gitlab.cern.ch/<username>/<repo_name>((/?)|(.git?))
 REPO_HTTP_PATTERN="^https?://(github\.com|gitlab\.cern\.ch)/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+(/|\.git)?$"
+REPO_SSH_PATTERN="^(ssh://git@(gitlab\.cern\.ch)(:[0-9]+)?/|git@github\.com:)[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+(/|\.git)?$"
 
 # Checks if the provided repository is a valid URL
-if [[ "$REPOSITORY" =~ $REPO_HTTP_PATTERN ]]; then
+if [[ "$REPOSITORY" =~ $REPO_HTTP_PATTERN || "$REPOSITORY" =~ $REPO_SSH_PATTERN ]]; then
     # Extract the repository name
     REPO_NAME=$(basename "${REPOSITORY%.git}")
     ENV_NAME="${REPO_NAME}_env"
@@ -128,6 +159,7 @@ if [[ "$REPOSITORY" =~ $REPO_HTTP_PATTERN ]]; then
     # If the repository was not previous cloned yet, clone it.
     # Otherwise, use the existing one in the SWAN_projects folder
     if [ ! -d "${GIT_REPO_PATH}" ]; then
+        save_ssh_host "$REPOSITORY"
         _log "Cloning the repository from ${REPOSITORY}..."
         timeout 45s git clone $REPOSITORY -q "${TMP_REPO_PATH}" 2>&1
         if [ $? -ne 0 ]; then
