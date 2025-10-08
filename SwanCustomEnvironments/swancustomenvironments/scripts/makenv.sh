@@ -146,8 +146,9 @@ done
 # Validate input arguments
 
 # Git URL pattern: https://github.com/<username>/<repo_name>(/?) or https://gitlab.cern.ch/<username>/<repo_name>((/?)|(.git?))
-REPO_HTTP_PATTERN="^https?://(github\.com|gitlab\.cern\.ch)/[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+(/|\.git)?$"
-REPO_SSH_PATTERN="^(ssh://git@(gitlab\.cern\.ch)(:[0-9]+)?/|git@github\.com:)[a-zA-Z0-9_-]+/[a-zA-Z0-9_-]+(/|\.git)?$"
+REPO_HTTP_PATTERN="^https?://(github\.com|gitlab\.cern\.ch)(/[a-zA-Z0-9._-]+)+(/|\.git)?$"
+# SSH URL pattern: ssh://<username>@<hostname>:<port>/<repo_path> or <username>@<hostname>:<repo_path> (scp-style)
+REPO_SSH_PATTERN="^(ssh://git@(gitlab\.cern\.ch)(:[0-9]+)?/|git@github\.com:)([a-zA-Z0-9._-]+/)+[a-zA-Z0-9._-]+(/|\.git)?$"
 
 # Checks if the provided repository is a valid URL
 if [[ "$REPOSITORY" =~ $REPO_HTTP_PATTERN || "$REPOSITORY" =~ $REPO_SSH_PATTERN ]]; then
