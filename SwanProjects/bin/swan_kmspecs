@@ -1,0 +1,136 @@
+#!/usr/bin/env python
+# Copyright (c) SWAN Development Team.
+# Author: Omar.Zapata@cern.ch 2021
+
+"""
+This script allows to find the kernels for python2/3 and kernel spec paths for our kernel spec manager.
+
+The script runs a subprocess inside the project environment trying to find the package ipykernel
+and run jupyter_path('kernels') to get the list of available paths for the differents kernels inside the environment as well.
+
+This is executed in the Create/Edit project handlers and the stdout is captured, getting the json information printed in the function generate_ksminfo()
+"""
+import argparse
+import json
+import os
+import pprint
+import subprocess
+import sys
+from distutils.spawn import find_executable
+from shutil import rmtree
+try:
+    from jupyter_core.paths import jupyter_path, get_home_dir
+except ImportError:
+    print("{'status':0, 'msg':'Package jupyter_core not found in the environment, kernel paths can not be found.'}")
+    sys.exit(1)
+
+
+def checkipykernel(python_interpreter):
+    """
+    Checks if ipykernel is available for the given python interpreter,
+    this function have to be executed inside the project environment.
+
+    Parameters
+    ----------
+    python_interpreter : str
+        full path to python interpreter.
+
+    Returns
+    -------
+    int
+        zero if ipykernel was found.
+    """
+    python_code = 'import ipykernel'
+    command = [python_interpreter, "-c", python_code]
+    proc = subprocess.Popen(command, stdout=subprocess.PIPE)
+    proc.wait()
+    proc.communicate()
+    return proc.returncode
+
+
+def check_native_kernel():
+    """
+    Checks if ipykernel is available for python2 and python3.
+
+    This routine is called inside the project environment,
+    It checks if python2/3 are available and, if they are,
+    it checks if the package ipykernel is installed for them.
+
+    Why? A kernel.json might not be available but,
+    if the package ipykernel is, it will allow us to create the json file locally in the project.
+    We need to do so because our kernel spec manager requires a kernel path with the kernel.json file.
+
+    Returns
+    -------
+    dict
+        information about python version found and if ipykernel was found for the python version.
+    """
+    project_data = {}
+    # checking if python2 is found
+    python2 = find_executable("python2")
+    if python2 is not None:
+        project_data["python2"] = {"found": True, "path": python2}
+        # checking is ipython is found for python2
+        rcode = checkipykernel(python2)
+        if rcode == 0:
+            project_data["python2"]["ipykernel"] = True
+        else:
+            project_data["python2"]["ipykernel"] = False
+    else:
+        project_data["python2"]["found"] = False
+
+    # checking if python3 is found
+    python3 = find_executable("python3")
+    if python3 is not None:
+        project_data["python3"] = {"found": True, "path": python3}
+        # checking is ipython is found for python3
+        rcode = checkipykernel(python3)
+        if rcode == 0:
+            project_data["python3"]["ipykernel"] = True
+        else:
+            project_data["python3"]["ipykernel"] = False
+    else:
+        project_data["python3"]["found"] = False
+    return project_data
+
+
+def get_kernel_paths():
+    """
+    Allows to find kernel paths inside the environment
+
+    Returns
+    -------
+    list
+        kernel paths found inside the environment.
+    """
+    kernels_blacklist_paths = [os.path.join(
+        get_home_dir(), '.local/share/jupyter/kernels'), '/usr/local/share/jupyter/kernels', '/usr/share/jupyter/kernels']
+    tmp_paths = jupyter_path('kernels')
+    if "kernels" in tmp_paths:
+        tmp_paths.remove("kernels")
+    paths = []
+    for path in tmp_paths:
+        found = False
+        for bl_path in kernels_blacklist_paths:
+            if bl_path in path:
+                found = True
+        if not found:
+            paths.append(path)
+    return paths
+
+
+def generate_ksminfo():
+    """
+    Function to generate all the kernel spec manager info,
+    calling the function check_native_kernel and  get_kernel_paths.
+    """
+    ksminfo = check_native_kernel()
+    ksminfo["kernel_dirs"] = get_kernel_paths()
+    ksminfo["status"] = 1
+    print(json.dumps(ksminfo, indent=4))
+
+if __name__ == '__main__':
+    """
+    Entry point to use this script, calls generate_ksminfo routine to generate the kernel info.
+    """
+    generate_ksminfo()
