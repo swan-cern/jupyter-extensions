@@ -15,15 +15,21 @@ eval "${ACTIVATE_ENV_CMD}"
 # Use uv for better performance if environment is fully resolved;
 # Otherwise, use pip for resolution (more reliable long-term).
 _log "Installing packages from ${REQ_PATH}..."
+
+# If REQ_PATH points to a pyproject.toml, change it to the its parent folder
+# so pip doesn't get called with "-r pyproject.toml", which is invalid.
+if [[ "${REQ_PATH}" == *pyproject.toml ]]; then
+    REQ_PATH="$(dirname "${REQ_PATH}")"
+fi
 if [ "${RESOLVED_REQ}" = true ]; then
-    uv pip install -r "${REQ_PATH}" 2>&1
+    uv pip install ${R_FLAG} "${REQ_PATH}" 2>&1
     if [ $? -ne 0 ]; then
         return 1
     fi
     # Enforce installation of our version of ipykernel and its dependencies
     uv pip install ${IPYKERNEL} 2>&1
 else
-    pip install -r "${REQ_PATH}" 2>&1
+    pip install ${R_FLAG} "${REQ_PATH}" 2>&1
     if [ $? -ne 0 ]; then
         return 1
     fi

@@ -175,20 +175,27 @@ fi
 # --------------------------------------------------------------------------------------------
 # Create and set up the environment
 
+R_FLAG=""
 ENV_PATH="/home/$USER/${ENV_NAME}"
 IPYKERNEL="ipykernel==$(python -c 'import ipykernel; print(ipykernel.__version__)')"
 
 if [ -f "${TMP_REPO_PATH}/requirements.txt" ]; then
     # Fully resolved requirements (requirements.txt) take precedence
     RESOLVED_REQ=true
+    R_FLAG=-r
     REQ_PATH="${TMP_REPO_PATH}/requirements.txt"
+elif [ -f "${TMP_REPO_PATH}/pyproject.toml" ]; then
+    # Else if pyproject.toml is present, proceed with high-level requirements
+    RESOLVED_REQ=false
+    REQ_PATH="${TMP_REPO_PATH}/pyproject.toml"
 elif [ -f "${TMP_REPO_PATH}/requirements.in" ]; then
     # If only requirements.in is present, proceed with high-level requirements
     RESOLVED_REQ=false
+    R_FLAG=-r
     REQ_PATH="${TMP_REPO_PATH}/requirements.in"
 else
-    # There are no requirements files (neither requirements.txt nor requirements.in) in the repository
-    _log "ERROR: No requirements file found. You must provide a requirements.in or requirements.txt file." && exit 1
+    # There are no requirements files (neither requirements.txt, pyproject.toml nor requirements.in) in the repository
+    _log "ERROR: No requirements file found. You must provide a requirements.in, pyproject.toml, or requirements.txt file." && exit 1
 fi
 
 # Check if the requirements file contains the nxcals package, if the user activated the nxcals option
@@ -249,6 +256,13 @@ mv -f ${TMP_KERNEL} ${KERNEL_JSON} 2>&1
 if [ ! -d "${GIT_REPO_PATH}" ]; then
     mkdir -p ${GIT_HOME}
     mv ${TMP_REPO_PATH} ${GIT_HOME}
+    # If pyproject.toml was used, reinstall the package reference, because it was
+    # initially installed under /tmp (only if the repo was not previously cloned)
+    # So, when requirements.txt is generated, it will point to the actual path and not /tmp
+    if [ "${R_FLAG}" != "-r" ]; then
+        REQ_PATH="${GIT_REPO_PATH}"
+        pip install "${REQ_PATH}" 2>&1 # Use installed env pip
+    fi
 fi
 
 _log "REPO_PATH:${GIT_REPO_PATH#$HOME}"
