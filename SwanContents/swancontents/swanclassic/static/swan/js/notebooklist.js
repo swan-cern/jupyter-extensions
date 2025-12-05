@@ -2,13 +2,15 @@ define([
     'jquery',
     'require',
     'base/js/namespace',
+    'tree/js/newnotebook',
     'tree/js/notebooklist',
     'base/js/dialog',
     'base/js/utils',
     'base/js/events',
     'base/js/keyboard',
+    'base/js/i18n',
     'moment'
-], function ($, requirejs, IPython, notebook_list, dialog, utils, events, keyboard, moment) {
+], function ($, requirejs, IPython, newnotebook, notebook_list, dialog, utils, events, keyboard, i18n, moment) {
 
     /**
      * Extends Jupyter notebooklist lib to cope with the new filemanager and handlers
@@ -19,6 +21,7 @@ define([
     var swan_share_root = 'swan_sharing_folder'
 
     var parent_notebook_list = notebook_list.NotebookList;
+    var parent_newnotebook = newnotebook.NewNotebookWidget;
     var child_notebook_list = function (selector, options) {
         parent_notebook_list.call(this, selector, options);
 
@@ -331,6 +334,50 @@ define([
 
         var filesize = utils.format_filesize(model.size);
         item.find(".file-size").text(filesize || '\xA0');
+    };
+
+    /**
+     *  Temporary overwrite to fix a bug with the dir_path being encoded in URL format
+     *  Once the upstream PR has been merged, this function overwrite can be removed:
+        https://github.com/jupyter/nbclassic/pull/391
+     */ 
+    parent_newnotebook.prototype.new_notebook = function (kernel_name, evt) {
+        /** create and open a new notebook */
+        var that = this;
+        kernel_name = kernel_name || this.default_kernel;
+        var w = window.open(undefined, IPython._target);
+        var dir_path = utils.get_body_data('notebookPath');
+        this.contents.new_untitled(dir_path, {type: "notebook"}).then(
+            function (data) {
+                var url = utils.url_path_join(
+                    that.base_url, that.nbclassic_path, 'notebooks',
+                    utils.encode_uri_components(data.path)
+                );
+                if (kernel_name) {
+                    url += "?kernel_name=" + kernel_name;
+                }
+                w.location = url;
+        }).catch(function (e) {
+            w.close();
+            // This statement is used simply so that message extraction
+            // will pick up the strings.  The actual setting of the text
+            // for the button is in dialog.js.
+            var button_labels = [ i18n._("OK")];
+            dialog.modal({
+                title : i18n._('Creating Notebook Failed'),
+                body : $('<div/>')
+                    .text(i18n._("An error occurred while creating a new notebook."))
+                    .append($('<div/>')
+                        .addClass('alert alert-danger')
+                        .text(e.message || e)),
+                buttons: {
+                    OK: {'class' : 'btn-primary'}
+                }
+            });
+        });
+        if (evt !== undefined) {
+            evt.preventDefault();
+        }
     };
 
     /**
