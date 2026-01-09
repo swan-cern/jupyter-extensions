@@ -95,12 +95,6 @@ while [ $# -gt 0 ]; do
     case $key in
         --repository)
             REPOSITORY=$2
-            # Check if a repository was provided
-            if [ -z "$REPOSITORY" ]; then
-                _log "ERROR: No repository provided." && _log
-                print_help
-                exit 1
-            fi
             shift
             shift
             ;;
@@ -145,63 +139,76 @@ done
 # --------------------------------------------------------------------------------------------
 # Validate input arguments
 
-# Git URL pattern: https://github.com/<username>/<repo_name>(/?) or https://gitlab.cern.ch/<username>/<repo_name>((/?)|(.git?))
-REPO_HTTP_PATTERN="^https?://(github\.com|gitlab\.cern\.ch)(/[a-zA-Z0-9._-]+)+(/|\.git)?$"
-# SSH URL pattern: ssh://<username>@<hostname>:<port>/<repo_path> or <username>@<hostname>:<repo_path> (scp-style)
-REPO_SSH_PATTERN="^(ssh://git@(gitlab\.cern\.ch)(:[0-9]+)?/|git@github\.com:)([a-zA-Z0-9._-]+/)+[a-zA-Z0-9._-]+(/|\.git)?$"
+# Only handles repository if the BUILDER is not coming from a software stack (e.g LHCb)
+if [[ " $STACKS_FOR_CUSTOMENVS " != *" $BUILDER "* ]]; then
+    # Check if a repository was provided when using accpy builder
+    if [ -z "$REPOSITORY" ]; then
+        _log "ERROR: No repository provided." && _log
+        print_help
+        exit 1g
+    fi
 
-# Checks if the provided repository is a valid URL
-if [[ "$REPOSITORY" =~ $REPO_HTTP_PATTERN || "$REPOSITORY" =~ $REPO_SSH_PATTERN ]]; then
-    # Extract the repository name
-    REPO_NAME=$(basename "${REPOSITORY%.git}")
-    ENV_NAME="${REPO_NAME}_env"
+    # Git URL pattern: https://github.com/<username>/<repo_name>(/?) or https://gitlab.cern.ch/<username>/<repo_name>((/?)|(.git?))
+    REPO_HTTP_PATTERN="^https?://(github\.com|gitlab\.cern\.ch)(/[a-zA-Z0-9._-]+)+(/|\.git)?$"
+    # SSH URL pattern: ssh://<username>@<hostname>:<port>/<repo_path> or <username>@<hostname>:<repo_path> (scp-style)
+    REPO_SSH_PATTERN="^(ssh://git@(gitlab\.cern\.ch)(:[0-9]+)?/|git@github\.com:)([a-zA-Z0-9._-]+/)+[a-zA-Z0-9._-]+(/|\.git)?$"
 
-    define_repo_path $REPO_NAME
-    # If the repository was not previous cloned yet, clone it.
-    # Otherwise, use the existing one in the SWAN_projects folder
-    if [ ! -d "${GIT_REPO_PATH}" ]; then
-        save_ssh_host "$REPOSITORY"
-        _log "Cloning the repository from ${REPOSITORY}..."
-        timeout 45s git clone $REPOSITORY -q "${TMP_REPO_PATH}" 2>&1
-        if [ $? -ne 0 ]; then
-            _log "ERROR: Failed to clone Git repository" && exit 1
+    # Checks if the provided repository is a valid URL
+    if [[ "$REPOSITORY" =~ $REPO_HTTP_PATTERN || "$REPOSITORY" =~ $REPO_SSH_PATTERN ]]; then
+        # Extract the repository name
+        REPO_NAME=$(basename "${REPOSITORY%.git}")
+        ENV_NAME="${REPO_NAME}_env"
+
+        define_repo_path $REPO_NAME
+        # If the repository was not previous cloned yet, clone it.
+        # Otherwise, use the existing one in the SWAN_projects folder
+        if [ ! -d "${GIT_REPO_PATH}" ]; then
+            save_ssh_host "$REPOSITORY"
+            _log "Cloning the repository from ${REPOSITORY}..."
+            timeout 45s git clone $REPOSITORY -q "${TMP_REPO_PATH}" 2>&1
+            if [ $? -ne 0 ]; then
+                _log "ERROR: Failed to clone Git repository" && exit 1
+            fi
         fi
+    else
+        _log "ERROR: Invalid Git repository (${REPOSITORY})." && _log
+        exit 1
+    fi
+
+    # --------------------------------------------------------------------------------------------
+    # Create and set up the environment
+
+    R_FLAG=""
+    if [ -f "${TMP_REPO_PATH}/requirements.txt" ]; then
+        # Fully resolved requirements (requirements.txt) take precedence
+        RESOLVED_REQ=true
+        R_FLAG=-r
+        REQ_PATH="${TMP_REPO_PATH}/requirements.txt"
+    elif [ -f "${TMP_REPO_PATH}/pyproject.toml" ]; then
+        # Else if pyproject.toml is present, proceed with high-level requirements
+        RESOLVED_REQ=false
+        REQ_PATH="${TMP_REPO_PATH}/pyproject.toml"
+    elif [ -f "${TMP_REPO_PATH}/requirements.in" ]; then
+        # If only requirements.in is present, proceed with high-level requirements
+        RESOLVED_REQ=false
+        R_FLAG=-r
+        REQ_PATH="${TMP_REPO_PATH}/requirements.in"
+    else
+        # There are no requirements files (neither requirements.txt, pyproject.toml nor requirements.in) in the repository
+        _log "ERROR: No requirements file found. You must provide a requirements.in, pyproject.toml, or requirements.txt file." && exit 1
+    fi
+
+    # Check if the requirements file contains the nxcals package, if the user activated the nxcals option
+    if [ -n "${USE_NXCALS}" ] && ! grep -q "nxcals" "${REQ_PATH}"; then
+        _log "ERROR: The NXCALS cluster was selected but the requirements file (${REQ_PATH}) does not contain the nxcals package." && exit 1
     fi
 else
-    _log "ERROR: Invalid Git repository (${REPOSITORY})." && _log
-    exit 1
+    R_FLAG=""
+    ENV_NAME="${BUILDER}_env"
 fi
 
-# --------------------------------------------------------------------------------------------
-# Create and set up the environment
-
-R_FLAG=""
 ENV_PATH="/home/$USER/${ENV_NAME}"
 IPYKERNEL="ipykernel==$(python -c 'import ipykernel; print(ipykernel.__version__)')"
-
-if [ -f "${TMP_REPO_PATH}/requirements.txt" ]; then
-    # Fully resolved requirements (requirements.txt) take precedence
-    RESOLVED_REQ=true
-    R_FLAG=-r
-    REQ_PATH="${TMP_REPO_PATH}/requirements.txt"
-elif [ -f "${TMP_REPO_PATH}/pyproject.toml" ]; then
-    # Else if pyproject.toml is present, proceed with high-level requirements
-    RESOLVED_REQ=false
-    REQ_PATH="${TMP_REPO_PATH}/pyproject.toml"
-elif [ -f "${TMP_REPO_PATH}/requirements.in" ]; then
-    # If only requirements.in is present, proceed with high-level requirements
-    RESOLVED_REQ=false
-    R_FLAG=-r
-    REQ_PATH="${TMP_REPO_PATH}/requirements.in"
-else
-    # There are no requirements files (neither requirements.txt, pyproject.toml nor requirements.in) in the repository
-    _log "ERROR: No requirements file found. You must provide a requirements.in, pyproject.toml, or requirements.txt file." && exit 1
-fi
-
-# Check if the requirements file contains the nxcals package, if the user activated the nxcals option
-if [ -n "${USE_NXCALS}" ] && ! grep -q "nxcals" "${REQ_PATH}"; then
-    _log "ERROR: The NXCALS cluster was selected but the requirements file (${REQ_PATH}) does not contain the nxcals package." && exit 1
-fi
 
 _log "Creating environment ${ENV_NAME} using ${BUILDER}${BUILDER_VERSION:+ (${BUILDER_VERSION})}..."
 # To prevent builders (e.g. mamba) from caching files on EOS, which slows down the creation of the environment,
@@ -250,22 +257,25 @@ else
     # Configure the PATH to point to all the binaries in the environment
     jq --arg PATH "${PATH}" '. + {env: {$PATH}}' ${KERNEL_JSON} > ${TMP_KERNEL}
 fi
-mv -f ${TMP_KERNEL} ${KERNEL_JSON} 2>&1
 
-# Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder
-if [ ! -d "${GIT_REPO_PATH}" ]; then
-    mkdir -p ${GIT_HOME}
-    mv ${TMP_REPO_PATH} ${GIT_HOME}
-    # If pyproject.toml was used, reinstall the package reference, because it was
-    # initially installed under /tmp (only if the repo was not previously cloned)
-    # So, when requirements.txt is generated, it will point to the actual path and not /tmp
-    if [ "${R_FLAG}" != "-r" ]; then
-        REQ_PATH="${GIT_REPO_PATH}"
-        pip install "${REQ_PATH}" 2>&1 # Use installed env pip
+if [[ " $STACKS_FOR_CUSTOMENVS " != *" $BUILDER "* ]]; then
+    mv -f ${TMP_KERNEL} ${KERNEL_JSON} 2>&1
+
+    # Move the repository from /tmp to the $CERNBOX_HOME/SWAN_projects folder
+    if [ ! -d "${GIT_REPO_PATH}" ]; then
+        mkdir -p ${GIT_HOME}
+        mv ${TMP_REPO_PATH} ${GIT_HOME}
+        # If pyproject.toml was used, reinstall the package reference, because it was
+        # initially installed under /tmp (only if the repo was not previously cloned)
+        # So, when requirements.txt is generated, it will point to the actual path and not /tmp
+        if [ "${R_FLAG}" != "-r" ]; then
+            REQ_PATH="${GIT_REPO_PATH}"
+            pip install "${REQ_PATH}" 2>&1 # Use installed env pip
+        fi
     fi
+
+    _log "REPO_PATH:${GIT_REPO_PATH#$HOME}"
+
+    # Ensure the terminal loads the environment and cds into the repository path
+    echo -e "${ACTIVATE_ENV_CMD}\ncd ${GIT_REPO_PATH}" >> /home/$USER/.bash_profile
 fi
-
-_log "REPO_PATH:${GIT_REPO_PATH#$HOME}"
-
-# Ensure the terminal loads the environment and cds into the repository path
-echo -e "${ACTIVATE_ENV_CMD}\ncd ${GIT_REPO_PATH}" >> /home/$USER/.bash_profile
