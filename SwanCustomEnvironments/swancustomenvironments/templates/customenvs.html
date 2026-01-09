@@ -72,6 +72,7 @@ data-base-url="{{base_url | urlencode}}"
 
     const urlParams = new URLSearchParams(window.location.search);
     const file = `/${urlParams.get('file') || ""}`.replace(/\.\.\//g, '').replace(/\.\.\\/g, '');
+    const user_interface = urlParams.get('user_interface') || 'lab';
 
     // Scroll to the output-box height
     outputBox.scrollIntoView({
@@ -110,7 +111,7 @@ data-base-url="{{base_url | urlencode}}"
                     if (has_failed) trigger_visual_error("Environment creation failed");
 
                     // Output is fine -> Redirect to JupyterLab
-                    else window.location = base_url + "lab" + project_path;
+                    else window.location = base_url + user_interface + project_path;
 
                     // Exit the loop after processing all data
                     break;
