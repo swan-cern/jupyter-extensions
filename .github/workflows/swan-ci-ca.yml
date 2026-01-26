@@ -13,6 +13,9 @@ jobs:
   build-publish:
 
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # To push to PyPI
+      contents: write  # To create a release
 
     steps:
     - uses: actions/checkout@v4
@@ -53,20 +56,17 @@ jobs:
     - name: Install dependencies 
       run: |
         cd $PACKAGE_NAME
-        pip install build twine
+        pip install build
 
     - name: Build wheel
       run: |
         cd $PACKAGE_NAME
         python -m build
 
-    - name: Publish distribution to PyPI
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-      run: |
-        cd $PACKAGE_NAME
-        twine upload --repository pypi dist/*
+    - name: Publish distribution to PyPI 🚀
+      uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        packages-dir: ./${{ env.PACKAGE_NAME }}/dist/
 
     - name: Create Release
       id: create_release
