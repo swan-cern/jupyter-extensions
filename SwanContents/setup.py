@@ -62,7 +62,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup_args = dict(
-    name='tomasr-swancontents',
+    name=name,
     version=version,
     url="https://github.com/swan-cern/jupyter-extensions",
     author="SWAN Admins",
