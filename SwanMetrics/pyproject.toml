@@ -1,0 +1,25 @@
+[build-system]
+requires = ["hatchling==1.28.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "swanmetrics"
+dynamic = ["version"]
+description = "Jupyter Server extension for collecting metrics via jupyter_events"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.10"
+authors = [{ name = "SWAN Team", email = "swan-admins@cern.ch" }]
+dependencies = ["jupyter_server==2.15.0", "jupyter_events==0.12.0"]
+
+[project.entry-points."jupyter_server.extensions"]
+swanmetrics = "swanmetrics:_load_jupyter_server_extension"
+
+[tool.hatch]
+version = { path = "swanmetrics/_version.py" }
+
+[tool.hatch.build.targets.wheel]
+packages = ["swanmetrics"]
+
+[tool.hatch.build.targets.wheel.shared-data]
+"jupyter_server_config.d/swanmetrics.json" = "etc/jupyter/jupyter_server_config.d/swanmetrics.json"
