@@ -18,7 +18,7 @@ jobs:
       contents: write  # To create a release
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
       with:
         fetch-depth: 0
 
@@ -43,9 +43,9 @@ jobs:
 
 
     - name: Install Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
-        python-version: '3.9'
+        python-version: '3.14'
 
     - name: Install node
       if: ${{env.PACKAGE_JSON}}
