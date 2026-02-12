@@ -7,7 +7,7 @@
       <div class="loader-ring">
         <img src="{{ hub_prefix }}/static/swan/logos/logo_swan_letters.png" alt="SWAN logo">
       </div>
-      <h4 id="status-msg" class="text-body-secondary">Creating environment...</h4>
+      <h4 id="status-msg">Creating environment...</h4>
       <button id="restart-session" class="hidden btn btn-primary btn-lg">Restart session</button>
     </div>
   </div>
@@ -47,7 +47,6 @@
 
         loader.classList.add('loader-error');
         statusMsg.textContent = 'Error creating environment';
-        statusMsg.classList.remove('text-body-secondary');
         statusMsg.classList.add('text-danger');
         restartSessionBtn.classList.remove('hidden');
         console.error(message);
