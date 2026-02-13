@@ -81,14 +81,15 @@ class SwanCustomEnvironmentsHandler(JupyterHandler):
 
     @web.authenticated
     async def get(self):
+        hub_prefix = self.jinja_template_vars.get("hub_prefix", "/hub/")
         is_admin = self.current_user.hub_user.get('admin', False)
         self.write(
             self.render_template(
                 "customenvs.html",
                 page_title="Creating custom environment",
-                hub_prefix="/hub",
-                base_url="/hub/",
-                logout_url="/hub/logout",
+                hub_prefix=hub_prefix,
+                base_url=hub_prefix,
+                logout_url=f"{hub_prefix}logout",
                 user=self.current_user,
                 parsed_scopes={'admin-ui'} if is_admin else set(),
             )

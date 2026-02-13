@@ -40,23 +40,23 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {% block stylesheet %}
       <link rel="stylesheet"
-            href="{{ hub_prefix }}/static/css/style.min.css"
+            href="{{ hub_prefix }}static/css/style.min.css"
             type="text/css" />
     {% endblock stylesheet %}
     {% block favicon %}
-      <link rel="icon" href="{{ hub_prefix }}/static/favicon.ico" type="image/x-icon">
+      <link rel="icon" href="{{ hub_prefix }}static/favicon.ico" type="image/x-icon">
     {% endblock favicon %}
     {% block scripts %}
-      <script src="{{ hub_prefix }}/static/components/bootstrap/dist/js/bootstrap.bundle.min.js"
+      <script src="{{ hub_prefix }}static/components/bootstrap/dist/js/bootstrap.bundle.min.js"
               type="text/javascript"
               charset="utf-8"></script>
-      <script src="{{ hub_prefix }}/static/components/requirejs/require.js"
+      <script src="{{ hub_prefix }}static/components/requirejs/require.js"
               type="text/javascript"
               charset="utf-8"></script>
-      <script src="{{ hub_prefix }}/static/components/jquery/dist/jquery.min.js"
+      <script src="{{ hub_prefix }}static/components/jquery/dist/jquery.min.js"
               type="text/javascript"
               charset="utf-8"></script>
-      <script src="{{ hub_prefix }}/static/js/darkmode.js"
+      <script src="{{ hub_prefix }}static/js/darkmode.js"
               type="text/javascript"
               charset="utf-8"></script>
     {% endblock scripts %}
@@ -67,7 +67,7 @@
         {% if version_hash %}
         urlArgs: "v={{version_hash}}",
         {% endif %}
-        baseUrl: '{{ hub_prefix }}/static/js',
+        baseUrl: '{{ hub_prefix }}static/js',
         paths: {
           components: '../components',
           jquery: '../components/jquery/dist/jquery.min',
@@ -137,14 +137,14 @@
               {% if user %}
                 {% block nav_bar_left_items %}
                   <li class="nav-item">
-                    <a class="nav-link" href="{{ hub_prefix }}/home">Home</a>
+                    <a class="nav-link" href="{{ hub_prefix }}home">Home</a>
                   </li>
                   <li class="nav-item">
-                    <a class="nav-link" href="{{ hub_prefix }}/token">Token</a>
+                    <a class="nav-link" href="{{ hub_prefix }}token">Token</a>
                   </li>
                   {% if 'admin-ui' in parsed_scopes %}
                     <li class="nav-item">
-                      <a class="nav-link" href="{{ hub_prefix }}/admin">Admin</a>
+                      <a class="nav-link" href="{{ hub_prefix }}admin">Admin</a>
                     </li>
                   {% endif %}
                   {% if services %}

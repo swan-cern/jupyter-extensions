@@ -5,18 +5,18 @@
 {% endblock %}
 
 {% block favicon %}
-  <link rel="shortcut icon" type="image/x-icon" href="{{hub_prefix}}/static/swan/logos/favicon.ico">
+  <link rel="shortcut icon" type="image/x-icon" href="{{ hub_prefix }}static/swan/logos/favicon.ico">
 {% endblock favicon %}
 
 {% block stylesheet %}
   {{ super() }}
-  <link rel="stylesheet" href="{{hub_prefix}}/static/swan/css/style.css" type="text/css"/>
+  <link rel="stylesheet" href="{{ hub_prefix }}static/swan/css/style.css" type="text/css"/>
 {% endblock stylesheet %}
 
 {% block logo %}
   <span id="jupyterhub-logo" class="navbar-brand">
     <a href="{{ logo_url or base_url }}">
-      <img src="{{ hub_prefix }}/logo" alt="SWAN logo" class="jpy-logo" title="Home" />
+      <img src="{{ hub_prefix }}logo" alt="SWAN logo" class="jpy-logo" title="Home" />
     </a>
   </span>
 {% endblock logo %}
@@ -55,7 +55,7 @@
 {% endmacro %}
 
 {% macro render_logo() %}
-  <img src="{{ hub_prefix }}/static/swan/logos/logo_cern.svg" alt="CERN logo">
+  <img src="{{ hub_prefix }}static/swan/logos/logo_cern.svg" alt="CERN logo">
 {% endmacro %}
 
 {% macro render_help_links() %}
