@@ -33,7 +33,7 @@
     const file = `/${urlParams.get('file') || ""}`.replace(/\.\.\//g, '').replace(/\.\.\\/g, '');
     const user_interface = urlParams.get('user_interface') || 'lab';
 
-    restartSessionBtn.addEventListener('click', () => window.location = `${hubPrefix}/home?changeconfig`);
+    restartSessionBtn.addEventListener('click', () => window.location = `${hubPrefix}home?changeconfig`);
 
     const get_jh_auth_header = () => {
         const xsrf = document.cookie.match(/\b_xsrf=([^;]*)\b/);
