@@ -1,0 +1,8 @@
+{
+  "jupyter.lab.setting-icon-label": "CERNBox Storage Quota",
+  "title": "CERNBox Storage Quota",
+  "description": "Settings for the CERNBox storage quota indicator",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

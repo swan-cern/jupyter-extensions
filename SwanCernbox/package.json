@@ -1,0 +1,75 @@
+{
+  "name": "@swan-cern/swancernbox",
+  "version": "0.1.0",
+  "description": "A JupyterLab extension providing CERNBox integration",
+  "keywords": [
+    "jupyter",
+    "jupyterlab",
+    "jupyterlab-extension",
+    "cern",
+    "swan",
+    "cernbox"
+  ],
+  "homepage": "https://github.com/swan-cern/swancernbox",
+  "license": "MIT",
+  "author": {
+    "name": "SWAN Team",
+    "email": "swan-admins@cern.ch"
+  },
+  "files": [
+    "lib/**/*.{d.ts,eot,gif,html,jpg,js,js.map,json,png,svg,woff2,ttf}",
+    "style/**/*.{css,eot,gif,html,jpg,json,png,svg,woff2,ttf}",
+    "schema/*.json"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "style": "style/base.css",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/swan-cern/swancernbox.git"
+  },
+  "scripts": {
+    "build": "jlpm build:lib && jlpm build:labextension:dev",
+    "build:prod": "jlpm clean && jlpm build:lib:prod && jlpm build:labextension",
+    "build:lib": "tsc --sourceMap",
+    "build:lib:prod": "tsc",
+    "build:labextension": "jupyter labextension build .",
+    "build:labextension:dev": "jupyter labextension build --development True .",
+    "clean": "jlpm clean:lib && jlpm clean:labextension",
+    "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
+    "clean:labextension": "rimraf swancernbox/labextension swancernbox/_version.py",
+    "install:extension": "jlpm build",
+    "lint": "jlpm stylelint && jlpm prettier && jlpm eslint",
+    "lint:check": "jlpm stylelint:check && jlpm prettier:check && jlpm eslint:check",
+    "prettier": "jlpm prettier:base --write --list-different",
+    "prettier:base": "prettier \"**/*{.ts,.tsx,.js,.jsx,.css,.json,.md}\"",
+    "stylelint": "jlpm stylelint:check --fix",
+    "stylelint:check": "stylelint --cache \"style/**/*.css\"",
+    "watch": "run-p watch:src watch:labextension",
+    "watch:src": "tsc -w --sourceMap",
+    "watch:labextension": "jupyter labextension watch ."
+  },
+  "dependencies": {
+    "@jupyterlab/application": "^4.5.1",
+    "@jupyterlab/filebrowser": "^4.5.1",
+    "@jupyterlab/ui-components": "^4.5.1",
+    "@lumino/widgets": "^2.7.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@jupyterlab/builder": "^4.5.1",
+    "eslint": "^9.39.2",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^3.8.1",
+    "rimraf": "^5.0.10",
+    "stylelint": "^16.26.1",
+    "stylelint-config-standard": "^39.0.1",
+    "typescript": "~5.5.4",
+    "typescript-eslint": "^8.55.0"
+  },
+  "jupyterlab": {
+    "extension": true,
+    "outputDir": "swancernbox/labextension",
+    "schemaDir": "schema"
+  }
+}

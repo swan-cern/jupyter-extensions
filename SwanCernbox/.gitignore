@@ -1,0 +1,18 @@
+# Python
+dist/
+.venv/
+*.egg-info/
+__pycache__/
+
+# Node
+node_modules/
+*.tsbuildinfo
+.yarn/
+.stylelintcache
+
+# JupyterLab
+lib/
+swancernbox/labextension/
+
+# Generated files
+fake-eos/

@@ -1,0 +1,8 @@
+{
+  "jupyter.lab.setting-icon-label": "CERNBox Spaces",
+  "title": "CERNBox Spaces",
+  "description": "Settings for the CERNBox Spaces sidebar",
+  "type": "object",
+  "properties": {},
+  "additionalProperties": false
+}

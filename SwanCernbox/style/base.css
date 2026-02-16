@@ -1,0 +1,326 @@
+/* ============================================================
+ * CERNBox integration
+ *
+ * Uses JupyterLab CSS variables for theme compatibility.
+ * ============================================================ */
+
+.swan-spaces-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--jp-layout-color1);
+  color: var(--jp-ui-font-color1);
+  font-size: var(--jp-ui-font-size1);
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+
+.swan-spaces-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--jp-border-color2);
+  flex-shrink: 0;
+}
+
+.swan-spaces-header-title {
+  margin: 0;
+  font-size: var(--jp-ui-font-size2);
+  font-weight: 600;
+  color: var(--jp-ui-font-color0);
+}
+
+.swan-spaces-refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--jp-border-radius);
+  background: transparent;
+  color: var(--jp-ui-font-color2);
+  font-size: 16px;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.swan-spaces-refresh-btn:hover {
+  background: var(--jp-layout-color2);
+  color: var(--jp-ui-font-color0);
+}
+
+/* ── List container ────────────────────────────────────────── */
+
+.swan-spaces-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+/* ── Space item ────────────────────────────────────────────── */
+
+.swan-spaces-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.swan-spaces-item:hover {
+  background: var(--jp-layout-color2);
+}
+
+.swan-spaces-item-active {
+  background: var(--jp-layout-color2);
+  border-left-color: var(--jp-brand-color1);
+}
+
+.swan-spaces-item-active:hover {
+  background: var(--jp-layout-color3);
+}
+
+.swan-spaces-item-name {
+  font-weight: 500;
+  color: var(--jp-ui-font-color0);
+  line-height: 1.4;
+}
+
+.swan-spaces-item-description {
+  margin-top: 2px;
+  font-size: var(--jp-ui-font-size0);
+  color: var(--jp-ui-font-color2);
+  line-height: 1.4;
+
+  /* Clamp to 2 lines */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.swan-spaces-item-path {
+  margin-top: 2px;
+  font-size: 11px;
+  font-family: var(--jp-code-font-family);
+  color: var(--jp-ui-font-color3);
+  line-height: 1.3;
+}
+
+/* ── Error state on individual items (navigation failure) ── */
+
+.swan-spaces-item.swan-spaces-error {
+  background: var(--jp-error-color3, #fdd);
+}
+
+/* ── Status messages ───────────────────────────────────────── */
+
+.swan-spaces-loading,
+.swan-spaces-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--jp-ui-font-color2);
+  font-style: italic;
+}
+
+.swan-spaces-error {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--jp-error-color1);
+}
+
+/* ============================================================
+ * Shares — sidebar widget styles
+ *
+ * All classes prefixed with 'swan-shares-' to avoid collisions.
+ * ============================================================ */
+
+.swan-shares-panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background: var(--jp-layout-color1);
+  color: var(--jp-ui-font-color1);
+  font-size: var(--jp-ui-font-size1);
+}
+
+/* ── Header ────────────────────────────────────────────────── */
+
+.swan-shares-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--jp-border-color2);
+  flex-shrink: 0;
+}
+
+.swan-shares-header-title {
+  margin: 0;
+  font-size: var(--jp-ui-font-size2);
+  font-weight: 600;
+  color: var(--jp-ui-font-color0);
+}
+
+.swan-shares-refresh-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: var(--jp-border-radius);
+  background: transparent;
+  color: var(--jp-ui-font-color2);
+  font-size: 16px;
+  cursor: pointer;
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+
+.swan-shares-refresh-btn:hover {
+  background: var(--jp-layout-color2);
+  color: var(--jp-ui-font-color0);
+}
+
+/* ── List container ────────────────────────────────────────── */
+
+.swan-shares-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 4px 0;
+}
+
+/* ── Sections ──────────────────────────────────────────────── */
+
+.swan-shares-section {
+  margin-bottom: 4px;
+}
+
+.swan-shares-section-title {
+  padding: 6px 12px 2px;
+  font-size: var(--jp-ui-font-size0);
+  font-weight: 600;
+  color: var(--jp-ui-font-color2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── Share item ────────────────────────────────────────────── */
+
+.swan-shares-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+
+.swan-shares-item:hover {
+  background: var(--jp-layout-color2);
+}
+
+.swan-shares-item-active {
+  background: var(--jp-layout-color2);
+  border-left-color: var(--jp-brand-color1);
+}
+
+.swan-shares-item-active:hover {
+  background: var(--jp-layout-color3);
+}
+
+.swan-shares-item-name {
+  font-weight: 500;
+  color: var(--jp-ui-font-color0);
+  line-height: 1.4;
+}
+
+.swan-shares-item-meta {
+  margin-top: 2px;
+  font-size: var(--jp-ui-font-size0);
+  color: var(--jp-ui-font-color2);
+  font-style: italic;
+  line-height: 1.4;
+}
+
+.swan-shares-item-path {
+  margin-top: 2px;
+  font-size: 11px;
+  font-family: var(--jp-code-font-family);
+  color: var(--jp-ui-font-color3);
+  line-height: 1.3;
+}
+
+/* ── Error state on individual items (navigation failure) ── */
+
+.swan-shares-item.swan-shares-error {
+  background: var(--jp-error-color3, #fdd);
+}
+
+/* ── Status messages ───────────────────────────────────────── */
+
+.swan-shares-loading,
+.swan-shares-empty {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--jp-ui-font-color2);
+  font-style: italic;
+}
+
+.swan-shares-error {
+  padding: 16px 12px;
+  text-align: center;
+  color: var(--jp-error-color1);
+}
+
+/* ============================================================
+ * Storage Quota — progress bar at bottom of file browser
+ * ============================================================ */
+
+.swan-quota-container {
+  flex-shrink: 0;
+  padding: 8px 12px;
+  border-top: 1px solid var(--jp-border-color2);
+  background: var(--jp-layout-color1);
+}
+
+.swan-quota-label {
+  font-size: var(--jp-ui-font-size0);
+  color: var(--jp-ui-font-color2);
+  margin-bottom: 4px;
+}
+
+.swan-quota-bar-outer {
+  height: 6px;
+  border-radius: 3px;
+  background: var(--jp-layout-color3);
+  overflow: hidden;
+}
+
+.swan-quota-bar-inner {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--jp-brand-color1);
+  transition:
+    width 0.4s ease,
+    background-color 0.3s ease;
+}
+
+.swan-quota-bar-warning {
+  background: var(--jp-warn-color1, #e6a117);
+}
+
+.swan-quota-bar-critical {
+  background: var(--jp-error-color1, #d32f2f);
+}
