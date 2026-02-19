@@ -397,23 +397,55 @@ class SparkYarnConfiguration(SparkConfiguration):
             app_id = self._get_sc_config('spark.app.id')
             if grafana_url and app_id:
                 # if spark.cern.grafana.url is set, use cern spark monitoring dashboard
-                conn_config['sparkmetrics'] = grafana_url + \
-                                              '&var-ClusterName=' + self.get_cluster_name() + \
-                                              '&var-UserName=' + self.get_spark_user() + \
-                                              '&var-ApplicationId=' + app_id
+                conn_config['sparkmetrics'] = (
+                    grafana_url
+                    + '&var-ClusterName=' + self.get_cluster_name()
+                    + '&var-UserName=' + self.get_spark_user()
+                    + '&var-ApplicationId=' + app_id
+                )
 
-            # Determine the WebUI URL for Spark on YARN
-            # First, we get a list of 2 potential proxy addresses,
-            # one for each YARN RM (we have 2 Resource Managers in our Hadoop configs)
-            # Example result:
-            # 'https://ithdpXXX1.cern.ch:8088/proxy/application_1688370955275_70252,
-            # https://ithdpXXX2.cern.ch:8088/proxy/application_1688370955275_70252'
-            # Then we simply take the first one and use it as the WebUi URL
-            webui_urls = self._get_sc_config(
-                'spark.org.apache.hadoop.yarn.server.webproxy.amfilter.AmIpFilter.param.PROXY_URI_BASES',
-                wait=True
-            )
-            if webui_urls:
-                conn_config['sparkwebui'] = webui_urls.split(',', 1)[0]
+            # Determine the WebUI URL for Spark on YARN (Spark 4 compatible)
+            # Spark 4 may no longer expose PROXY_URI_BASES via SparkConf, so we reconstruct
+            # the proxy URLs one for each YARN RM (we have 2 Resource Managers in our Hadoop configs)
+            # from YARN/Hadoop configuration and pick the first one.
+            try:
+                hconf = sc._jsc.hadoopConfiguration()
+
+                # Prefer Spark's applicationId if available; fallback to config (keeps your original behavior)
+                effective_app_id = sc.applicationId or app_id
+
+                if effective_app_id:
+                    policy = (hconf.get("yarn.http.policy") or "").upper()
+                    use_https = (policy == "HTTPS_ONLY")
+                    scheme = "https" if use_https else "http"
+
+                    # 1) Dedicated YARN web proxy, if configured
+                    addrs = []
+                    proxy_addr = hconf.get("yarn.web-proxy.address")
+                    if proxy_addr:
+                        addrs = [proxy_addr]
+                    else:
+                        # 2) RM webapp addresses (HA or not)
+                        rm_ids = hconf.get("yarn.resourcemanager.ha.rm-ids")
+                        key_prefix = (
+                            "yarn.resourcemanager.webapp.https.address"
+                            if use_https
+                            else "yarn.resourcemanager.webapp.address"
+                        )
+
+                        if rm_ids:
+                            rm_ids = [x.strip() for x in rm_ids.split(",") if x.strip()]
+                            addrs = [hconf.get(f"{key_prefix}.{rid}") for rid in rm_ids]
+                            addrs = [a for a in addrs if a]
+                        else:
+                            addr = hconf.get(key_prefix)
+                            addrs = [addr] if addr else []
+
+                    if addrs:
+                        # we only store the first one
+                        conn_config['sparkwebui'] = f"{scheme}://{addrs[0]}/proxy/{effective_app_id}"
+            except Exception:
+                # Best-effort: don't break config retrieval if hadoopConfiguration isn't available
+                pass
 
         return conn_config
