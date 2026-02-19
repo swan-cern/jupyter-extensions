@@ -21,8 +21,22 @@
   </span>
 {% endblock logo %}
 
+{% block nav_bar_left_items %}
+  <li class="nav-item">
+    <a class="btn swan-nav-link" href="{{ base_url }}home">Home</a>
+  </li>
+  <li class="nav-item">
+    <a class="btn swan-nav-link" href="{{ base_url }}token">Token</a>
+  </li>
+  {% if 'admin-ui' in parsed_scopes %}
+    <li class="nav-item">
+      <a class="btn swan-nav-link" href="{{ base_url }}admin">Admin</a>
+    </li>
+  {% endif %}
+{% endblock nav_bar_left_items %}
+
 {% block theme_toggle %}
-  <button class="btn btn-sm"
+  <button class="btn btn-sm me-3"
           id="dark-theme-toggle"
           aria-label="Toggle dark mode"
           title="Toggle dark mode">
@@ -30,6 +44,23 @@
     <i aria-hidden="true" class="fa fa-sun"></i>
   </button>
 {% endblock theme_toggle %}
+
+{% block login_widget %}
+  <span id="login_widget">
+    {% if user %}
+      <span class="me-1">{{ user.name }}</span>
+      <a id="logout"
+          role="button"
+          class="btn swan-nav-link"
+          href="{{ logout_url }}"><i aria-hidden="true" class="fa fa-sign-out me-1"></i>Logout</a>
+    {% else %}
+      <a id="login"
+          role="button"
+          class="btn swan-nav-link"
+          href="{{ login_url }}">Login</a>
+    {% endif %}
+  </span>
+{% endblock login_widget %}
 
 {% block footer %}
   <footer>
