@@ -1,5 +1,8 @@
+import os
+
 from tornado import web
 from asyncio import sleep
+from jinja2 import ChoiceLoader, FileSystemLoader
 
 from jupyter_server.base.handlers import JupyterHandler, APIHandler
 from jupyter_server.utils import url_path_join
@@ -78,10 +81,17 @@ class SwanCustomEnvironmentsHandler(JupyterHandler):
 
     @web.authenticated
     async def get(self):
+        hub_prefix = self.jinja_template_vars.get("hub_prefix", "/hub/")
+        is_admin = self.current_user.hub_user.get('admin', False)
         self.write(
             self.render_template(
                 "customenvs.html",
                 page_title="Creating custom environment",
+                hub_prefix=hub_prefix,
+                base_url=hub_prefix,
+                logout_url=f"{hub_prefix}logout",
+                user=self.current_user,
+                parsed_scopes={'admin-ui'} if is_admin else set(),
             )
         )
 
@@ -91,6 +101,13 @@ def _load_jupyter_server_extension(serverapp):
     """
 
     web_app = serverapp.web_app
+
+    templates_dir = os.path.join(os.path.dirname(__file__), "templates")
+    jinja_env = web_app.settings["jinja2_env"]
+    jinja_env.loader = ChoiceLoader([
+        FileSystemLoader(templates_dir),
+        jinja_env.loader,
+    ])
 
     new_handlers = [
         (r"/api/customenvs", SwanCustomEnvironmentsApiHandler),
