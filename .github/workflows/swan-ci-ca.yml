@@ -45,7 +45,7 @@ jobs:
     - name: Install Python
       uses: actions/setup-python@v6
       with:
-        python-version: '3.14'
+        python-version: '3.12'  # nbclassic (required by swancontents) needs the `pipes` modules which was removed in Python 3.13
 
     - name: Install node
       if: ${{env.PACKAGE_JSON}}
