@@ -445,7 +445,11 @@ class SparkYarnConfiguration(SparkConfiguration):
                         # we only store the first one
                         conn_config['sparkwebui'] = f"{scheme}://{addrs[0]}/proxy/{effective_app_id}"
             except Exception:
-                # Best-effort: don't break config retrieval if hadoopConfiguration isn't available
-                pass
+                # Best-effort: don't break config retrieval, but do log what went wrong
+                self.connector.log.warn(
+                    "Failed to create Spark WebUI link from YARN/Hadoop configuration "
+                    f"(appId={getattr(sc, 'applicationId', None) or app_id}): {e}",
+                    exc_info=True,
+                )
 
         return conn_config
