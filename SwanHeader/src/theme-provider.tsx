@@ -1,8 +1,12 @@
 import React from 'react';
 import {
   createTheme,
-  ThemeProvider as MaterialUIThemeProvider
+  ThemeProvider as MaterialUIThemeProvider,
+  StylesProvider,
+  createGenerateClassName,
 } from '@material-ui/core/styles';
+
+const generateClassName = createGenerateClassName({ seed: 'swan-header' });
 
 const createLightorDarkTheme = (color: 'light' | 'dark') => {
   return createTheme({
@@ -49,8 +53,10 @@ export const ThemeProvider: React.FunctionComponent<{
 }> = props => {
   const currentTheme = props.theme === 'dark' ? darkTheme : lightTheme;
   return (
-    <MaterialUIThemeProvider theme={currentTheme}>
-      {props.children}
-    </MaterialUIThemeProvider>
+    <StylesProvider generateClassName={generateClassName}>
+      <MaterialUIThemeProvider theme={currentTheme}>
+        {props.children}
+      </MaterialUIThemeProvider>
+    </StylesProvider>
   );
 };

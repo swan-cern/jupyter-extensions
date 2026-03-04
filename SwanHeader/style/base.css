@@ -76,12 +76,12 @@
 }
 
 /* .sw-header-menu is not inside .sw-header */
-.sw-header-menu .MuiPaper-root {
+.sw-header-menu .swan-header-MuiPaper-root {
   border: 1px solid #bdbdbd;
   border-top: 0;
   color: black !important;
 }
 
-.sw-header-menu .MuiList-padding {
+.sw-header-menu .swan-header-MuiList-padding {
   padding: 0;
 }

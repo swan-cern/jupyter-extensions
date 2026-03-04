@@ -2,9 +2,13 @@ import React from 'react';
 import {
   createMuiTheme,
   ThemeProvider as MaterialUIThemeProvider,
+  StylesProvider,
+  createGenerateClassName,
 } from '@material-ui/core/styles';
 import { observer } from 'mobx-react-lite';
 import { store } from '../store';
+
+const generateClassName = createGenerateClassName({ seed: 'spark-connector' });
 
 const brandColor1 = getComputedStyle(document.body)
   .getPropertyValue('--jp-brand-color1')
@@ -45,8 +49,10 @@ const darkTheme = createTheme('dark');
 export const ThemeProvider = observer((props: any) => {
   const currentTheme = store.colorTheme === 'light' ? lightTheme : darkTheme;
   return (
-    <MaterialUIThemeProvider theme={currentTheme}>
-      {props.children}
-    </MaterialUIThemeProvider>
+    <StylesProvider generateClassName={generateClassName}>
+      <MaterialUIThemeProvider theme={currentTheme}>
+        {props.children}
+      </MaterialUIThemeProvider>
+    </StylesProvider>
   );
 });
