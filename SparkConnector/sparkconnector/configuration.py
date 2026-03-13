@@ -191,7 +191,7 @@ class SparkK8sConfiguration(SparkConfiguration):
 
         spark_work_dir = None
         for dh in self.connector.ipython.user_ns.get('_dh', []):
-            dh_str = os.fspath(dh)  # supports both str and pathlib.Path
+            dh_str = str(dh)
             if dh_str.startswith('/eos/home') and 'SWAN_projects' in dh_str:
                 # Adjust /eos/home path to /eos/user xrootd access
                 spark_work_dir = (
@@ -203,7 +203,7 @@ class SparkK8sConfiguration(SparkConfiguration):
 
         adjusted_paths = []
         for path in path_array:
-            path_str = os.fspath(path) if path else path
+            path_str = str(path)
 
             if spark_work_dir and path_str.startswith('./'):
                 adjusted_path = path_str.replace('.', spark_work_dir, 1)
