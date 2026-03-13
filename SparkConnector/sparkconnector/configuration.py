@@ -187,29 +187,39 @@ class SparkLocalConfiguration(SparkConfiguration):
 class SparkK8sConfiguration(SparkConfiguration):
 
     def _format_local_paths(self, path_array):
-        """ Dependencies which are in EOS HOME will be formatted to root:// """
+        """Dependencies which are in EOS HOME will be formatted to root://"""
 
         spark_work_dir = None
-        for dh in self.connector.ipython.user_ns.get('_dh'):
-            if dh.startswith('/eos/home') and 'SWAN_projects' in dh:
+        for dh in self.connector.ipython.user_ns.get('_dh', []):
+            dh_str = os.fspath(dh)  # supports both str and pathlib.Path
+            if dh_str.startswith('/eos/home') and 'SWAN_projects' in dh_str:
                 # Adjust /eos/home path to /eos/user xrootd access
-                spark_work_dir = dh.replace('/eos/home', 'root://eoshome.cern.ch//eos/user', 1).replace('-', '/', 1)
+                spark_work_dir = (
+                    dh_str
+                    .replace('/eos/home', 'root://eoshome.cern.ch//eos/user', 1)
+                    .replace('-', '/', 1)
+                )
                 break
 
         adjusted_paths = []
         for path in path_array:
-            if spark_work_dir and path.startswith('./'):
-                adjusted_path = path.replace('.', spark_work_dir, 1)
+            path_str = os.fspath(path) if path else path
+
+            if spark_work_dir and path_str.startswith('./'):
+                adjusted_path = path_str.replace('.', spark_work_dir, 1)
                 if " " in adjusted_path:
                     raise Exception(
                         'Could not stage dependencies with spark.files, spark.jars or spark.submit.pyFiles '
-                        'which include space in the name of the project or path')
+                        'which include space in the name of the project or path'
+                    )
                 adjusted_paths.append(adjusted_path)
-            elif path.startswith('/'):
-                raise Exception('Staging of dependencies not allowed from all local paths. '
-                                'Please use your notebook directory ./, root://, http:// or s3a://')
+            elif path_str.startswith('/'):
+                raise Exception(
+                    'Staging of dependencies not allowed from all local paths. '
+                    'Please use your notebook directory ./, root://, http:// or s3a://'
+                )
             else:
-                adjusted_paths.append(path)
+                adjusted_paths.append(path_str)
 
         return ",".join(adjusted_paths)
 
