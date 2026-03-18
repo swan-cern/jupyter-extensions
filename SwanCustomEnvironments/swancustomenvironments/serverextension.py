@@ -3,6 +3,7 @@ import os
 from tornado import web
 from asyncio import sleep
 from jinja2 import ChoiceLoader, FileSystemLoader
+from time import monotonic
 
 from jupyter_server.base.handlers import JupyterHandler, APIHandler
 from jupyter_server.utils import url_path_join
@@ -59,12 +60,27 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
 
     async def _process_log_stream(self, makenv_process: Popen) -> None:
         """Reads from the log file and streams output to the client."""
+        # Interval in seconds between keepalive lines sent to the client when the
+        # process produces no output. It's below proxy idle-timeout (nginx default: 60s)
+        KEEPALIVE_INTERVAL = 5
+
+        last_keepalive = monotonic()
         with open(self.LOG_FILE, "r") as log_file:
             while True:
                 line = log_file.readline()
                 if not line and makenv_process.poll() is not None:
                     break  # Process finished, no more logs to read
-                await self._send_line(line)
+
+                if line:
+                    # Real output arrived — reset the keepalive timer and send it.
+                    last_keepalive = monotonic()
+                    await self._send_line(line)
+                else:
+                    # No output yet — sleep briefly, then check if it's time to send a keepalive
+                    await sleep(0.5)
+                    if monotonic() - last_keepalive >= KEEPALIVE_INTERVAL:
+                        last_keepalive = monotonic()
+                        await self._send_line("# keepalive\n")
 
     async def _send_line(self, line: str) -> None:
         """Sends a line to the client"""
