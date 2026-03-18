@@ -76,6 +76,9 @@
                 // Remove the last element (empty string) for avoiding an extra line break
                 const chunked_lines = decoder.decode(value, { stream: true }).split('\n').slice(0, -1);
                 chunked_lines.forEach(message_line => {
+                    // Skip backend keepalive heartbeats
+                    if (message_line.trim() === '# keepalive') return;
+
                     if (message_line.startsWith('REPO_PATH')) {
                         const repo_path = message_line.split(':')[1];
                         if (repo_path && repo_path !== '/') {
