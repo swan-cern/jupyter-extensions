@@ -26,29 +26,17 @@ if [[ "${REQ_PATH}" == *pyproject.toml ]]; then
     REQ_PATH="$(dirname "${REQ_PATH}")"
 fi
 
-if [ "${RESOLVED_REQ}" = true ]; then
-    # Use the same pip configuration as the Acc-Py default pip
-    ACCPY_PIP_CONF="-i $(pip config get global.index-url) --allow-insecure-host $(pip config get global.trusted-host)"
-    uv pip install ${ACCPY_PIP_CONF} ${R_FLAG} "${REQ_PATH}" 2>&1
-    if [ $? -ne 0 ]; then
-        return 1
-    fi
-    # Enforce installation of our version of ipykernel
-    uv pip install ${ACCPY_PIP_CONF} ${IPYKERNEL} 2>&1
-else
-    pip install ${R_FLAG} "${REQ_PATH}" 2>&1
-    if [ $? -ne 0 ]; then
-        return 1
-    fi
-    # Enforce installation of our version of ipykernel
-    pip install ${IPYKERNEL} 2>&1
+# Use the same pip configuration as the Acc-Py default pip
+ACCPY_PIP_CONF="-i $(pip config get global.index-url) --allow-insecure-host $(pip config get global.trusted-host)"
+uv pip install ${ACCPY_PIP_CONF} ${R_FLAG} "${REQ_PATH}" 2>&1
+if [ $? -ne 0 ]; then
+    return 1
 fi
+
+# Enforce installation of our version of ipykernel
+uv pip install ${ACCPY_PIP_CONF} ${IPYKERNEL} 2>&1
 
 if [ -n "${USE_NXCALS}" ]; then
     # For NXCALS, enforce installation of our Spark extension versions
-    if [ "${RESOLVED_REQ}" = true ]; then
-        uv pip install ${ACCPY_PIP_CONF} ${SPARKMONITOR} ${SPARKCONNECTOR} 2>&1
-    else
-        pip install ${SPARKMONITOR} ${SPARKCONNECTOR} 2>&1
-    fi
+    uv pip install ${ACCPY_PIP_CONF} ${SPARKMONITOR} ${SPARKCONNECTOR} 2>&1
 fi
