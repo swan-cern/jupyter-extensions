@@ -1,7 +1,29 @@
 #!/bin/bash
 
-# Create a virtual environment
-uv venv ${ENV_PATH} --seed 2>&1
+# Check if there are any constraints on the Python version
+PYTHON_VERSION=""
+if [[ "${REQ_PATH}" == *pyproject.toml ]]; then
+    # Extract requires-python from pyproject.toml
+    PYTHON_VERSION=$(python -c "
+import sys
+import tomllib
+
+with open('${REQ_PATH}', 'rb') as f:
+    data = tomllib.load(f)
+
+rp = data.get('project', {}).get('requires-python', '')
+if rp:
+    print(rp)
+" 2>/dev/null)
+fi
+
+# Create venv
+if [ -n "${PYTHON_VERSION}" ]; then
+    _log "Detected requires-python: ${PYTHON_VERSION}"
+    uv venv ${ENV_PATH} --seed --python "${PYTHON_VERSION}" 2>&1
+else
+    uv venv ${ENV_PATH} --seed 2>&1
+fi
 
 # Activate the environment
 _log "Setting up the environment..."
