@@ -270,7 +270,7 @@ if [[ " $STACKS_FOR_CUSTOMENVS " != *" $BUILDER "* ]]; then
         # So, when requirements.txt is generated, it will point to the actual path and not /tmp
         if [ "${R_FLAG}" != "-r" ]; then
             REQ_PATH="${GIT_REPO_PATH}"
-            pip install "${REQ_PATH}" 2>&1 # Use installed env pip
+            uv pip install "${REQ_PATH}" 2>&1 # Use installed env pip
         fi
     fi
 
