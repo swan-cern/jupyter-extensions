@@ -180,17 +180,11 @@ if [[ " $STACKS_FOR_CUSTOMENVS " != *" $BUILDER "* ]]; then
 
     R_FLAG=""
     if [ -f "${TMP_REPO_PATH}/requirements.txt" ]; then
-        # Fully resolved requirements (requirements.txt) take precedence
-        RESOLVED_REQ=true
         R_FLAG=-r
         REQ_PATH="${TMP_REPO_PATH}/requirements.txt"
     elif [ -f "${TMP_REPO_PATH}/pyproject.toml" ]; then
-        # Else if pyproject.toml is present, proceed with high-level requirements
-        RESOLVED_REQ=false
         REQ_PATH="${TMP_REPO_PATH}/pyproject.toml"
     elif [ -f "${TMP_REPO_PATH}/requirements.in" ]; then
-        # If only requirements.in is present, proceed with high-level requirements
-        RESOLVED_REQ=false
         R_FLAG=-r
         REQ_PATH="${TMP_REPO_PATH}/requirements.in"
     else
