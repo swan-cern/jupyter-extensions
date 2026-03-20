@@ -69,16 +69,13 @@ jobs:
         packages-dir: ./${{ env.PACKAGE_NAME }}/dist/
 
     - name: Create Release
-      id: create_release
-      uses: actions/create-release@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        tag_name: ${{ github.ref }}
-        release_name: ${{ github.ref }}
-        body_path: /tmp/release_body.md
-        draft: false
-        prerelease: false
+      run: |
+        TAG="${GITHUB_REF#refs/tags/}"
+        gh release create "$TAG" \
+          --title "$TAG" \
+          --notes-file /tmp/release_body.md
 
     - name: Invoke workflow in jupyter-images
       uses: benc-uk/workflow-dispatch@v1
