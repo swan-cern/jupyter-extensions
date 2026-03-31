@@ -1,5 +1,6 @@
-import os, subprocess, shutil, sys, uuid, time, base64, tempfile
+import os, subprocess, shutil, sys, uuid, time, base64, tempfile, ssl
 import requests
+import urllib3
 
 from pyspark import SparkConf, SparkContext
 from string import Formatter
@@ -186,6 +187,91 @@ class SparkLocalConfiguration(SparkConfiguration):
 
 class SparkK8sConfiguration(SparkConfiguration):
 
+    def _should_skip_k8s_tls_verify(self):
+        """Allow an explicit compatibility escape hatch for broken cluster certs."""
+        return os.environ.get('SPARK_K8S_SKIP_TLS_VERIFY', 'false').lower() == 'true'
+
+    def _get_kubeconfig_path(self):
+        return os.environ.get('KUBECONFIG') or os.path.expanduser('~/.kube/config')
+
+    def _build_k8s_api_instance(self, relax_x509_strict=False):
+        """Create a k8s API client honoring the current kubeconfig and local overrides."""
+        k8s_config = client.Configuration()
+        config.load_kube_config(
+            config_file=self._get_kubeconfig_path(),
+            client_configuration=k8s_config
+        )
+
+        api_client = client.ApiClient(k8s_config)
+
+        if relax_x509_strict and k8s_config.verify_ssl and k8s_config.ssl_ca_cert:
+            self.connector.log.warning(
+                'Retrying Kubernetes API call with strict X.509 verification relaxed while '
+                'still validating against the kubeconfig CA bundle'
+            )
+            ssl_context = ssl.create_default_context(cafile=k8s_config.ssl_ca_cert)
+            if hasattr(ssl, 'VERIFY_X509_STRICT'):
+                ssl_context.verify_flags &= ~ssl.VERIFY_X509_STRICT
+
+            api_client.rest_client.pool_manager = urllib3.PoolManager(
+                num_pools=4,
+                cert_reqs='CERT_REQUIRED',
+                ca_certs=k8s_config.ssl_ca_cert,
+                cert_file=k8s_config.cert_file,
+                key_file=k8s_config.key_file,
+                ssl_context=ssl_context
+            )
+
+        if self._should_skip_k8s_tls_verify():
+            self.connector.log.warning(
+                'SPARK_K8S_SKIP_TLS_VERIFY=true: disabling TLS verification for Kubernetes API calls'
+            )
+            k8s_config.verify_ssl = False
+            api_client = client.ApiClient(k8s_config)
+
+        return client.CoreV1Api(api_client)
+
+    def _is_aki_compatibility_error(self, exc):
+        message = str(exc)
+        return (
+            'CERTIFICATE_VERIFY_FAILED' in message and
+            'Missing Authority Key Identifier' in message
+        )
+
+    def _is_k8s_tls_exception(self, exc):
+        return isinstance(
+            exc,
+            (ssl.SSLError, urllib3.exceptions.SSLError, urllib3.exceptions.MaxRetryError)
+        )
+
+    def _raise_k8s_tls_error(self, exc):
+        if self._is_aki_compatibility_error(exc):
+            raise Exception(
+                'Could not connect to the Kubernetes API because Python '
+                f'{sys.version_info.major}.{sys.version_info.minor} uses stricter OpenSSL '
+                'certificate validation and the cluster certificate chain is missing the '
+                'Authority Key Identifier extension. '
+                'Please fix the cluster certificate chain. As a temporary workaround, '
+                'set SPARK_K8S_SKIP_TLS_VERIFY=true to disable TLS verification for the '
+                'Kubernetes secret refresh call.'
+            ) from exc
+
+        raise
+
+    def _call_k8s_api(self, method_name, *args):
+        api_instance = self._build_k8s_api_instance()
+        method = getattr(api_instance, method_name)
+
+        try:
+            return method(*args)
+        except Exception as e:
+            if self._is_k8s_tls_exception(e) and self._is_aki_compatibility_error(e):
+                api_instance = self._build_k8s_api_instance(relax_x509_strict=True)
+                return getattr(api_instance, method_name)(*args)
+            if self._is_k8s_tls_exception(e):
+                self._raise_k8s_tls_error(e)
+            raise
+
     def _format_local_paths(self, path_array):
         """Dependencies which are in EOS HOME will be formatted to root://"""
 
@@ -235,13 +321,9 @@ class SparkK8sConfiguration(SparkConfiguration):
     def _refresh_spark_tokens(self, name, namespace, data_dict):
         """ Create or replace k8s secret <name> in the namespace <namespace """
 
-        config.load_kube_config()
-
-        api_instance = client.CoreV1Api()
-
         try:
             # Refresh tokens, so new executors will pick up new token
-            api_instance.read_namespaced_secret(name, namespace)
+            self._call_k8s_api('read_namespaced_secret', name, namespace)
             exists = True
         except ApiException:
             exists = False
@@ -267,9 +349,9 @@ class SparkK8sConfiguration(SparkConfiguration):
         try:
             # Refresh tokens, so new executors will pick up new token
             if exists:
-                api_instance.replace_namespaced_secret(name, namespace, secret_data)
+                self._call_k8s_api('replace_namespaced_secret', name, namespace, secret_data)
             else:
-                api_instance.create_namespaced_secret(namespace, secret_data)
+                self._call_k8s_api('create_namespaced_secret', namespace, secret_data)
         except ApiException as e:
             raise Exception("Could not create required secret: %s\n" % e)
 
@@ -281,7 +363,7 @@ class SparkK8sConfiguration(SparkConfiguration):
         # Set K8s configuration
         conf.set('spark.kubernetes.namespace', os.environ.get('SPARK_USER'))
         conf.set('spark.kubernetes.container.image', 'gitlab-registry.cern.ch/swan/spark/docker-registry/swan:alma9-20260319')
-        conf.set('spark.master', self._retrieve_k8s_master(os.environ.get('KUBECONFIG')))
+        conf.set('spark.master', self._retrieve_k8s_master(self._get_kubeconfig_path()))
 
         # Configure shuffle if running on K8s with Spark 3.x.x
         if self.get_spark_version().split('.')[0]=='3':
