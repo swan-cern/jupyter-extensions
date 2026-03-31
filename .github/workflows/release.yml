@@ -3,37 +3,116 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      bump:
-        description: "Release bump: major, minor or patch"
-        required: true
-        default: "patch"
       extension:
         description: "Extension name"
         required: true
-        default: "HdfsBrowser"
+        type: choice
+        options:
+          - HdfsBrowser
+          - SparkConnector
+          - SwanContents
+          - SwanCustomEnvironments
+          - SwanDask
+          - SwanHeader
+          - SwanHelp
+          - SwanIntro
+          - SwanKernelEnv
+          - SwanMetrics
+          - SwanNotifications
+          - SwanOauthRenew
+          - SwanPortAllocator
+          - SwanShare
+      bump:
+        description: "Version bump"
+        required: true
+        default: patch
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
 
 jobs:
-  bump-version:
+  release:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: write
+
     steps:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v6
+          fetch-depth: 0
+
+      - uses: astral-sh/setup-uv@v7
         with:
-          python-version: '3.14'
-      - uses: BSFishy/pip-action@v1
+          python-version: '3.12' # nbclassic (required by swancontents) needs the `pipes` module removed in 3.13
+
+      - name: Install node
+        if: hashFiles(format('{0}/package.json', inputs.extension)) != ''
+        uses: actions/setup-node@v6
         with:
-          packages: |
-            bump2version
-      - name: Bump and tag
+          node-version: '24.x'
+
+      - name: Bump version
+        id: version
         run: |
-          git config --local user.email "swan-admins@cern.ch"
-          git config --local user.name "swan-admins[bot]"
-          cd ${{ github.event.inputs.extension }}
-          bump2version ${{ github.event.inputs.bump }}
-      - name: Push changes
-        uses: ad-m/github-push-action@master
+          # Run bump2version
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cd ${{ inputs.extension }}
+          uvx bump2version ${{ inputs.bump }}
+
+          # Get the new tag and version
+          TAG=$(git describe --tags --exact-match)
+          VERSION=$(echo "$TAG" | cut -d / -f 2)
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Generate release notes
+        run: |
+          # Get the previous tag for this extension
+          PREV_TAG=$(git describe --tags --match "${{ inputs.extension }}/*" --abbrev=0 HEAD~1 2>/dev/null || true)
+          # If there is a previous tag, get commits since that tag, otherwise get all commits
+          [ -n "$PREV_TAG" ] && RANGE="$PREV_TAG..HEAD" || RANGE="HEAD"
+          # Format commit messages as a markdown list & remove the extension name from the beginning of the message
+          EXT_LOWER=$(echo "${{ inputs.extension }}" | tr '[:upper:]' '[:lower:]')
+          git log "$RANGE" --pretty=format:"- %B" -- "${{ inputs.extension }}" \
+            | sed -r "s/$EXT_LOWER: //g" > /tmp/release_body.md
+
+      - name: Push version bump commit and tag
+        env:
+          WORKFLOW_ACCESS_TOKEN: ${{ secrets.WORKFLOW_ACCESS_TOKEN }}
+        run: |
+          # Bypass branch protection rules by using the workflow access token
+          git remote set-url origin "https://x-access-token:${WORKFLOW_ACCESS_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          git push origin master --tags --atomic
+
+      - name: Build wheel 📦
+        run: |
+          cd ${{ inputs.extension }}
+          uv build
+
+      - name: Publish to PyPI 🚀
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          github_token: ${{ secrets.WORKFLOW_ACCESS_TOKEN }}
-          tags: true
+          packages-dir: ./${{ inputs.extension }}/dist/
+
+      - name: Create GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.tag }}" \
+            --title "${{ steps.version.outputs.tag }}" \
+            --notes-file /tmp/release_body.md
+
+      - name: Trigger package update in jupyter-images
+        env:
+          GH_TOKEN: ${{ secrets.WORKFLOW_ACCESS_TOKEN }}
+        run: |
+          gh workflow run update-packages.yml \
+            --repo swan-cern/jupyter-images \
+            --ref master \
+            -f package="${{ inputs.extension }}" \
+            -f version="${{ steps.version.outputs.version }}"
