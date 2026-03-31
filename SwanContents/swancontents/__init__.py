@@ -14,7 +14,4 @@ def _jupyter_server_extension_points():
     ]
 
 def _jupyter_labextension_paths():
-    return [{
-        "src": "swanclassic/labextension",
-        "dest": "@swanclassic/lab-extension"
-    }]
+    return []

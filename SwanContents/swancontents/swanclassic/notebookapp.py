@@ -1,5 +1,7 @@
 # coding: utf-8
 
+import os
+
 from nbclassic.notebookapp import NotebookApp as ClassicNotebookApp
 
 from nbclassic import DEFAULT_TEMPLATE_PATH_LIST as NBCLASSIC_DEFAULT_TEMPLATE_PATH_LIST
@@ -43,6 +45,8 @@ class NotebookApp(ClassicNotebookApp):
         """
         Registers the old UI paths, like /projects, /share and /cernbox automatically.
         """
+        if os.environ.get('SWAN_USE_JUPYTERLAB', 'false').lower() == 'true':
+            return
         handlers = []
         handlers.extend(load_handlers("swancontents.swanclassic.handlers.projects"))
         handlers.extend(load_handlers("swancontents.swanclassic.handlers.share"))
