@@ -9,7 +9,8 @@ import logging
 from jupyter_server.base.handlers import PrometheusMetricsHandler
 
 editors_opened = {
-    "vscode": False
+    "vscode": False,
+    "marimo": False
 }
 
 KERNEL_ACTIONS_SCHEMA_ID = "https://events.jupyter.org/jupyter_server/kernel_actions/v1"
