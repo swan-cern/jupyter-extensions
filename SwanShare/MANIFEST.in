@@ -7,6 +7,9 @@ include ts*.json
 include swanshare/nbextension/*.js
 include webpack.config.js
 
+include yarn.lock
+include .yarnrc.yml
+
 # Javascript files
 graft src
 graft style
