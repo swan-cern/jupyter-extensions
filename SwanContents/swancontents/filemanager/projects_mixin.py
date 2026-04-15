@@ -107,7 +107,7 @@ class ProjectsMixin(HasTraits):
             with self.perm_to_403():
                 await super()._save_file(os.path.join(os_path, self.swan_default_file), '', 'text')
 
-    async def get(self, path, content=True, type=None, format=None, require_hash=None):
+    async def get(self, path, content=True, type=None, format=None, require_hash=False):
         """ Get info from a path"""
 
         path = path.strip('/')
@@ -130,7 +130,7 @@ class ProjectsMixin(HasTraits):
             model = await self._proj_model(path, content=content)
 
         else:
-            model = await super().get(path, content, type, format)
+            model = await super().get(path, content, type, format, require_hash)
         return model
 
     async def save(self, model, path=''):
