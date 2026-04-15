@@ -13,6 +13,7 @@ include swanintro/nbextension/img/*
 # Javascript files
 graft src
 graft style
+graft nbextension
 prune **/node_modules
 prune lib
 
