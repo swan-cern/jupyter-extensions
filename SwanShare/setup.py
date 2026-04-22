@@ -39,7 +39,7 @@ cmdclass = create_cmdclass("jsdeps",
 )
 
 cmdclass["jsdeps"] = combine_commands(
-    install_npm(HERE, build_cmd="webpack"),
+    install_npm(HERE, build_cmd="webpack", npm=["jlpm"]),
     ensure_targets(jstargets),
 )
 
