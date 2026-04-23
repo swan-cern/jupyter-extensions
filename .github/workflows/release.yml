@@ -17,6 +17,7 @@ on:
           - SwanHelp
           - SwanIntro
           - SwanKernelEnv
+          - SwanMarimoProxy
           - SwanMetrics
           - SwanNotifications
           - SwanOauthRenew
