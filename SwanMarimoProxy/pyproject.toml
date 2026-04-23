@@ -1,0 +1,42 @@
+[build-system]
+requires = ["hatchling==1.29.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "swan-marimo-proxy"
+version = "0.1.1"
+description = "Jupyter Server Proxy extension to launch Marimo within SWAN"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [{ name = "SWAN Admins" }]
+classifiers = [
+    "Framework :: Jupyter",
+    "Framework :: Jupyter :: JupyterLab",
+    "Framework :: Jupyter :: JupyterLab :: 4",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = ["jupyter-server-proxy>=4.0", "marimo>=0.20"]
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.15.7", "jupyterlab>=4.0"]
+
+[project.entry-points.jupyter_serverproxy_servers]
+marimo = "swan_marimo_proxy:setup_marimo"
+
+[project.urls]
+Homepage = "https://github.com/swan-cern/swan-marimo-proxy"
+Repository = "https://github.com/swan-cern/swan-marimo-proxy"
+Issues = "https://github.com/swan-cern/swan-marimo-proxy/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["swan_marimo_proxy"]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
