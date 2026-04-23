@@ -1,0 +1,77 @@
+[build-system]
+requires = ["hatchling==1.29.0", "jupyterlab==4.5.6"]
+build-backend = "hatchling.build"
+
+[project]
+name = "swan-ml"
+description = "JupyterLab sidebar showing ml.cern.ch pipeline run status"
+authors = [{ name = "SWAN Team", email = "swan-admins@cern.ch" }]
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+    "jupyter_server>=2.0",
+    "kfp>=2.8.0,<3",
+    "PyJWT>=2.0.1",
+]
+dynamic = ["version"]
+
+[dependency-groups]
+dev = [
+    "jupyterlab>=4.0.0,<5",
+    "ruff==0.15.11",
+]
+
+[tool.hatch.version]
+path = "swan_ml/_version.py"
+
+[tool.hatch.build.targets.wheel.shared-data]
+"swan_ml/labextension" = "share/jupyter/labextensions/swan-ml"
+"install.json" = "share/jupyter/labextensions/swan-ml/install.json"
+"jupyter-config/server-config" = "etc/jupyter/jupyter_server_config.d"
+
+[tool.hatch.build.hooks.jupyter-builder]
+dependencies = ["hatch-jupyter-builder==0.9.1"]
+build-function = "hatch_jupyter_builder.npm_builder"
+ensured-targets = [
+    "swan_ml/labextension/static/style.js",
+    "swan_ml/labextension/package.json",
+]
+skip-if-exists = [
+    "swan_ml/labextension/static/style.js",
+]
+
+[tool.hatch.build.hooks.jupyter-builder.build-kwargs]
+build_cmd = "build:prod"
+npm = ["jlpm"]
+
+[tool.hatch.build.hooks.jupyter-builder.editable-build-kwargs]
+build_cmd = "build"
+npm = ["jlpm"]
+source_dir = "src"
+build_dir = "swan_ml/labextension"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "ASYNC",   # flake8-async
+    "B",       # flake8-bugbear
+    "DTZ",     # flake8-datetimez
+    "E",       # pycodestyle errors
+    "F",       # Pyflakes
+    "G",       # flake8-logging-format
+    "I",       # isort
+    "LOG",     # flake8-logging
+    "PIE",     # flake8-pie
+    "PLE",     # Pylint errors
+    "PLR",     # Pylint refactor
+    "PLW",     # Pylint warnings
+    "RET",     # flake8-return
+    "RUF",     # Ruff-specific
+    "SIM",     # flake8-simplify
+    "UP",      # pyupgrade
+    "W",       # pycodestyle warnings
+    "YTT",     # flake8-2020
+]
