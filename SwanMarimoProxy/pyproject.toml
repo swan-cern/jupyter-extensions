@@ -4,7 +4,6 @@ build-backend = "hatchling.build"
 
 [project]
 name = "swan-marimo-proxy"
-version = "0.1.1"
 description = "Jupyter Server Proxy extension to launch Marimo within SWAN"
 readme = "README.md"
 license = "MIT"
@@ -20,6 +19,7 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
 ]
 dependencies = ["jupyter-server-proxy>=4.0", "marimo>=0.20"]
+dynamic = ["version"]
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.15.7", "jupyterlab>=4.0"]
@@ -31,6 +31,9 @@ marimo = "swan_marimo_proxy:setup_marimo"
 Homepage = "https://github.com/swan-cern/swan-marimo-proxy"
 Repository = "https://github.com/swan-cern/swan-marimo-proxy"
 Issues = "https://github.com/swan-cern/swan-marimo-proxy/issues"
+
+[tool.hatch]
+version = { path = "swan_marimo_proxy/_version.py" }
 
 [tool.hatch.build.targets.wheel]
 packages = ["swan_marimo_proxy"]

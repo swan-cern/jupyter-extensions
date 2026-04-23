@@ -2255,7 +2255,6 @@ wheels = [
 
 [[package]]
 name = "swan-marimo-proxy"
-version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "jupyter-server-proxy" },
