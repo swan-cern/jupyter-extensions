@@ -36,6 +36,7 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
+    environment: publish
     permissions:
       id-token: write
       contents: write
