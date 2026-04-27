@@ -33,37 +33,50 @@ on:
           - minor
           - patch
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions: {}  # Deny all permissions by default at workflow level
+
 jobs:
   release:
     runs-on: ubuntu-latest
+    environment: publish
+    env:
+      EXTENSION: ${{ inputs.extension }}
     permissions:
-      id-token: write
-      contents: write
+      id-token: write # Required to authenticate with gh CLI using OIDC
+      contents: write # Required to push commits and tags, and create releases
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
           fetch-depth: 0
 
-      - uses: astral-sh/setup-uv@v7
+      - uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
         with:
           python-version: '3.12' # nbclassic (required by swancontents) needs the `pipes` module removed in 3.13
+          enable-cache: false
 
       - name: Install node
-        if: hashFiles(format('{0}/package.json', inputs.extension)) != ''
-        uses: actions/setup-node@v6
+        if: hashFiles(format('{0}/package.json', env.EXTENSION)) != ''
+        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6.4.0
         with:
           node-version: '24.x'
+          package-manager-cache: false
 
       - name: Bump version
         id: version
+        env:
+          BUMP: ${{ inputs.bump }}
         run: |
           # Run bump2version
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          cd ${{ inputs.extension }}
-          uvx bump2version ${{ inputs.bump }}
+          cd ${EXTENSION}
+          uvx bump2version ${BUMP}
 
           # Get the new tag and version
           TAG=$(git describe --tags --exact-match)
@@ -74,12 +87,12 @@ jobs:
       - name: Generate release notes
         run: |
           # Get the previous tag for this extension
-          PREV_TAG=$(git describe --tags --match "${{ inputs.extension }}/*" --abbrev=0 HEAD~1 2>/dev/null || true)
+          PREV_TAG=$(git describe --tags --match "${EXTENSION}/*" --abbrev=0 HEAD~1 2>/dev/null || true)
           # If there is a previous tag, get commits since that tag, otherwise get all commits
           [ -n "$PREV_TAG" ] && RANGE="$PREV_TAG..HEAD" || RANGE="HEAD"
           # Format commit messages as a markdown list & remove the extension name from the beginning of the message
-          EXT_LOWER=$(echo "${{ inputs.extension }}" | tr '[:upper:]' '[:lower:]')
-          git log "$RANGE" --pretty=format:"- %B" -- "${{ inputs.extension }}" \
+          EXT_LOWER=$(echo "${EXTENSION}" | tr '[:upper:]' '[:lower:]')
+          git log "$RANGE" --pretty=format:"- %B" -- "${EXTENSION}" \
             | sed -r "s/$EXT_LOWER: //g" > /tmp/release_body.md
 
       - name: Push version bump commit and tag
@@ -92,13 +105,13 @@ jobs:
 
       - name: Build wheel 📦
         run: |
-          cd ${{ inputs.extension }}
+          cd ${EXTENSION}
           uv build
 
       - name: Publish to PyPI 🚀
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # v1.14.0
         with:
-          packages-dir: ./${{ inputs.extension }}/dist/
+          packages-dir: ./${EXTENSION}/dist/
 
       - name: Create GitHub release
         env:
@@ -115,5 +128,5 @@ jobs:
           gh workflow run update-packages.yml \
             --repo swan-cern/jupyter-images \
             --ref master \
-            -f package="${{ inputs.extension }}" \
+            -f package="${EXTENSION}" \
             -f version="${{ steps.version.outputs.version }}"
