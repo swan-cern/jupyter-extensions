@@ -1,0 +1,13 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "no-descending-specificity": null
+  },
+  "ignoreFiles": [
+    "node_modules/**",
+    "lib/**",
+    "swan_ml/labextension/**",
+    ".venv/**",
+    ".yarn/**"
+  ]
+}

@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+dist/
+
+# Virtual environments
+.venv/
+
+# Node
+node_modules/
+.yarn/
+
+# TypeScript / JupyterLab build output
+lib/
+swan_ml/labextension/
+tsconfig.tsbuildinfo
+
+# Jupyter
+.ipynb_checkpoints/
+
