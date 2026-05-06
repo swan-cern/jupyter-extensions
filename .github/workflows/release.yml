@@ -19,7 +19,6 @@ on:
           - SwanKernelEnv
           - SwanMarimoProxy
           - SwanMetrics
-          - SwanNotifications
           - SwanOauthRenew
           - SwanPortAllocator
           - SwanShare

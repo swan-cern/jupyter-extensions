@@ -10,7 +10,6 @@ Repository that stores all the Jupyter extensions for SWAN.
 * [SwanHelp](SwanHelp) - SWAN Help panel for Notebooks and Lab
 * [SwanIntro](SwanIntro) - Extension to display to users what has changed since the last time they used the service (or greet new users)
 * [SwanKernelEnv](SwanKernelEnv) - Kernel extension to remove SWAN special paths from the user environment (thus keeping the clean LCG release environment)
-* [SwanNotifications](SwanNotifications) - Extension to display notifications to users
 * [SwanOauthRenew](SwanOauthRenew) - Extension that fetches the latest oAuth tokens from JupyterHub and writes to the file observed by EOS
 * [SwanShare](SwanShare) - Jupyter Notebooks/CERNBox sharing integration used by SwanContents
 * [SwanPortAllocator](SwanPortAllocator) - Extension to reserve ports in a user container
