@@ -4,7 +4,6 @@ node_modules
 lib
 dist
 swan_ml/labextension
-swan_ml/_version.py
 tsconfig.tsbuildinfo
 yarn.lock
 package-lock.json
