@@ -25,4 +25,4 @@ def _load_jupyter_server_extension(server_app):
 
     config = SwanML(config=server_app.config)
     setup_handlers(server_app.web_app, config)
-    server_app.log.info("swan-ml server extension loaded")
+    server_app.log.info("swan_ml server extension loaded")
