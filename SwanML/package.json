@@ -23,7 +23,7 @@
     "build:labextension:dev": "jupyter labextension build --development True .",
     "clean": "jlpm clean:lib && jlpm clean:labextension",
     "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
-    "clean:labextension": "rimraf swan_ml/labextension swan_ml/_version.py",
+    "clean:labextension": "rimraf swan_ml/labextension",
     "watch": "run-p watch:src watch:labextension",
     "watch:src": "tsc -w --sourceMap",
     "watch:labextension": "jupyter labextension watch .",
