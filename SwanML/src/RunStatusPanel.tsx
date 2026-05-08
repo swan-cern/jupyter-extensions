@@ -24,7 +24,7 @@ export function RunStatusPanel({ widget }: { widget: VisibilityHost }): React.Re
   useEffect(() => widget.onVisibilityChange(setIsVisible), [widget]);
 
   const [runs, setRuns] = useState<PipelineRun[]>([]);
-  const [nextPageToken, setNextPageToken] = useState<string | null>(null);
+  const [nextPageToken, setNextPageToken] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
