@@ -12,7 +12,7 @@ export interface PipelineRun {
 
 export interface RunsPage {
   runs: PipelineRun[];
-  next_page_token: string | null;
+  next_page_token: string;
 }
 
 /**
@@ -42,6 +42,6 @@ export async function fetchRuns(pageSize = 20, pageToken?: string): Promise<Runs
   const data = await response.json();
   return {
     runs: data.runs || [],
-    next_page_token: data.next_page_token || null,
+    next_page_token: data.next_page_token,
   };
 }
