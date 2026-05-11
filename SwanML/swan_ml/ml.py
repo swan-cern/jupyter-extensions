@@ -1,11 +1,9 @@
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 import jwt
 import kfp
 
-if TYPE_CHECKING:
-    from swan_ml.config import SwanML
+from swan_ml.config import SwanML
 
 
 def read_token(path: Path) -> str:
