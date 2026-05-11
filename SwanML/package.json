@@ -1,6 +1,6 @@
 {
   "name": "swan-ml",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "JupyterLab sidebar showing ml.cern.ch pipeline run status",
   "license": "MIT",
   "author": "SWAN Team",
