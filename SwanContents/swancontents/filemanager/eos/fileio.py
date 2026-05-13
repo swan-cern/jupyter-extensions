@@ -1,3 +1,4 @@
+from jupyter_core.paths import is_hidden as _is_hidden
 from jupyter_server.services.contents.fileio import AsyncFileManagerMixin
 from jupyter_server.utils import url_path_join
 from tornado.web import HTTPError
@@ -106,6 +107,24 @@ class SwanFileManagerMixin(AsyncFileManagerMixin):
 
         else:
             return super()._get_os_path(path)
+
+    async def is_hidden(self, path):
+        """
+        Override is_hidden to support the virtual swan_sharing_folder paths.
+
+        For paths under swan_sharing_folder/<owner>/..., _get_os_path resolves
+        outside self.root_dir, which since jupyter_core 5.9 (PR #429) makes
+        jupyter_core.paths.is_hidden raise ValueError. We use the shared
+        owner's EOS home as the effective root instead.
+        """
+        if path.startswith(swan_sharing_folder):
+            path_parts = path.split('/')
+            if len(path_parts) < 3:
+                return False  # virtual root itself
+            eosbasepath_format = os.getenv('EOS_PATH_FORMAT', '/eos/user/{username[0]}/{username}/')
+            user_basepath = eosbasepath_format.format(username=path_parts[1])
+            return _is_hidden(self._get_os_path(path), user_basepath)
+        return await super().is_hidden(path)
 
     @contextmanager
     def atomic_writing(self, os_path, *args, **kwargs):
