@@ -1,7 +1,9 @@
+import logging
 from pathlib import Path
 
 import jwt
 import kfp
+import kfp_server_api
 
 from swan_ml.config import SwanML
 
@@ -25,18 +27,31 @@ def get_kfp_client(token_path: Path, host: str) -> kfp.Client:
     )
 
 
-def fetch_runs(page_size: int, page_token: str, config: SwanML) -> dict:
+def fetch_runs(page_size: int, page_token: str, config: SwanML, log: logging.Logger) -> dict:
     """Fetch runs from Kubeflow."""
 
     client = get_kfp_client(
         token_path=Path(config.token_path),
         host=config.kubeflow_host,
     )
-    response = client.list_runs(
-        page_size=page_size,
-        page_token=page_token,
-        sort_by="created_at desc",
-    )
+    try:
+        response = client.list_runs(
+            page_size=page_size,
+            page_token=page_token,
+            sort_by="created_at desc",
+        )
+    except kfp_server_api.exceptions.ApiException as e:
+        if e.reason == "Forbidden":
+            # This can happen if the user never logged in to Kubeflow before.
+            # In this case, we just return an empty list instead of showing an error.
+            log.info("Kubeflow returned 403 Forbidden when listing runs; returning empty list")
+            return {
+                "runs": [],
+                "next_page_token": '',
+                "total_size": 0,
+            }
+        raise
+
 
     runs = []
     for run in response.runs or []:

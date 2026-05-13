@@ -25,7 +25,7 @@ class ListRunsHandler(APIHandler):
         config = self.swan_config
 
         loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(None, fetch_runs, page_size, page_token, config)
+        result = await loop.run_in_executor(None, fetch_runs, page_size, page_token, config, self.log)
         self.finish(json.dumps(result))
 
 
