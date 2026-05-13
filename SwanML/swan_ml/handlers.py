@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 
 import tornado.web
 from jupyter_server.base.handlers import APIHandler
@@ -10,8 +9,6 @@ from jupyter_server.utils import url_path_join
 
 from swan_ml.config import SwanML
 from swan_ml.ml import fetch_runs
-
-logger = logging.getLogger(__name__)
 
 
 class ListRunsHandler(APIHandler):
@@ -43,8 +40,4 @@ def setup_handlers(web_app, config: SwanML):
             ListRunsHandler,
         ),
     ]
-
     web_app.add_handlers(".*", handlers)
-    logger.info(
-        "Registered swan-ml API handlers at %sapi/mlcern/", base_url
-    )
