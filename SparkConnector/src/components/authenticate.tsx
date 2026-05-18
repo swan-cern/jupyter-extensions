@@ -42,6 +42,11 @@ export const Authenticate = observer(() => {
           onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
             setPassword(event.target.value);
           }}
+          onKeyDown={(event: React.KeyboardEvent<HTMLInputElement>) => {
+            if (event.key === 'Enter' && password) {
+              store.onClickAuthenticate(password);
+            }
+          }}
         />
       </Section>
       <Button
