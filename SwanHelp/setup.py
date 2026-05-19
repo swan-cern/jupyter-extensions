@@ -55,7 +55,7 @@ js_command = combine_commands(
     ensure_targets(jstargets),
 )
 
-is_repo = os.path.exists(os.path.join(HERE, ".git"))
+is_repo = os.path.exists(os.path.join(HERE, "..", ".git"))
 if is_repo:
     cmdclass["jsdeps"] = js_command
 else:
