@@ -46,7 +46,7 @@ class SwanEosFileManager(ProjectsMixin, SwanFileManagerMixin, AsyncLargeFileMana
         Define the root path for tornado StaticFileHandler object
         This is necessary to open files from other users (for sharing tab)
         """
-        if self.root_dir.startswith("/eos/"):
+        if self.swan_home.startswith("/eos/"):
             return {"path": "/eos/", "default_path": self.root_dir}
         else:
             return {"path": self.root_dir}

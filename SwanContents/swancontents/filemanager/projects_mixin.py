@@ -28,6 +28,17 @@ class ProjectsMixin(HasTraits):
         help="The base name used when creating untitled projects."
     )
 
+    @property
+    def swan_home(self):
+        """Absolute path to the user home which contains SWAN_projects
+
+        In the classic UI, this is the same as root_dir (typically /eos/user/<u>/<user>).
+        In JupyterLab, the home path is built from root_dir (/eos) and preferred_dir (user/<u>/<user>).
+        """
+        if self.preferred_dir:
+            return os.path.join(self.root_dir, self.preferred_dir)
+        return self.root_dir
+
     def _get_project_path(self, path):
         """ Return the project path where the path provided belongs to """
 
@@ -46,7 +57,7 @@ class ProjectsMixin(HasTraits):
     def _is_swan_root_folder(self, path):
         """ Check is this is SWAN projects folder """
 
-        folders = path.replace(self.root_dir+'/', '', 1).split('/')
+        folders = path.replace(self.swan_home+'/', '', 1).split('/')
         if len(folders) == 2 and folders[0] == self.swan_default_folder:
             return True
 
@@ -55,7 +66,7 @@ class ProjectsMixin(HasTraits):
     def _contains_swan_folder_name(self, path):
         """ To prevent users from using the default SWAN projects folder name """
 
-        folders = path.replace(self.root_dir + '/' + self.swan_default_folder + '/', '', 1).split('/')
+        folders = path.replace(self.swan_home + '/' + self.swan_default_folder + '/', '', 1).split('/')
         for folder in folders:
             if folder == self.swan_default_folder:
                 return True
