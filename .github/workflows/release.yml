@@ -16,7 +16,6 @@ on:
           - SwanDask
           - SwanHeader
           - SwanHelp
-          - SwanIntro
           - SwanKernelEnv
           - SwanMarimoProxy
           - SwanMetrics
