@@ -253,7 +253,7 @@ class ProjectsMixin(HasTraits):
 
             dest_dir_name_ext = os.path.basename(url)
             repo_name_no_ext = os.path.splitext(dest_dir_name_ext)[0]
-            dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, repo_name_no_ext)
+            dest_dir_name = os.path.join(self.swan_home, self.swan_default_folder, repo_name_no_ext)
 
             model['type'] = 'directory'
             model['path'] = await self.move_folder(tmp_dir_name, dest_dir_name)
