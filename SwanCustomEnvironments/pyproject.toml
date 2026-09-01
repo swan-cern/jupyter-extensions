@@ -75,5 +75,12 @@ before-build-npm = [
 ]
 before-build-python = ["jlpm clean:all"]
 
+[dependency-groups]
+dev = ["pytest>=8", "pytest-asyncio>=0.23", "jupyter_server>=2.0.1,<3"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["swancustomenvironments/tests"]
+
 [tool.check-wheel-contents]
 ignore = ["W002"]

@@ -62,3 +62,19 @@ jobs:
         env:
           PACKAGE: ${{ matrix.package }}
         run: uv build ${PACKAGE}
+
+      - name: Lint ${{ matrix.package }} 🧹
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: cd ${PACKAGE} && uvx ruff@0.15.20 check .
+
+      - name: Test ${{ matrix.package }} 🧪
+        env:
+          PACKAGE: ${{ matrix.package }}
+        run: |
+          cd ${PACKAGE}
+          if grep -q '\[tool\.pytest\.ini_options\]' pyproject.toml; then
+            uv run --group dev pytest -v
+          else
+            echo "No tests configured for ${PACKAGE}, skipping."
+          fi
