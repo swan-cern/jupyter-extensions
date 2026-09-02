@@ -64,10 +64,10 @@ jobs:
         run: uv build ${PACKAGE}
 
       - name: Lint ${{ matrix.package }} 🧹
-        uses: astral-sh/ruff-action@v1
+        uses: astral-sh/ruff-action@d0a0e814ec17e92d33be7d24dd922b479f1bcd38 # v1
         with:
           version: "0.15.20"
-          args: check ${{ matrix.package }}
+          src: ${{ matrix.package }}
 
       - name: Test ${{ matrix.package }} 🧪
         env:
