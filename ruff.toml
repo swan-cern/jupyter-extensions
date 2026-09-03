@@ -1,0 +1,5 @@
+[lint]
+ignore = [
+    "I001",    # TODO: fix import ordering across all packages
+    "ASYNC230", # TODO: replace blocking open() with async file I/O
+]

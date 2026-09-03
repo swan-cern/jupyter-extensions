@@ -78,12 +78,6 @@ before-build-python = ["jlpm clean:all"]
 [dependency-groups]
 dev = ["pytest>=8", "pytest-asyncio>=0.23"]
 
-[tool.ruff.lint]
-ignore = [
-    "I001",    # TODO: fix import ordering
-    "ASYNC230", # TODO: replace blocking open() with async file I/O
-]
-
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 
