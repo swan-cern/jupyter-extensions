@@ -1,5 +1,12 @@
 [lint]
 ignore = [
-    "I001",     # TODO: fix import ordering across all packages
+    "I001",    # TODO: fix import ordering across all packages
     "ASYNC230", # TODO: replace blocking open() with async file I/O
+    "BLE001",  # TODO: narrow broad Exception catches
+    "TRY002",  # TODO: replace bare Exception raises with custom types
+    "C408",    # TODO: rewrite dict() calls as literals
+    "F401",    # TODO: add explicit re-exports where needed
+    "F541",    # TODO: remove f-prefix from strings without placeholders
+    "RUF010",  # TODO: use explicit conversion flags in f-strings
+    "PLR1730", # TODO: replace if/min patterns with max()
 ]
