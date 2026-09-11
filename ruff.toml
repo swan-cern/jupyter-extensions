@@ -3,3 +3,17 @@ ignore = [
     "I001",     # TODO: fix import ordering across all packages
     "ASYNC230", # TODO: replace blocking open() with async file I/O
 ]
+
+[lint.per-file-ignores]
+# TODO: pre-existing violations in SwanContents, never linted before CI (#494).
+"SwanContents/**" = [
+    "ASYNC210", "ASYNC221",              # blocking HTTP/subprocess calls in async functions
+    "BLE001", "E722", "S110", "TRY203",  # broad / bare / useless exception handling
+    "G201",                              # log.error(exc_info=True) instead of log.exception()
+    "C408", "PIE790", "PIE810",          # dict() calls, needless pass, chained startswith
+    "SIM103", "SIM115", "SIM117", "SIM401",  # simplification suggestions
+    "UP008", "UP009", "UP020", "UP025", "UP031",  # pyupgrade modernisation
+    "DTZ005", "DTZ006", "DTZ011",        # naive datetimes
+    "F401", "F841",                      # unused imports / variables
+    "W605", "RUF012", "FURB188", "PLW1510",
+]

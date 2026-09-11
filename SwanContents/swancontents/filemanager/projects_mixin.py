@@ -1,7 +1,7 @@
 
 from traitlets import HasTraits, Unicode
 from tornado import web
-import os, io, shutil, subprocess, tempfile, requests
+import os, io, shutil, subprocess, tempfile, requests, zipfile
 from .proj_url_checker import (
     is_cernbox_shared_link,
     get_name_from_shared_from_link,
