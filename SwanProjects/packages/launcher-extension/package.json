@@ -1,0 +1,107 @@
+{
+  "name": "@swan/launcher-extension",
+  "version": "0.0.0",
+  "private": true,
+  "description": "SWAN JupyterLab - Launcher Panel",
+  "homepage": "https://github.com/ozapatam/jupyterlab-swanlauncher",
+  "bugs": {
+    "url": "https://github.com/ozapatam/jupyterlab-swanlauncher/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ozapatam/jupyterlab-swanlauncher.git"
+  },
+  "license": "AGPL-3.0",
+  "author": "SWAN Admins",
+  "sideEffects": [
+    "style/*.css",
+    "style/index.js"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "style": "style/index.css",
+  "directories": {
+    "lib": "lib"
+  },
+  "files": [
+    "lib/*.d.ts",
+    "lib/*.js.map",
+    "lib/*.js",
+    "lib/*.jsx",
+    "src/*.ts",
+    "src/*.tsx",
+    "schema/*.json",
+    "style/*.css",
+    "style/*.svg",
+    "style/index.js"
+  ],
+  "scripts": {
+    "build": "jlpm run build:lib && jlpm run build:labextension:dev",
+    "build:labextension": "jupyter labextension build .",
+    "build:labextension:dev": "jupyter labextension build --development True .",
+    "build:lib": "tsc",
+    "build:prod": "jlpm run clean && jlpm run build:lib && jlpm run build:labextension",
+    "clean": "jlpm run clean:lib",
+    "clean:all": "jlpm run clean:lib && jlpm run clean:labextension",
+    "clean:labextension": "rimraf swanlauncher/labextension",
+    "clean:lib": "rimraf lib tsconfig.tsbuildinfo",
+    "docs": "typedoc src",
+    "eslint": "eslint . --ext .ts,.tsx --fix",
+    "eslint:check": "eslint . --ext .ts,.tsx",
+    "install:extension": "jlpm run build",
+    "prepublishOnly": "npm run build",
+    "watch": "run-p watch:src watch:labextension",
+    "watch:labextension": "jupyter labextension watch .",
+    "watch:src": "tsc -w"
+  },
+  "resolutions": {
+    "@jupyterlab/application": "3.0.11",
+    "@jupyterlab/apputils": "3.0.9",
+    "@jupyterlab/coreutils": "5.0.6",
+    "@jupyterlab/launcher": "3.0.9",
+    "@jupyterlab/services": "6.0.9",
+    "@jupyterlab/ui-components": "3.0.7"
+  },
+  "dependencies": {
+    "@jupyterlab/application": "^3.0.11",
+    "@jupyterlab/apputils": "^3.0.9",
+    "@jupyterlab/launcher": "^3.0.9",
+    "@jupyterlab/translation": "^3.0.9",
+    "@jupyterlab/ui-components": "^3.0.7",
+    "@lumino/algorithm": "^1.3.3",
+    "@lumino/commands": "^1.12.0",
+    "@lumino/coreutils": "^1.5.3",
+    "@lumino/disposable": "^1.4.3",
+    "@lumino/properties": "^1.2.3",
+    "@lumino/widgets": "^1.16.1",
+    "@types/react": "^17.0.5",
+    "codemirror": "^5.61.0",
+    "react": "^17.0.1",
+    "react-markdown": "^6.0.2"
+  },
+  "devDependencies": {
+    "@jupyterlab/builder": "^3.0.0",
+    "@typescript-eslint/eslint-plugin": "^4.8.1",
+    "@typescript-eslint/parser": "^4.8.1",
+    "eslint": "^7.14.0",
+    "eslint-config-prettier": "^6.15.0",
+    "eslint-plugin-prettier": "^3.1.4",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.1.1",
+    "rimraf": "^3.0.2",
+    "typedoc": "^0.15.4",
+    "typescript": "~4.1.3"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "jupyterlab": {
+    "extension": true,
+    "schemaDir": "schema",
+    "outputDir": "../../swanprojects/labextensions/@swan/launcher-extension",
+    "disabledExtensions": [
+      "@jupyterlab/launcher-extension:plugin"
+    ]
+  },
+  "styleModule": "style/index.js"
+}
