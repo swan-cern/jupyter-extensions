@@ -1,7 +1,7 @@
 
 from traitlets import HasTraits, Unicode
 from tornado import web
-import os, io, shutil, subprocess, tempfile, requests
+import os, io, shutil, subprocess, tempfile, requests, zipfile
 from .proj_url_checker import (
     is_cernbox_shared_link,
     get_name_from_shared_from_link,
@@ -262,6 +262,11 @@ class ProjectsMixin(HasTraits):
             # Opened from "Open in SWAN" button
             file_path = url[6:]
             username = get_eos_username(file_path)
+
+            # in JupyterLab root_dir is /eos, so get_eos_username is None
+            # Files outside /eos/user/<u>/<user> then open in place, while
+            # the user's own files are copied into SWAN_projects.
+            # The classic UI behaves the opposite. Revisit with CERNBox sharing.
             if username == get_eos_username(self.root_dir):
                 # Inside user own directory
                 model['type'] = 'file'
@@ -272,7 +277,7 @@ class ProjectsMixin(HasTraits):
                 shutil.copy2(file_path, tmp_dir_name) ##### FIXME
                 file_name = file_path.split('/').pop()
                 file_name_no_ext = os.path.splitext(file_name)[0]
-                dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name_no_ext)
+                dest_dir_name = os.path.join(self.swan_home, self.swan_default_folder, file_name_no_ext)
 
                 model['type'] = 'file'
                 model['path'] = os.path.join(await self.move_folder(tmp_dir_name, dest_dir_name), file_name)
@@ -283,7 +288,7 @@ class ProjectsMixin(HasTraits):
 
             if os.path.isdir(path):
 
-                dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name)
+                dest_dir_name = os.path.join(self.swan_home, self.swan_default_folder, file_name)
 
                 model['type'] = 'directory'
                 model['path'] = await self.move_folder(path, dest_dir_name, preserve=True)
@@ -292,7 +297,7 @@ class ProjectsMixin(HasTraits):
 
                 shutil.copy2(path, tmp_dir_name) ##### FIXME
                 file_name_no_ext = os.path.splitext(file_name)[0]
-                dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name_no_ext)
+                dest_dir_name = os.path.join(self.swan_home, self.swan_default_folder, file_name_no_ext)
 
                 model['type'] = 'file'
                 model['path'] = os.path.join(await self.move_folder(tmp_dir_name, dest_dir_name), file_name)
@@ -326,7 +331,7 @@ class ProjectsMixin(HasTraits):
 
             # Get the destination folder path
             file_name_no_ext = os.path.splitext(file_name)[0]
-            dest_dir_name = os.path.join(self.root_dir, self.swan_default_folder, file_name_no_ext)
+            dest_dir_name = os.path.join(self.swan_home, self.swan_default_folder, file_name_no_ext)
 
             model['type'] = 'file'
             model['path'] = os.path.join(await self.move_folder(tmp_dir_name, dest_dir_name), file_name)
