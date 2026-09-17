@@ -8,9 +8,13 @@ from jupyter_server.base.handlers import path_regex
 from jupyter_server.utils import ensure_async
 from nbconvert import HTMLExporter
 
-import importlib.util
+has_voila = False
+try:
+    import voila  # noqa: F401
 
-has_voila = importlib.util.find_spec("voila") is not None
+    has_voila = True
+except:
+    pass
 
 class NotebookViewerHandler(
     ExtensionHandlerJinjaMixin, ExtensionHandlerMixin, JupyterHandler
