@@ -14,5 +14,5 @@ ignore = [
     "SIM103", "SIM115", "SIM117", "SIM401",  # simplification suggestions
     "UP031",  # pyupgrade modernisation
     "DTZ005", "DTZ006", "DTZ011",        # naive datetimes
-    "W605", "RUF012", "FURB188", "PLW1510"
+    "RUF012", "FURB188", "PLW1510"
 ]
