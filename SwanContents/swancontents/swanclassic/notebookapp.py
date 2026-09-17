@@ -53,14 +53,14 @@ class NotebookApp(ClassicNotebookApp):
         handlers.extend(load_handlers("swancontents.swanclassic.handlers.cernbox"))
         handlers.extend(load_handlers("swancontents.swanclassic.handlers.notebookviewer"))
         self.handlers.extend(handlers)
-        super(NotebookApp, self).initialize_handlers()
+        super().initialize_handlers()
 
     def initialize_settings(self):
         """
         Initialize settings to extend the jinja variables configuration
         in order to use them in our theme templates
         """
-        super(NotebookApp, self).initialize_settings()
+        super().initialize_settings()
         new_vars = (
             self.settings["jinja_template_vars"]
             if "jinja_template_vars" in self.settings
