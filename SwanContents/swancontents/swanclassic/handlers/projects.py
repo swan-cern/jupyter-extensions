@@ -1,5 +1,5 @@
 
-from tornado import web, gen
+from tornado import web
 
 from jupyter_server.base.handlers import JupyterHandler
 from jupyter_server.extension.handler import (
