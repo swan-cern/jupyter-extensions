@@ -57,7 +57,7 @@ def has_good_chars(name, extra_chars=''):
               '/._+-' + extra_chars
 
     if name.startswith('https:'):
-        name = name[6:]
+        name = name.removeprefix('https:')
 
     if is_file_on_eos(name):
         name = name[5:]
