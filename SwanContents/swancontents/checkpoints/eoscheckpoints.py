@@ -72,14 +72,11 @@ class EOSCheckpoints(SwanFileManagerMixin, AsyncCheckpoints):
             # the version might no longer exist if it was cleaned (by default EOS should keep 10 versions)
             self._no_such_checkpoint(path, checkpoint_id)
 
-
-
     def rename_checkpoint(self, checkpoint_id, old_path, new_path):
         """
             Called when notebook file is renamed.
             EOS should handle this by itself.
         """
-        pass
 
     async def delete_checkpoint(self, checkpoint_id, path):
         """Remove a created version"""
