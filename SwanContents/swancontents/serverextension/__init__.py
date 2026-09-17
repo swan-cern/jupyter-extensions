@@ -1,5 +1,4 @@
 from jupyter_server.utils import url_path_join
-from jupyter_server.base.handlers import path_regex
 from jupyter_server import DEFAULT_TEMPLATE_PATH_LIST
 from jupyter_server.serverapp import ServerApp
 
