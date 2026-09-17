@@ -33,7 +33,7 @@ class NotebookViewerHandler(
 
         try:
             model = await ensure_async(cm.get(path, content=True))
-        except web.HTTPError as e:
+        except web.HTTPError:
             raise
 
         if model["type"] != "notebook":
