@@ -143,7 +143,7 @@ class EOSCheckpoints(SwanFileManagerMixin, AsyncCheckpoints):
     def _no_such_checkpoint(self, path, checkpoint_id):
         raise HTTPError(
             404,
-            u'Checkpoint no longer exists: %s@%s' % (path, checkpoint_id)
+            'Checkpoint no longer exists: %s@%s' % (path, checkpoint_id)
         )
 
     def _get_mock_checkpoint(self, path):

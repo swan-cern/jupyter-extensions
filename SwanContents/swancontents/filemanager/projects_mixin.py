@@ -124,7 +124,7 @@ class ProjectsMixin(HasTraits):
         path = path.strip('/')
 
         if path != self.swan_default_folder and not self.exists(path):
-            raise web.HTTPError(404, u'No such file or directory: %s' % path)
+            raise web.HTTPError(404, 'No such file or directory: %s' % path)
 
         os_path = self._get_os_path(path)
 
@@ -136,7 +136,7 @@ class ProjectsMixin(HasTraits):
         if self._is_dir(os_path) and self._is_file(os_path_proj):
             if type not in (None, 'project', 'directory'):
                 raise web.HTTPError(400,
-                                u'%s is a project, not a %s' % (path, type), reason='bad type')
+                                '%s is a project, not a %s' % (path, type), reason='bad type')
 
             model = await self._proj_model(path, content=content)
 
@@ -152,7 +152,7 @@ class ProjectsMixin(HasTraits):
             return await super().save(model, path)
 
         if 'type' not in model:
-            raise web.HTTPError(400, u'No file type provided')
+            raise web.HTTPError(400, 'No file type provided')
         
         if model['type'] != 'directory' or 'is_project' not in model or not model['is_project']:
             return await super().save(model, path)
@@ -174,7 +174,7 @@ class ProjectsMixin(HasTraits):
             raise
 
         except Exception as e:
-            self.log.error(u'Error while creating a Project: %s %s', path, e, exc_info=True)
+            self.log.error('Error while creating a Project: %s %s', path, e, exc_info=True)
             raise web.HTTPError(500, f"Unexpected error while creating a Project: {path} {e}") from e
         
         return await self.get(path, content=False)
@@ -303,7 +303,7 @@ class ProjectsMixin(HasTraits):
                 model['path'] = os.path.join(await self.move_folder(tmp_dir_name, dest_dir_name), file_name)
 
             else:
-                raise web.HTTPError(404, u'File or directory does not exist: %s' % path)
+                raise web.HTTPError(404, 'File or directory does not exist: %s' % path)
 
 
         else:
