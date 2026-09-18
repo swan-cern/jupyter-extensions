@@ -42,6 +42,16 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         await self._process_log_stream(makenv_process)
         self.finish()
 
+    @staticmethod
+    def _build_makenv_args(repository: str, builder: str, builder_version: str, nxcals: str) -> list:
+        """Constructs the CLI argument list for makenv.sh from query parameters."""
+        arguments = ["--repository", repository, "--builder", builder]
+        if builder_version:
+            arguments.extend(("--builder_version", builder_version))
+        if nxcals:
+            arguments.append("--nxcals")
+        return arguments
+
     def _launch_makenv(self) -> Popen:
         """Launches the makenv.sh script as a subprocess."""
         repository = self.get_query_argument("repository", default="")
@@ -49,11 +59,7 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         builder_version = self.get_query_argument("builder_version", default="")
         nxcals = self.get_query_argument("nxcals", default="")
 
-        arguments = ["--repository", repository, "--builder", builder]
-        if builder_version:
-            arguments.extend(("--builder_version", builder_version))
-        if nxcals:
-            arguments.append("--nxcals")
+        arguments = self._build_makenv_args(repository, builder, builder_version, nxcals)
 
         with open(self.LOG_FILE, "w") as log_file:
             return Popen([self.makenv_path, *arguments], stdout=log_file, stderr=log_file)
