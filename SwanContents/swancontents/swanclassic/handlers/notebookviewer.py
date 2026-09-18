@@ -10,12 +10,11 @@ from nbconvert import HTMLExporter
 
 has_voila = False
 try:
-    import voila
+    import voila  # noqa: F401
 
     has_voila = True
 except:
     pass
-
 
 class NotebookViewerHandler(
     ExtensionHandlerJinjaMixin, ExtensionHandlerMixin, JupyterHandler
@@ -38,7 +37,7 @@ class NotebookViewerHandler(
 
         try:
             model = await ensure_async(cm.get(path, content=True))
-        except web.HTTPError as e:
+        except web.HTTPError:
             raise
 
         if model["type"] != "notebook":

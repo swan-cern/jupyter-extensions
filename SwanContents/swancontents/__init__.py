@@ -1,5 +1,6 @@
 from ._version import __version__
 
+__all__ = ["__version__"]
 
 def _jupyter_server_extension_points():
     from .swanclassic.notebookapp import NotebookApp
