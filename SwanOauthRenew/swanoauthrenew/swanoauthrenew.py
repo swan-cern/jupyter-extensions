@@ -47,6 +47,11 @@ class TokenRefresher(threading.Thread):
                 ttl = 60
             time.sleep(ttl)
 
+    @staticmethod
+    def _extract_token(auth_state: dict, key: str) -> str:
+        """Traverses auth_state using a slash-separated key path."""
+        return reduce(lambda x, y: x[y], key.split("/"), auth_state)
+
     def refresh_token(self):
         r = requests.get(f"{self.api_url}/user",
                          headers={"Authorization": f"token {self.api_token}"})
@@ -58,7 +63,7 @@ class TokenRefresher(threading.Thread):
         ttl = -1
 
         for file, key, content in self.config.files:
-            token = reduce(lambda x, y : x[y], key.split("/"), auth_state)
+            token = self._extract_token(auth_state, key)
             # Write the token in the corresponding file, by using the given content format
             with open(file, 'w') as f:
                 f.write(content.format(token = token))
