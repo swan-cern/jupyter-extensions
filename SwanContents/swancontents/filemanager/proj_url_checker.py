@@ -14,8 +14,8 @@ CERNBoxPrefix = 'https://cernbox.cern.ch/index.php/s'
 CERNBoxPrefixTesting = 'https://cernboxwebpreview.cern.ch/index.php/s'
 EOSUserPrefix = 'file://eos/'
 LocalPrefix = 'local:'
-EOSUserRE = '/eos/(docker/|up2u/)?(user/[a-z]|home-[a-z])/([a-z0-9]+)'
-GitlabRE = '^https://(.+:.+@)?gitlab\.cern\.ch'
+EOSUserRE = r'/eos/(docker/|up2u/)?(user/[a-z]|home-[a-z])/([a-z0-9]+)'
+GitlabRE = r'^https://(.+:.+@)?gitlab\.cern\.ch'
 
 def get_name_from_shared_from_link(r):
     hdr = r.raw.getheader('Content-Disposition')
@@ -57,7 +57,7 @@ def has_good_chars(name, extra_chars=''):
               '/._+-' + extra_chars
 
     if name.startswith('https:'):
-        name = name[6:]
+        name = name.removeprefix('https:')
 
     if is_file_on_eos(name):
         name = name[5:]

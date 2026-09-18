@@ -4,7 +4,7 @@ from jupyter_server.services.contents.fileio import AsyncFileManagerMixin
 from jupyter_server.utils import url_path_join
 from tornado.web import HTTPError
 from contextlib import contextmanager
-import io, os
+import os
 import subprocess
 
 swan_sharing_folder = 'swan_sharing_folder/'
@@ -66,9 +66,9 @@ def atomic_writing(path, text=True, encoding='utf-8', log=None, **kwargs):
     if text:
         # Make sure that text files have Unix linefeeds by default
         kwargs.setdefault('newline', '\n')
-        fileobj = io.open(tmp_path, 'w', encoding=encoding, **kwargs)
+        fileobj = open(tmp_path, 'w', encoding=encoding, **kwargs)
     else:
-        fileobj = io.open(tmp_path, 'wb', **kwargs)
+        fileobj = open(tmp_path, 'wb', **kwargs)
 
     try:
         yield fileobj
