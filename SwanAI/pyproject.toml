@@ -1,0 +1,85 @@
+[build-system]
+requires = ["hatchling==1.29.0", "jupyterlab==4.5.6"]
+build-backend = "hatchling.build"
+
+[project]
+name = "swan-ai"
+description = "JupyterLab chat sidebar talking directly to AI provider APIs"
+authors = [{ name = "SWAN Team", email = "swan-admins@cern.ch" }]
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = [
+    "jupyter_server>=2.0",
+    "anthropic>=1,<2",
+    "openai>=2,<3",
+]
+dynamic = ["version"]
+
+[dependency-groups]
+dev = [
+    "jupyterlab>=4.0.0,<5",
+    "pytest>=8",
+    "pytest-asyncio>=0.24",
+    "ruff==0.15.11",
+]
+
+[tool.hatch.version]
+path = "swan_ai/_version.py"
+
+[tool.hatch.build.targets.wheel.shared-data]
+"swan_ai/labextension" = "share/jupyter/labextensions/swan-ai"
+"install.json" = "share/jupyter/labextensions/swan-ai/install.json"
+"jupyter-config/server-config" = "etc/jupyter/jupyter_server_config.d"
+
+[tool.hatch.build.hooks.jupyter-builder]
+dependencies = ["hatch-jupyter-builder==0.9.1"]
+build-function = "hatch_jupyter_builder.npm_builder"
+ensured-targets = [
+    "swan_ai/labextension/static/style.js",
+    "swan_ai/labextension/package.json",
+]
+skip-if-exists = [
+    "swan_ai/labextension/static/style.js",
+]
+
+[tool.hatch.build.hooks.jupyter-builder.build-kwargs]
+build_cmd = "build:prod"
+npm = ["jlpm"]
+
+[tool.hatch.build.hooks.jupyter-builder.editable-build-kwargs]
+build_cmd = "build"
+npm = ["jlpm"]
+source_dir = "src"
+build_dir = "swan_ai/labextension"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+# Owned by bump2version, which rewrites the version string in place.
+extend-exclude = ["swan_ai/_version.py"]
+
+[tool.ruff.lint]
+select = [
+    "ASYNC",   # flake8-async
+    "B",       # flake8-bugbear
+    "DTZ",     # flake8-datetimez
+    "E",       # pycodestyle errors
+    "F",       # Pyflakes
+    "G",       # flake8-logging-format
+    "I",       # isort
+    "LOG",     # flake8-logging
+    "PIE",     # flake8-pie
+    "PLE",     # Pylint errors
+    "PLR",     # Pylint refactor
+    "PLW",     # Pylint warnings
+    "RET",     # flake8-return
+    "RUF",     # Ruff-specific
+    "SIM",     # flake8-simplify
+    "UP",      # pyupgrade
+    "W",       # pycodestyle warnings
+    "YTT",     # flake8-2020
+]

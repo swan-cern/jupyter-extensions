@@ -4,6 +4,7 @@ Repository that stores all the Jupyter extensions for SWAN.
 
 * [HdfsBrowser](HdfsBrowser) - Extension to browse Hadoop
 * [SparkConnector](SparkConnector) - Helper to connect to CERN's Spark Clusters
+* [SwanAI](SwanAI) - Chat sidebar talking to AI providers (Anthropic, OpenAI) through their APIs
 * [SwanContents](SwanContents) - Contents Manager for Jupyter with Projects functionality and SWAN templates
 * [SwanCustomEnvironments](SwanCustomEnvironments) - Extension to create custom software environments
 * [SwanDask](SwanDask) - Wrapper to run dask_jupyterlab as an external process
