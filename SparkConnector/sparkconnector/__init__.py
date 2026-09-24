@@ -10,11 +10,11 @@ except ImportError:
 
 def _jupyter_nbextension_paths():
     """ Used by "jupyter nbextension" command to install frontend extension """
-    return [dict(
-                section="notebook",
-                src="nbextension",
-                dest="sparkconnector",
-                require="sparkconnector/extension"),
+    return [{
+                "section": "notebook",
+                "src": "nbextension",
+                "dest": "sparkconnector",
+                "require": "sparkconnector/extension"},
             ]
 
 def _jupyter_labextension_paths():

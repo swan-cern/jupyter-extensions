@@ -20,12 +20,12 @@ class LogReader(Thread):
             try:
                 # Seek in file from the end to max size
                 f.seek(-max_size, os.SEEK_END)
-            except IOError as e:
+            except OSError:
                 # the file is below the max size
                 f.seek(0)
 
             formatted_lines = []
-            for line in f.readlines():
+            for line in f:
                 formatted_lines.append(self.format_log_line(line.decode('utf-8')))
             return formatted_lines
 
@@ -45,14 +45,14 @@ class LogReader(Thread):
 
     def run(self):
         """ Read the log file and send the logs to frontend """
-        logfile = open(self.path,"r")
-        log_lines = self.follow(logfile)
-        for line in log_lines:
-            # Add double lines to the log-line for better readability
-            self.connector.send({
-                "msgtype": "sparkconn-action-follow-log",
-                "msg": self.format_log_line(line)
-            })
+        with open(self.path,"r") as logfile:
+            log_lines = self.follow(logfile)
+            for line in log_lines:
+                # Add double lines to the log-line for better readability
+                self.connector.send({
+                    "msgtype": "sparkconn-action-follow-log",
+                    "msg": self.format_log_line(line)
+                })
 
     # from "Generator Tricks for Systems Programmers"
     # (http://www.dabeaz.com/generators/)

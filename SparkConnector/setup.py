@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """
 Setup Module to setup Python Handlers for the SparkConnector extension.
 """
@@ -37,7 +36,7 @@ package_data_spec = {
 labext_name = "@swan-cern/sparkconnector"
 
 data_files_spec = [
-    ("share/jupyter/labextensions/%s" % labext_name, lab_path, "**")
+    (f"share/jupyter/labextensions/{labext_name}", lab_path, "**")
 ]
 
 cmdclass = create_cmdclass("jsdeps",
@@ -60,27 +59,27 @@ else:
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setup_args = dict(
-    name=name,
-    version=version,
-    url="https://github.com/swan-cern/jupyter-extensions",
-    author="SWAN Admins",
-    description="Helper to connect to CERN's Spark Clusters",
-    long_description= long_description,
-    long_description_content_type="text/markdown",
-    cmdclass= cmdclass,
-    packages=setuptools.find_packages(),
-    install_requires=[
+setup_args = {
+    "name": name,
+    "version": version,
+    "url": "https://github.com/swan-cern/jupyter-extensions",
+    "author": "SWAN Admins",
+    "description": "Helper to connect to CERN's Spark Clusters",
+    "long_description": long_description,
+    "long_description_content_type": "text/markdown",
+    "cmdclass": cmdclass,
+    "packages": setuptools.find_packages(),
+    "install_requires": [
         "swanportallocator",
         "requests",
     ],
-    zip_safe=False,
-    include_package_data=True,
-    python_requires=">=3.6",
-    license="AGPL-3.0",
-    platforms="Linux",
-    keywords=["Jupyter", "JupyterLab", "SWAN", "CERN"],
-    classifiers=[
+    "zip_safe": False,
+    "include_package_data": True,
+    "python_requires": ">=3.6",
+    "license": "AGPL-3.0",
+    "platforms": "Linux",
+    "keywords": ["Jupyter", "JupyterLab", "SWAN", "CERN"],
+    "classifiers": [
         "Framework :: Jupyter",
         "Framework :: Jupyter :: JupyterLab",
         "Framework :: Jupyter :: JupyterLab :: 4",
@@ -94,7 +93,7 @@ setup_args = dict(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
     ],
-)
+}
 
 
 if __name__ == "__main__":

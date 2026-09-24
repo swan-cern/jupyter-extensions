@@ -16,3 +16,7 @@ ignore = [
     "DTZ005", "DTZ006", "DTZ011",        # naive datetimes
     "RUF012", "PLW1510"
 ]
+
+"SparkConnector/**" = [
+    "TRY002", # Create your own exception
+]
