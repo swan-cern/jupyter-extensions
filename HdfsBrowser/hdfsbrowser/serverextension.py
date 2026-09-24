@@ -81,10 +81,7 @@ class HDFSBrowserProxy(APIHandler):
         # Define webhdfs_protocol
         http_policy = 'false'
         for elem in root.iter('property'):
-            if elem[0].text == 'dfs.http.policy':
-                http_policy = elem[1].text
-                break
-            elif elem[0].text == 'dfs.https.enable':
+            if elem[0].text == 'dfs.http.policy' or elem[0].text == 'dfs.https.enable':
                 http_policy = elem[1].text
                 break
         if http_policy == 'true' or http_policy.find('HTTPS') != -1:
@@ -101,8 +98,7 @@ class HDFSBrowserProxy(APIHandler):
 
         # get active namenode
         for namenode in namenodes.split(','):
-            nmd_active_url = '{0}://{1}:{2}/jmx?get=Hadoop:service=NameNode,name=NameNodeStatus::State'.format(
-                webhdfs_protocol, namenode, self.hdfs_browser_config.hdfs_site_namenodes_port)
+            nmd_active_url = f'{webhdfs_protocol}://{namenode}:{self.hdfs_browser_config.hdfs_site_namenodes_port}/jmx?get=Hadoop:service=NameNode,name=NameNodeStatus::State'
 
             try:
                 response = yield AsyncHTTPClient().fetch(
@@ -113,18 +109,17 @@ class HDFSBrowserProxy(APIHandler):
                     ),
                     raise_error=False
                 )
-            except Exception:
-                self.log.error('NameNode request {0} failed, state could not be retrieved'.format(nmd_active_url))
+            except Exception:  # noqa: BLE001
+                self.log.error(f'NameNode request {nmd_active_url} failed, state could not be retrieved')
                 self.log.error(traceback.format_exc())
                 break
 
             if response and response.body:
                 namenode_state = json.loads(response.body)['beans'][0]['State']
-                self.log.debug('NameNode {0} state is {1}'.format(namenode, namenode_state))
+                self.log.debug(f'NameNode {namenode} state is {namenode_state}')
 
                 if namenode_state == 'active':
-                    self.active_namenode_url = '{0}://{1}:{2}'.format(
-                        webhdfs_protocol, namenode, self.hdfs_browser_config.hdfs_site_namenodes_port)
+                    self.active_namenode_url = f'{webhdfs_protocol}://{namenode}:{self.hdfs_browser_config.hdfs_site_namenodes_port}'
                     break
             else:
                 self.log.error('NameNode request {0} responded with empty response').format(nmd_active_url)
@@ -146,7 +141,7 @@ class HDFSBrowserProxy(APIHandler):
         request_path = \
             self.request.uri[self.request.uri.index(self.proxy_root)
                              + len(self.proxy_root) + 1:]
-        self.log.debug('HDFSBrowserHandler handle request {}'.format(request_path))
+        self.log.debug(f'HDFSBrowserHandler handle request {request_path}')
 
         if not self.active_namenode_url:
             raise web.HTTPError(status_code=500, log_message='HDFS Browser not available, no active hdfs namenode')
@@ -154,7 +149,7 @@ class HDFSBrowserProxy(APIHandler):
         # proxy the request
         hdfs_browser_url = url_path_join(self.active_namenode_url, request_path)
 
-        self.log.debug('HDFSBrowserHandler proxing request {}'.format(hdfs_browser_url))
+        self.log.debug(f'HDFSBrowserHandler proxing request {hdfs_browser_url}')
         try:
             if '/webhdfs/v1' in hdfs_browser_url:
                 yield AsyncHTTPClient(force_instance=True,
@@ -180,15 +175,14 @@ class HDFSBrowserProxy(APIHandler):
                     raise_error=False
                 )
                 self.handle_explorer_response(explorer_response)
-        except Exception:
+        except Exception:  # noqa: BLE001
             self.log.error(traceback.format_exc())
-            raise web.HTTPError(status_code=500, log_message='HDFS Browser request {0} failed'.format(hdfs_browser_url))
+            raise web.HTTPError(status_code=500, log_message=f'HDFS Browser request {hdfs_browser_url} failed')
 
     def handle_explorer_response(self, response):
         content_type = response.headers['Content-Type']
 
-        self.log.debug('HDFSBrowserHandler explorer {0} response content-type {1}'.format(
-            self.request.uri, content_type))
+        self.log.debug(f'HDFSBrowserHandler explorer {self.request.uri} response content-type {content_type}')
 
         replace_path = self.request.uri[:self.request.uri.index(self.proxy_root) + len(self.proxy_root)]
 
@@ -209,8 +203,7 @@ class HDFSBrowserProxy(APIHandler):
                     if match is not None:
                         value = match.groups()[0]
                     tag[attribute] = url_path_join(replace_path, value)
-                    self.log.debug('REPLACE: tag_attribute_old: {0} tag_attribute_new: {1}'.format(
-                        value, tag[attribute]))
+                    self.log.debug(f'REPLACE: tag_attribute_old: {value} tag_attribute_new: {tag[attribute]}')
 
             content = soup.prettify()
         elif 'javascript' in content_type:
@@ -220,7 +213,7 @@ class HDFSBrowserProxy(APIHandler):
             )
             content = content.replace(
                 '?op=',
-                '?delegation={0}&op='.format(self.hdfs_browser_config.webhdfs_token.strip())
+                f'?delegation={self.hdfs_browser_config.webhdfs_token.strip()}&op='
             )
         else:
             content = response.body
@@ -239,7 +232,7 @@ class HDFSBrowserProxy(APIHandler):
         if not header_line:
             return
 
-        self.log.debug('HDFSBrowserHandler webhdfs {0} header'.format(header_line))
+        self.log.debug(f'HDFSBrowserHandler webhdfs {header_line} header')
 
         if header_line.startswith('HTTP/'):
             try:
@@ -261,7 +254,7 @@ class HDFSBrowserProxy(APIHandler):
         """Handles response chunk of the data by writing it onto the network
         """
 
-        self.log.debug('HDFSBrowserHandler webhdfs {0} chunk'.format(self.request.uri))
+        self.log.debug(f'HDFSBrowserHandler webhdfs {self.request.uri} chunk')
 
         self.write(chunk)
         self.flush()
@@ -269,10 +262,10 @@ class HDFSBrowserProxy(APIHandler):
     def handle_webhdfs_stream_finish(self):
         """Handles finish of the response
         """
-        self.log.debug('HDFSBrowserHandler webhdfs {0} finish'.format(self.request.uri))
+        self.log.debug(f'HDFSBrowserHandler webhdfs {self.request.uri} finish')
         self.finish()
 
     def compute_etag(self):
         """Disable caching with etag
         """
-        return None
+        return
