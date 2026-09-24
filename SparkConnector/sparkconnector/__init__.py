@@ -5,20 +5,17 @@ except ImportError:
     # in editable mode with pip. It is highly recommended to install
     # the package from a stable release or in editable mode: https://pip.pypa.io/en/stable/topics/local-project-installs/#editable-installs
     import warnings
+
     warnings.warn("Importing 'sparkconnector' outside a proper installation.")
     __version__ = "dev"
 
+
 def _jupyter_nbextension_paths():
-    """ Used by "jupyter nbextension" command to install frontend extension """
-    return [dict(
-                section="notebook",
-                src="nbextension",
-                dest="sparkconnector",
-                require="sparkconnector/extension"),
-            ]
+    """Used by "jupyter nbextension" command to install frontend extension"""
+    return [
+        dict(section="notebook", src="nbextension", dest="sparkconnector", require="sparkconnector/extension"),
+    ]
+
 
 def _jupyter_labextension_paths():
-    return [{
-        "src": "labextension",
-        "dest": "@swan-cern/sparkconnector"
-    }]
+    return [{"src": "labextension", "dest": "@swan-cern/sparkconnector"}]

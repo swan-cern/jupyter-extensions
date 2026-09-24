@@ -34,7 +34,7 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         """
         self.set_header("Content-Type", "text/event-stream")
         makenv_process = SwanCustomEnvironmentsApiHandler.makenv_process
-        
+
         if makenv_process is None:
             makenv_process = self._launch_makenv()
             SwanCustomEnvironmentsApiHandler.makenv_process = makenv_process
@@ -98,7 +98,7 @@ class SwanCustomEnvironmentsHandler(JupyterHandler):
     @web.authenticated
     async def get(self):
         hub_prefix = self.jinja_template_vars.get("hub_prefix", "/hub/")
-        is_admin = self.current_user.hub_user.get('admin', False)
+        is_admin = self.current_user.hub_user.get("admin", False)
         self.write(
             self.render_template(
                 "customenvs.html",
@@ -107,9 +107,10 @@ class SwanCustomEnvironmentsHandler(JupyterHandler):
                 base_url=hub_prefix,
                 logout_url=f"{hub_prefix}logout",
                 user=self.current_user,
-                parsed_scopes={'admin-ui'} if is_admin else set(),
+                parsed_scopes={"admin-ui"} if is_admin else set(),
             )
         )
+
 
 def _load_jupyter_server_extension(serverapp):
     """
@@ -120,10 +121,12 @@ def _load_jupyter_server_extension(serverapp):
 
     templates_dir = os.path.join(os.path.dirname(__file__), "templates")
     jinja_env = web_app.settings["jinja2_env"]
-    jinja_env.loader = ChoiceLoader([
-        FileSystemLoader(templates_dir),
-        jinja_env.loader,
-    ])
+    jinja_env.loader = ChoiceLoader(
+        [
+            FileSystemLoader(templates_dir),
+            jinja_env.loader,
+        ]
+    )
 
     new_handlers = [
         (r"/api/customenvs", SwanCustomEnvironmentsApiHandler),

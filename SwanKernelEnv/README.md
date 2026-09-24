@@ -18,5 +18,5 @@ pip install swankernelenv
 Set the following in `ipython_kernel_config.py`:
 
 ```python
-c.InteractiveShellApp.extensions.append('swankernelenv')
+c.InteractiveShellApp.extensions.append("swankernelenv")
 ```

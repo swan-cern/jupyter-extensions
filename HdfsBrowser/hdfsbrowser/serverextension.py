@@ -21,44 +21,35 @@ class HDFSBrowserConfig(Configurable):
     Allows configuration of HDFS Browser, set defaults for server extenions
     """
 
-    hdfs_site_path = Unicode(
-        'test/hdfs-site.xml', config=True, help='Path to hdfs-site.xml'
-    )
+    hdfs_site_path = Unicode("test/hdfs-site.xml", config=True, help="Path to hdfs-site.xml")
 
     hdfs_site_namenodes_property = Unicode(
-        'dfs.ha.namenodes.test', config=True, help='Property of hdfs-site.xml pointing to namenode'
+        "dfs.ha.namenodes.test", config=True, help="Property of hdfs-site.xml pointing to namenode"
     )
 
-    hdfs_site_namenodes_port = Unicode(
-        '50070', config=True, help='Port of web hdfs on namenode'
-    )
+    hdfs_site_namenodes_port = Unicode("50070", config=True, help="Port of web hdfs on namenode")
 
-    webhdfs_token = Unicode(
-        os.environ.get("WEBHDFS_TOKEN", ""), config=True, help='Token for webhdfs'
-    )
+    webhdfs_token = Unicode(os.environ.get("WEBHDFS_TOKEN", ""), config=True, help="Token for webhdfs")
 
     webhdfs_response_timeout = Float(
-        3600, config=True, help='Do not respond to webhdfs requests longer than this value e.g. for download'
+        3600, config=True, help="Do not respond to webhdfs requests longer than this value e.g. for download"
     )
 
     webhdfs_max_body_size = Long(
-        10 * 1024 * 1024 * 1024, config=True, help='Do not download files larger than this value'
+        10 * 1024 * 1024 * 1024, config=True, help="Do not download files larger than this value"
     )
 
     webhdfs_max_chunk_size = Long(
-        10 * 1024 * 1024, config=True, help='Do not download file chunks larger than this value'
+        10 * 1024 * 1024, config=True, help="Do not download file chunks larger than this value"
     )
 
-    connection_timeout = Float(
-        2, config=True, help='Do not wait for connection longer than this value'
-    )
+    connection_timeout = Float(2, config=True, help="Do not wait for connection longer than this value")
 
-    validate_cert = Bool(True, config=True, help='Validate SSL or not')
+    validate_cert = Bool(True, config=True, help="Validate SSL or not")
 
 
 # Use APIHandler to avoid having to configure the templates (required to render errors)
 class HDFSBrowserProxy(APIHandler):
-
     hdfs_browser_config = None
     proxy_root = None
     active_namenode_url = None
@@ -79,55 +70,57 @@ class HDFSBrowserProxy(APIHandler):
         root = tree.getroot()
 
         # Define webhdfs_protocol
-        http_policy = 'false'
-        for elem in root.iter('property'):
-            if elem[0].text == 'dfs.http.policy':
+        http_policy = "false"
+        for elem in root.iter("property"):
+            if elem[0].text == "dfs.http.policy":
                 http_policy = elem[1].text
                 break
-            elif elem[0].text == 'dfs.https.enable':
+            elif elem[0].text == "dfs.https.enable":
                 http_policy = elem[1].text
                 break
-        if http_policy == 'true' or http_policy.find('HTTPS') != -1:
-            webhdfs_protocol = 'https'
+        if http_policy == "true" or http_policy.find("HTTPS") != -1:
+            webhdfs_protocol = "https"
         else:
-            webhdfs_protocol = 'http'
+            webhdfs_protocol = "http"
 
         # get namenodes list
         namenodes = ""
-        for elem in root.iter('property'):
+        for elem in root.iter("property"):
             if elem[0].text == self.hdfs_browser_config.hdfs_site_namenodes_property:
                 namenodes = elem[1].text
                 break
 
         # get active namenode
-        for namenode in namenodes.split(','):
-            nmd_active_url = '{0}://{1}:{2}/jmx?get=Hadoop:service=NameNode,name=NameNodeStatus::State'.format(
-                webhdfs_protocol, namenode, self.hdfs_browser_config.hdfs_site_namenodes_port)
+        for namenode in namenodes.split(","):
+            nmd_active_url = "{0}://{1}:{2}/jmx?get=Hadoop:service=NameNode,name=NameNodeStatus::State".format(
+                webhdfs_protocol, namenode, self.hdfs_browser_config.hdfs_site_namenodes_port
+            )
 
             try:
                 response = yield AsyncHTTPClient().fetch(
                     HTTPRequest(
-                        nmd_active_url, 
-                        connect_timeout=self.hdfs_browser_config.connection_timeout, 
-                        validate_cert=self.hdfs_browser_config.validate_cert
+                        nmd_active_url,
+                        connect_timeout=self.hdfs_browser_config.connection_timeout,
+                        validate_cert=self.hdfs_browser_config.validate_cert,
                     ),
-                    raise_error=False
+                    raise_error=False,
                 )
             except Exception:
-                self.log.error('NameNode request {0} failed, state could not be retrieved'.format(nmd_active_url))
+                self.log.error("NameNode request {0} failed, state could not be retrieved".format(nmd_active_url))
                 self.log.error(traceback.format_exc())
                 break
 
             if response and response.body:
-                namenode_state = json.loads(response.body)['beans'][0]['State']
-                self.log.debug('NameNode {0} state is {1}'.format(namenode, namenode_state))
+                namenode_state = json.loads(response.body)["beans"][0]["State"]
+                self.log.debug("NameNode {0} state is {1}".format(namenode, namenode_state))
 
-                if namenode_state == 'active':
-                    self.active_namenode_url = '{0}://{1}:{2}'.format(
-                        webhdfs_protocol, namenode, self.hdfs_browser_config.hdfs_site_namenodes_port)
+                if namenode_state == "active":
+                    self.active_namenode_url = "{0}://{1}:{2}".format(
+                        webhdfs_protocol, namenode, self.hdfs_browser_config.hdfs_site_namenodes_port
+                    )
                     break
             else:
-                self.log.error('NameNode request {0} responded with empty response').format(nmd_active_url)
+                self.log.error("NameNode request {0} responded with empty response").format(nmd_active_url)
 
     @gen.coroutine
     def get(self):
@@ -143,30 +136,32 @@ class HDFSBrowserProxy(APIHandler):
 
         # match everything that goes after proxy root %proxy_root%%request_path%
         # e.g. /hdfsbrowser/webhdfs/v1/?del=dummy -> proxy_root=/hdfsbrowser, request_path=/webhdfs/v1/?del=dummy
-        request_path = \
-            self.request.uri[self.request.uri.index(self.proxy_root)
-                             + len(self.proxy_root) + 1:]
-        self.log.debug('HDFSBrowserHandler handle request {}'.format(request_path))
+        request_path = self.request.uri[self.request.uri.index(self.proxy_root) + len(self.proxy_root) + 1 :]
+        self.log.debug("HDFSBrowserHandler handle request {}".format(request_path))
 
         if not self.active_namenode_url:
-            raise web.HTTPError(status_code=500, log_message='HDFS Browser not available, no active hdfs namenode')
+            raise web.HTTPError(status_code=500, log_message="HDFS Browser not available, no active hdfs namenode")
 
         # proxy the request
         hdfs_browser_url = url_path_join(self.active_namenode_url, request_path)
 
-        self.log.debug('HDFSBrowserHandler proxing request {}'.format(hdfs_browser_url))
+        self.log.debug("HDFSBrowserHandler proxing request {}".format(hdfs_browser_url))
         try:
-            if '/webhdfs/v1' in hdfs_browser_url:
-                yield AsyncHTTPClient(force_instance=True,
-                                      max_body_size=self.hdfs_browser_config.webhdfs_max_body_size,
-                                      max_buffer_size=self.hdfs_browser_config.webhdfs_max_chunk_size).fetch(
-                    HTTPRequest(url=hdfs_browser_url,
-                                header_callback=self.handle_webhdfs_stream_header,
-                                streaming_callback=self.handle_webhdfs_stream_chunk,
-                                request_timeout=self.hdfs_browser_config.webhdfs_response_timeout,
-                                connect_timeout=self.hdfs_browser_config.connection_timeout,
-                                validate_cert=self.hdfs_browser_config.validate_cert),
-                    raise_error=False
+            if "/webhdfs/v1" in hdfs_browser_url:
+                yield AsyncHTTPClient(
+                    force_instance=True,
+                    max_body_size=self.hdfs_browser_config.webhdfs_max_body_size,
+                    max_buffer_size=self.hdfs_browser_config.webhdfs_max_chunk_size,
+                ).fetch(
+                    HTTPRequest(
+                        url=hdfs_browser_url,
+                        header_callback=self.handle_webhdfs_stream_header,
+                        streaming_callback=self.handle_webhdfs_stream_chunk,
+                        request_timeout=self.hdfs_browser_config.webhdfs_response_timeout,
+                        connect_timeout=self.hdfs_browser_config.connection_timeout,
+                        validate_cert=self.hdfs_browser_config.validate_cert,
+                    ),
+                    raise_error=False,
                 )
                 self.handle_webhdfs_stream_finish()
             else:
@@ -175,73 +170,70 @@ class HDFSBrowserProxy(APIHandler):
                     HTTPRequest(
                         url=hdfs_browser_url,
                         connect_timeout=self.hdfs_browser_config.connection_timeout,
-                        validate_cert=self.hdfs_browser_config.validate_cert)
-                    ,
-                    raise_error=False
+                        validate_cert=self.hdfs_browser_config.validate_cert,
+                    ),
+                    raise_error=False,
                 )
                 self.handle_explorer_response(explorer_response)
         except Exception:
             self.log.error(traceback.format_exc())
-            raise web.HTTPError(status_code=500, log_message='HDFS Browser request {0} failed'.format(hdfs_browser_url))
+            raise web.HTTPError(status_code=500, log_message="HDFS Browser request {0} failed".format(hdfs_browser_url))
 
     def handle_explorer_response(self, response):
-        content_type = response.headers['Content-Type']
+        content_type = response.headers["Content-Type"]
 
-        self.log.debug('HDFSBrowserHandler explorer {0} response content-type {1}'.format(
-            self.request.uri, content_type))
+        self.log.debug(
+            "HDFSBrowserHandler explorer {0} response content-type {1}".format(self.request.uri, content_type)
+        )
 
-        replace_path = self.request.uri[:self.request.uri.index(self.proxy_root) + len(self.proxy_root)]
+        replace_path = self.request.uri[: self.request.uri.index(self.proxy_root) + len(self.proxy_root)]
 
-        if 'text/html' in content_type:
+        if "text/html" in content_type:
             # a regular expression to match paths against the Spark on EMR proxy paths
-            PROXY_PATH_RE = re.compile(r'(.*)')
+            PROXY_PATH_RE = re.compile(r"(.*)")
 
             # a tuple of tuples with tag names and their attribute to automatically fix
-            PROXY_ATTRIBUTES = ((('a', 'link'), 'href'), (('img', 'script'), 'src'))
+            PROXY_ATTRIBUTES = ((("a", "link"), "href"), (("img", "script"), "src"))
 
             # prepend to each url a proxy root
-            soup = BeautifulSoup(response.body, 'html.parser')
+            soup = BeautifulSoup(response.body, "html.parser")
             soup.header.decompose()
-            for (tags, attribute) in PROXY_ATTRIBUTES:
+            for tags, attribute in PROXY_ATTRIBUTES:
                 for tag in soup.find_all(tags, **{attribute: True}):
                     value = tag[attribute]
                     match = PROXY_PATH_RE.match(value)
                     if match is not None:
                         value = match.groups()[0]
                     tag[attribute] = url_path_join(replace_path, value)
-                    self.log.debug('REPLACE: tag_attribute_old: {0} tag_attribute_new: {1}'.format(
-                        value, tag[attribute]))
+                    self.log.debug(
+                        "REPLACE: tag_attribute_old: {0} tag_attribute_new: {1}".format(value, tag[attribute])
+                    )
 
             content = soup.prettify()
-        elif 'javascript' in content_type:
-            content = response.body.decode().replace(
-                '/webhdfs/v1',
-                url_path_join(replace_path, '/webhdfs/v1')
-            )
+        elif "javascript" in content_type:
+            content = response.body.decode().replace("/webhdfs/v1", url_path_join(replace_path, "/webhdfs/v1"))
             content = content.replace(
-                '?op=',
-                '?delegation={0}&op='.format(self.hdfs_browser_config.webhdfs_token.strip())
+                "?op=", "?delegation={0}&op=".format(self.hdfs_browser_config.webhdfs_token.strip())
             )
         else:
             content = response.body
 
         self.set_status(response.code)
-        self.set_header('Content-Type', content_type)
+        self.set_header("Content-Type", content_type)
         self.write(content)
         self.finish()
 
     def handle_webhdfs_stream_header(self, header_line):
-        """Handles the incoming first lines of the response being headers and status code
-        """
+        """Handles the incoming first lines of the response being headers and status code"""
         headers = httputil.HTTPHeaders()
         header_line = header_line.rstrip()
 
         if not header_line:
             return
 
-        self.log.debug('HDFSBrowserHandler webhdfs {0} header'.format(header_line))
+        self.log.debug("HDFSBrowserHandler webhdfs {0} header".format(header_line))
 
-        if header_line.startswith('HTTP/'):
+        if header_line.startswith("HTTP/"):
             try:
                 status = httputil.parse_response_start_line(header_line)
                 self.set_status(status.code)
@@ -252,27 +244,24 @@ class HDFSBrowserProxy(APIHandler):
         headers.parse_line(header_line)
 
         # currently we are interested in propagating content-type and content-length
-        if headers.get('Content-Type'):
-            self.set_header('Content-Type', headers.get('Content-Type'))
-        if headers.get('Content-Length'):
-            self.set_header('Content-Length', headers.get('Content-Length'))
+        if headers.get("Content-Type"):
+            self.set_header("Content-Type", headers.get("Content-Type"))
+        if headers.get("Content-Length"):
+            self.set_header("Content-Length", headers.get("Content-Length"))
 
     def handle_webhdfs_stream_chunk(self, chunk):
-        """Handles response chunk of the data by writing it onto the network
-        """
+        """Handles response chunk of the data by writing it onto the network"""
 
-        self.log.debug('HDFSBrowserHandler webhdfs {0} chunk'.format(self.request.uri))
+        self.log.debug("HDFSBrowserHandler webhdfs {0} chunk".format(self.request.uri))
 
         self.write(chunk)
         self.flush()
 
     def handle_webhdfs_stream_finish(self):
-        """Handles finish of the response
-        """
-        self.log.debug('HDFSBrowserHandler webhdfs {0} finish'.format(self.request.uri))
+        """Handles finish of the response"""
+        self.log.debug("HDFSBrowserHandler webhdfs {0} finish".format(self.request.uri))
         self.finish()
 
     def compute_etag(self):
-        """Disable caching with etag
-        """
+        """Disable caching with etag"""
         return None

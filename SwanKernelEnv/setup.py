@@ -1,12 +1,13 @@
 """
 Setup Module to setup Python Handlers for the SwanKernelEnv extension.
 """
+
 import os
 
 from jupyter_packaging import get_version
 import setuptools
 
-name="swankernelenv"
+name = "swankernelenv"
 
 # Get our version
 version = get_version(os.path.join(name, "_version.py"))
@@ -20,7 +21,7 @@ setup_args = dict(
     url="https://github.com/swan-cern/jupyter-extensions",
     author="SWAN Admins",
     description="Ipython kernel extension to remove SWAN extra configurations from the user environment",
-    long_description= long_description,
+    long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
     install_requires=[

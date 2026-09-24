@@ -1,24 +1,22 @@
 """
 Setup Module to setup Python Handlers for the SwanPortAllocator extension.
 """
+
 import os
 
 from jupyter_packaging import get_version, create_cmdclass
 import setuptools
 
-name="swanportallocator"
+name = "swanportallocator"
 
 # Get our version
 version = get_version(os.path.join(name, "_version.py"))
 
 data_files_spec = [
-    ("etc/jupyter/jupyter_server_config.d",
-     "jupyter-config", "swanportallocator.json"),
+    ("etc/jupyter/jupyter_server_config.d", "jupyter-config", "swanportallocator.json"),
 ]
 
-cmdclass = create_cmdclass(
-    data_files_spec=data_files_spec
-)
+cmdclass = create_cmdclass(data_files_spec=data_files_spec)
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -34,7 +32,7 @@ setup_args = dict(
     cmdclass=cmdclass,
     packages=setuptools.find_packages(),
     install_requires=[
-        'pyzmq',
+        "pyzmq",
     ],
     zip_safe=False,
     include_package_data=True,

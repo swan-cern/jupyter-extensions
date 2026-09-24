@@ -26,16 +26,14 @@ def _patch_handlers():
 
 
 def _set_dashboard_whitelist():
-    '''
+    """
     Ask Jupyter proxy server to whitelist the current hostname so that queries
     to the Dask dashboard succeed.
-    '''
+    """
     private_ip = socket.gethostbyname(socket.gethostname())
 
     def custom_init(self, *args, **kwargs):
-        super(DaskDashboardHandler, self).__init__(*args,
-                                                   host_allowlist=[private_ip],
-                                                   *kwargs)
+        super(DaskDashboardHandler, self).__init__(*args, host_allowlist=[private_ip], *kwargs)
 
     DaskDashboardHandler.__init__ = partialmethod(custom_init)
 
@@ -65,15 +63,12 @@ def main():
     try:
         from jupyter_server.auth import IdentityProvider
         from traitlets.config import Configurable
+
         identity_provider = IdentityProvider(parent=Configurable())
     except:
         identity_provider = None
 
-    app = web.Application(
-        base_url=args.base_url,
-        allow_remote_access=True,
-        identity_provider=identity_provider
-    )
+    app = web.Application(base_url=args.base_url, allow_remote_access=True, identity_provider=identity_provider)
 
     server_app = WebApp()
     server_app.web_app = app

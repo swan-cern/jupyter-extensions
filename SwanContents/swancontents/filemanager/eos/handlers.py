@@ -15,9 +15,7 @@ class SwanAuthenticatedFileHandler(AuthenticatedFileHandler):
         self.root = os.path.abspath(path) + os.path.sep
         self.default_filename = default_filename
         self.default_path = default_path
-        self.eosbasepath_format = os.getenv(
-            "EOS_PATH_FORMAT", "/eos/user/{username[0]}/{username}/"
-        )
+        self.eosbasepath_format = os.getenv("EOS_PATH_FORMAT", "/eos/user/{username[0]}/{username}/")
 
     @web.authenticated
     def get(self, path):
