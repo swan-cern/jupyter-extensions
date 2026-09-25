@@ -25,6 +25,9 @@ dependencies = [
 ]
 dynamic = ["version", "description", "authors", "urls", "keywords"]
 
+[dependency-groups]
+dev = ["pytest>=8"]
+
 [tool.hatch.version]
 source = "nodejs"
 
