@@ -1,0 +1,322 @@
+/* ─── SwanAI chat sidebar ────────────────────────────────────────────── */
+
+.swanai-chat-widget {
+  min-width: 320px;
+}
+
+.swanai-panel {
+  font-family: var(--jp-ui-font-family);
+  font-size: var(--jp-ui-font-size1, 13px);
+  color: var(--jp-ui-font-color1);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ─── Header ─────────────────────────────────────────────────────────── */
+
+.swanai-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--jp-border-color1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.swanai-header h2 {
+  margin: 0;
+  font-size: var(--jp-ui-font-size1, 14px);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.swanai-header-actions {
+  display: flex;
+  gap: 6px;
+}
+
+/* ─── Buttons ────────────────────────────────────────────────────────── */
+
+.swanai-panel button {
+  background: none;
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 4px;
+  color: var(--jp-ui-font-color2);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 2px 8px;
+  transition:
+    background 0.15s,
+    color 0.15s;
+}
+
+.swanai-panel button:hover:not(:disabled) {
+  background: var(--jp-layout-color2);
+  color: var(--jp-ui-font-color1);
+}
+
+.swanai-panel button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.swanai-toggled {
+  background: var(--jp-layout-color2);
+  color: var(--jp-ui-font-color1);
+}
+
+/* ─── Provider and model selectors ───────────────────────────────────── */
+
+.swanai-selectors {
+  display: flex;
+  gap: 6px;
+  padding: 8px 16px;
+  border-bottom: 1px solid var(--jp-border-color2);
+  flex-shrink: 0;
+}
+
+.swanai-selectors select {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 2px 4px;
+  color: var(--jp-ui-font-color1);
+  background: var(--jp-layout-color1);
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 4px;
+}
+
+/* ─── Conversation ───────────────────────────────────────────────────── */
+
+.swanai-conversation {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.swanai-placeholder {
+  padding: 24px 16px;
+  color: var(--jp-ui-font-color2);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.swanai-message {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--jp-border-color2);
+}
+
+.swanai-message-role {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--jp-ui-font-color2);
+  margin-bottom: 4px;
+}
+
+.swanai-message-user {
+  background: var(--jp-layout-color2);
+}
+
+.swanai-user-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.swanai-message-body {
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Keep wide code blocks and tables inside the sidebar. */
+.swanai-markdown pre,
+.swanai-markdown table {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.swanai-markdown > *:first-child {
+  margin-top: 0;
+}
+
+.swanai-markdown > *:last-child {
+  margin-bottom: 0;
+}
+
+.swanai-caret {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  vertical-align: text-bottom;
+  background: var(--jp-ui-font-color2);
+  animation: swanai-blink 1s step-end infinite;
+}
+
+.swanai-message-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* ─── Thinking ───────────────────────────────────────────────────────── */
+
+.swanai-thinking {
+  margin-bottom: 6px;
+}
+
+.swanai-thinking-toggle {
+  font-size: 11px !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+.swanai-thinking-body {
+  margin-top: 4px;
+  padding: 6px 8px;
+  border-left: 2px solid var(--jp-border-color1);
+  color: var(--jp-ui-font-color2);
+  font-size: 12px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* ─── Errors and usage ───────────────────────────────────────────────── */
+
+.swanai-error {
+  margin: 8px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--jp-error-color1, #cf222e);
+  background: var(--jp-error-color3, #ffeef0);
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.swanai-error-dismiss {
+  border: none !important;
+  padding: 0 !important;
+  color: inherit !important;
+  flex-shrink: 0;
+}
+
+.swanai-usage {
+  padding: 4px 16px;
+  font-size: 11px;
+  color: var(--jp-ui-font-color3, var(--jp-ui-font-color2));
+  border-top: 1px solid var(--jp-border-color2);
+}
+
+/* ─── Composer ───────────────────────────────────────────────────────── */
+
+.swanai-composer {
+  display: flex;
+  gap: 6px;
+  align-items: flex-end;
+  padding: 8px 16px 12px;
+  border-top: 1px solid var(--jp-border-color1);
+  flex-shrink: 0;
+}
+
+.swanai-input {
+  flex: 1;
+  min-width: 0;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  padding: 6px 8px;
+  color: var(--jp-ui-font-color1);
+  background: var(--jp-layout-color1);
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 4px;
+}
+
+.swanai-send {
+  padding: 6px 12px !important;
+}
+
+/* ─── API keys ───────────────────────────────────────────────────────── */
+
+.swanai-settings {
+  padding: 8px 16px 12px;
+  border-bottom: 1px solid var(--jp-border-color1);
+  flex-shrink: 0;
+}
+
+.swanai-settings-intro {
+  margin: 0 0 10px;
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--jp-ui-font-color2);
+}
+
+.swanai-settings-intro code {
+  overflow-wrap: anywhere;
+}
+
+.swanai-provider-row {
+  margin-bottom: 10px;
+}
+
+.swanai-provider-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.swanai-provider-name {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.swanai-provider-status {
+  font-size: 11px;
+  color: var(--jp-ui-font-color2);
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.swanai-provider-status-ok {
+  color: var(--jp-success-color1, #2ea043);
+}
+
+.swanai-provider-form {
+  display: flex;
+  gap: 6px;
+}
+
+.swanai-key-input {
+  flex: 1;
+  min-width: 0;
+  font-family: inherit;
+  font-size: 12px;
+  padding: 3px 6px;
+  color: var(--jp-ui-font-color1);
+  background: var(--jp-layout-color1);
+  border: 1px solid var(--jp-border-color1);
+  border-radius: 4px;
+}
+
+.swanai-provider-note {
+  font-size: 11px;
+  color: var(--jp-ui-font-color2);
+}
+
+/* ─── Animations ─────────────────────────────────────────────────────── */
+
+@keyframes swanai-blink {
+  50% {
+    opacity: 0;
+  }
+}

@@ -11,6 +11,7 @@ on:
         options:
           - HdfsBrowser
           - SparkConnector
+          - SwanAI
           - SwanContents
           - SwanCustomEnvironments
           - SwanDask
