@@ -66,7 +66,7 @@ def main():
         from jupyter_server.auth import IdentityProvider
         from traitlets.config import Configurable
         identity_provider = IdentityProvider(parent=Configurable())
-    except:  # noqa: E722
+    except Exception:  # noqa: BLE001
         identity_provider = None
 
     app = web.Application(
