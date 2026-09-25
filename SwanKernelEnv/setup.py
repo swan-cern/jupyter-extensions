@@ -14,24 +14,24 @@ version = get_version(os.path.join(name, "_version.py"))
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setup_args = dict(
-    name=name,
-    version=version,
-    url="https://github.com/swan-cern/jupyter-extensions",
-    author="SWAN Admins",
-    description="Ipython kernel extension to remove SWAN extra configurations from the user environment",
-    long_description= long_description,
-    long_description_content_type="text/markdown",
-    packages=setuptools.find_packages(),
-    install_requires=[
+setup_args = {
+    "name": name,
+    "version": version,
+    "url": "https://github.com/swan-cern/jupyter-extensions",
+    "author": "SWAN Admins",
+    "description": "Ipython kernel extension to remove SWAN extra configurations from the user environment",
+    "long_description": long_description,
+    "long_description_content_type": "text/markdown",
+    "packages": setuptools.find_packages(),
+    "install_requires": [
         "ipykernel",
     ],
-    zip_safe=False,
-    include_package_data=True,
-    license="AGPL-3.0",
-    platforms="Linux, Mac OS X, Windows",
-    keywords=["Jupyter", "Notebooks", "SWAN", "CERN"],
-    classifiers=[
+    "zip_safe": False,
+    "include_package_data": True,
+    "license": "AGPL-3.0",
+    "platforms": "Linux, Mac OS X, Windows",
+    "keywords": ["Jupyter", "Notebooks", "SWAN", "CERN"],
+    "classifiers": [
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
@@ -41,7 +41,7 @@ setup_args = dict(
         "Programming Language :: Python :: 3.8",
         "Framework :: Jupyter",
     ],
-)
+}
 
 
 if __name__ == "__main__":
