@@ -14,12 +14,12 @@ except ImportError:
 def _jupyter_nbextension_paths():
     """Used by 'jupyter nbextension' command to install frontend extension
     """
-    return [dict(
-        section="notebook",
-        src="nbextension",
-        dest="hdfsbrowser",
-        require="hdfsbrowser/extension"
-    )]
+    return [{
+        "section": "notebook",
+        "src": "nbextension",
+        "dest": "hdfsbrowser",
+        "require": "hdfsbrowser/extension"
+    }]
 
 def _jupyter_labextension_paths():
     return [{
@@ -47,7 +47,7 @@ def _load_jupyter_server_extension(server_app):
     hdfs_browser_endpoint = url_path_join(base_url, hdfs_browser_proxy_root)
     hadoop_handlers = [
         (hdfs_browser_endpoint + ".*", HDFSBrowserProxy,
-         dict(proxy_root=hdfs_browser_proxy_root))
+         {"proxy_root": hdfs_browser_proxy_root})
     ]
     server_app.web_app.add_handlers(".*", hadoop_handlers)
-    server_app.log.info(f"Registered hdfsbrowser server extension")
+    server_app.log.info("Registered hdfsbrowser server extension")
