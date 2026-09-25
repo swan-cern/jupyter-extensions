@@ -38,8 +38,8 @@ package_data_spec = {
 labext_name = "@swan-cern/swanhelp"
 
 data_files_spec = [
-    ("share/jupyter/labextensions/%s" % labext_name, lab_path, "**"),
-    ("share/jupyter/labextensions/%s" % labext_name, HERE, "install.json"),
+    (f"share/jupyter/labextensions/{labext_name}", lab_path, "**"),
+    (f"share/jupyter/labextensions/{labext_name}", HERE, "install.json"),
      
 ]
 
@@ -64,26 +64,26 @@ else:
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setup_args = dict(
-    name=name,
-    version=version,
-    url="https://github.com/swan-cern/jupyter-extensions.git",
-    author="SWAN Admins",
-    description="Help panel for SWAN",
-    long_description= long_description,
-    long_description_content_type="text/markdown",
-    cmdclass= cmdclass,
-    packages=setuptools.find_packages(),
-    install_requires=[
+setup_args = {
+    "name": name,
+    "version": version,
+    "url": "https://github.com/swan-cern/jupyter-extensions.git",
+    "author": "SWAN Admins",
+    "description": "Help panel for SWAN",
+    "long_description": long_description,
+    "long_description_content_type": "text/markdown",
+    "cmdclass": cmdclass,
+    "packages": setuptools.find_packages(),
+    "install_requires": [
         "jupyterlab>=4.0.0,<5",
     ],
-    zip_safe=False,
-    include_package_data=True,
-    python_requires=">=3.6",
-    license="AGPL-3.0",
-    platforms="Linux, Mac OS X, Windows",
-    keywords=["Jupyter", "JupyterLab", "JupyterLab3", "SWAN", "CERN"],
-    classifiers=[
+    "zip_safe": False,
+    "include_package_data": True,
+    "python_requires": ">=3.6",
+    "license": "AGPL-3.0",
+    "platforms": "Linux, Mac OS X, Windows",
+    "keywords": ["Jupyter", "JupyterLab", "JupyterLab3", "SWAN", "CERN"],
+    "classifiers": [
         "Framework :: Jupyter",
         "Framework :: Jupyter :: JupyterLab",
         "Framework :: Jupyter :: JupyterLab :: 4",
@@ -97,7 +97,7 @@ setup_args = dict(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
     ],
-)
+}
 
 
 if __name__ == "__main__":
