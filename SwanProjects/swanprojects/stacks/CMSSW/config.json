@@ -1,0 +1,19 @@
+{
+  "releases":{
+    "CMSSW_11_1_1": [
+      "slc7_amd64_gcc820"
+    ],
+    "CMSSW_11_1_2": [
+      "slc7_amd64_gcc820"
+    ],
+    "CMSSW_11_1_3": [
+      "slc7_amd64_gcc820"
+    ],
+    "CMSSW_11_1_4": [
+      "slc7_amd64_gcc820"
+    ],
+    "CMSSW_11_1_5": [
+      "slc7_amd64_gcc820"
+    ]
+  }
+}
