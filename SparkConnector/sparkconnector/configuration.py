@@ -1,4 +1,4 @@
-import os, subprocess, shutil, sys, uuid, time, base64, tempfile, ssl
+import os, shutil, sys, uuid, time, base64, tempfile, ssl
 import requests
 import urllib3
 
@@ -30,7 +30,7 @@ class SparkConfigurationFactory:
             return SparkYarnConfiguration(self.connector, cluster_name)
 
 
-class SparkConfiguration(object):
+class SparkConfiguration:
 
     def __init__(self, connector, cluster_name):
         self.cluster_name = cluster_name
@@ -109,7 +109,7 @@ class SparkConfiguration(object):
         # If using SparkMonitor, this is defined but is of type SparkConf
         conf = self.connector.ipython.user_ns.get('swan_spark_conf')
         if conf:
-            self.connector.log.warn("conf already exists: %s", conf.toDebugString())
+            self.connector.log.warning("conf already exists: %s", conf.toDebugString())
             if not isinstance(conf, SparkConf):
                 raise Exception('There is already a "swan_spark_conf" variable defined and is not of type SparkConf.')
         else:
@@ -138,7 +138,7 @@ class SparkConfiguration(object):
         # User's options should take precedence over the base option
         env_extra_java_options = os.environ.get("SPARK_DRIVER_EXTRA_JAVA_OPTIONS", "").strip()
         user_extra_java_options = conf.get("spark.driver.extraJavaOptions", "")
-        logging_extra_java_options = "-Dlog4j2.configurationFile=%s" % self.connector.log4j_file
+        logging_extra_java_options = f"-Dlog4j2.configurationFile={self.connector.log4j_file}"
         
         extra_java_options = f"{env_extra_java_options} {user_extra_java_options} {logging_extra_java_options}"
         conf.set("spark.driver.extraJavaOptions", extra_java_options)
@@ -256,7 +256,7 @@ class SparkK8sConfiguration(SparkConfiguration):
                 'Kubernetes secret refresh call.'
             ) from exc
 
-        raise
+        raise  # noqa: PLE0704
 
     def _call_k8s_api(self, method_name, *args):
         api_instance = self._build_k8s_api_instance()
@@ -313,7 +313,7 @@ class SparkK8sConfiguration(SparkConfiguration):
         """ Extract k8s master ip from kubeconfig """
 
         with open(kubeconfig_path) as f:
-            for line in f.readlines():
+            for line in f:
                 server = line.split("server:")
                 if len(server) == 2:
                     return "k8s://" + server[1].strip()
@@ -353,7 +353,7 @@ class SparkK8sConfiguration(SparkConfiguration):
             else:
                 self._call_k8s_api('create_namespaced_secret', namespace, secret_data)
         except ApiException as e:
-            raise Exception("Could not create required secret: %s\n" % e)
+            raise Exception(f"Could not create required secret: {e}\n")
 
     def configure(self, opts, ports):
         """ Initialize K8s configuration for Spark """
@@ -535,9 +535,9 @@ class SparkYarnConfiguration(SparkConfiguration):
                     if addrs:
                         # we only store the first one
                         conn_config['sparkwebui'] = f"{scheme}://{addrs[0]}/proxy/{effective_app_id}"
-            except Exception:
+            except Exception as e:
                 # Best-effort: don't break config retrieval, but do log what went wrong
-                self.connector.log.warn(
+                self.connector.log.warning(
                     "Failed to create Spark WebUI link from YARN/Hadoop configuration "
                     f"(appId={getattr(sc, 'applicationId', None) or app_id}): {e}",
                     exc_info=True,
