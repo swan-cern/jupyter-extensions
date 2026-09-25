@@ -1,15 +1,19 @@
 """
 Setup Module to setup Python Handlers for the SwanNotifications extension.
 """
+
 import os
 
 from jupyter_packaging import (
-    create_cmdclass, install_npm, ensure_targets,
-    combine_commands, get_version,
+    create_cmdclass,
+    install_npm,
+    ensure_targets,
+    combine_commands,
+    get_version,
 )
 import setuptools
 
-name="swanshare"
+name = "swanshare"
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
@@ -23,19 +27,18 @@ jstargets = [
     os.path.join(nb_path, "extension.js"),
 ]
 
-package_data_spec = {
-    name: [
-        "*"
-    ]
-}
+package_data_spec = {name: ["*"]}
 
-cmdclass = create_cmdclass("jsdeps", 
+cmdclass = create_cmdclass(
+    "jsdeps",
     package_data_spec=package_data_spec,
-    data_files_spec=[(
-        "etc/jupyter/jupyter_server_config.d",
-        "jupyter_server_config.d",
-        "swanshare.json",
-    )]
+    data_files_spec=[
+        (
+            "etc/jupyter/jupyter_server_config.d",
+            "jupyter_server_config.d",
+            "swanshare.json",
+        )
+    ],
 )
 
 cmdclass["jsdeps"] = combine_commands(
@@ -56,9 +59,7 @@ setup_args = dict(
     long_description_content_type="text/markdown",
     cmdclass=cmdclass,
     packages=setuptools.find_packages(),
-    install_requires=[
-        'PyJWT'
-    ],
+    install_requires=["PyJWT"],
     zip_safe=False,
     include_package_data=True,
     license="AGPL-3.0",

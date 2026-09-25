@@ -8,19 +8,12 @@ import logging
 
 from jupyter_server.base.handlers import PrometheusMetricsHandler
 
-editors_opened = {
-    "vscode": False,
-    "marimo": False
-}
+editors_opened = {"vscode": False, "marimo": False}
 
 KERNEL_ACTIONS_SCHEMA_ID = "https://events.jupyter.org/jupyter_server/kernel_actions/v1"
 
 # Prometheus metrics
-EDITORS_OPEN = Counter(
-    "swan_editor_open",
-    "Code editor usage in SWAN",
-    ["editor"]
-)
+EDITORS_OPEN = Counter("swan_editor_open", "Code editor usage in SWAN", ["editor"])
 
 KERNEL_EVENTS = Counter(
     "swan_kernel_events",
@@ -29,6 +22,8 @@ KERNEL_EVENTS = Counter(
 )
 
 _original_prepare = ProxyHandler.prepare
+
+
 def _wrapped_prepare(self, *args, **kwargs):
     path = self.request.path
     for editor, visited in editors_opened.items():
@@ -36,7 +31,10 @@ def _wrapped_prepare(self, *args, **kwargs):
             EDITORS_OPEN.labels(editor=editor).inc()
             editors_opened[editor] = True
     return _original_prepare(self)
+
+
 ProxyHandler.prepare = _wrapped_prepare
+
 
 async def kernel_event_listener(
     *,
@@ -49,12 +47,13 @@ async def kernel_event_listener(
 
     This is registered with jupyter_events and called for every kernel action.
     """
-    
+
     KERNEL_EVENTS.labels(
         action=data.get("action", "?"),
         kernel_name=data.get("kernel_name", "?"),
         status=data.get("status", "?"),
     ).inc()
+
 
 def _load_jupyter_server_extension(server_app) -> None:
     """
@@ -76,20 +75,15 @@ def _load_jupyter_server_extension(server_app) -> None:
         event_logger.register_handler(handler)
 
     # Register the async listener for kernel actions
-    event_logger.add_listener(
-        schema_id=KERNEL_ACTIONS_SCHEMA_ID, listener=kernel_event_listener
-    )
+    event_logger.add_listener(schema_id=KERNEL_ACTIONS_SCHEMA_ID, listener=kernel_event_listener)
 
     web_app = server_app.web_app
-    
+
     # Add route for Prometheus handler at the root level
     # so that Prometheus always scrapes the same endpoint,
     # without having to access /user/<username>/metrics every time.
 
-    web_app.add_handlers(
-        r".*$", 
-        [(r"/metrics", PrometheusMetricsHandler)]
-    )
+    web_app.add_handlers(r".*$", [(r"/metrics", PrometheusMetricsHandler)])
 
 
 def _jupyter_server_extension_points():

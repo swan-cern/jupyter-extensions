@@ -46,7 +46,7 @@ def setup_marimo() -> dict:
         "--headless",
     ]
 
-    credentials = 'Basic ' + base64.b64encode(b' :' + token.encode()).decode()
+    credentials = "Basic " + base64.b64encode(b" :" + token.encode()).decode()
 
     return {
         "command": command,

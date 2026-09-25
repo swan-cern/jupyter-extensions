@@ -43,7 +43,7 @@ class NotebookApp(ClassicNotebookApp):
         """
         Registers the old UI paths, like /projects, /share and /cernbox automatically.
         """
-        if os.environ.get('SWAN_USE_JUPYTERLAB', 'false').lower() == 'true':
+        if os.environ.get("SWAN_USE_JUPYTERLAB", "false").lower() == "true":
             return
         handlers = []
         handlers.extend(load_handlers("swancontents.swanclassic.handlers.projects"))
@@ -59,19 +59,15 @@ class NotebookApp(ClassicNotebookApp):
         in order to use them in our theme templates
         """
         super().initialize_settings()
-        new_vars = (
-            self.settings["jinja_template_vars"]
-            if "jinja_template_vars" in self.settings
-            else dict()
-        )
+        new_vars = self.settings["jinja_template_vars"] if "jinja_template_vars" in self.settings else dict()
         new_vars.update({"current_year": datetime.datetime.now().year})
 
         # Check if we are running via Jupyterhub single user (in that case, control url is defined),
         #  and set a required variable for the templates
-        if 'hub_control_panel_url' in new_vars:
-            control_url = new_vars['hub_control_panel_url']
+        if "hub_control_panel_url" in new_vars:
+            control_url = new_vars["hub_control_panel_url"]
             # Remove the prefix from the path (it's built by appending 'home' at the end)
-            hub_prefix = '/'.join(control_url.split('/')[:-1]) + '/'
+            hub_prefix = "/".join(control_url.split("/")[:-1]) + "/"
             new_vars.update({"hub_prefix": hub_prefix})
 
         if datetime.date.today().month == 12:

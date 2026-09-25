@@ -10,19 +10,20 @@ try:
     from kubernetes.client.rest import ApiException
 except ImportError:
     pass
-class SparkConfigurationFactory:
 
+
+class SparkConfigurationFactory:
     def __init__(self, connector):
         self.connector = connector
 
     def create(self):
-        cluster_name = os.environ.get('SPARK_CLUSTER_NAME', 'local')
+        cluster_name = os.environ.get("SPARK_CLUSTER_NAME", "local")
 
         # Define configuration based on cluster type
-        if cluster_name == 'local':
+        if cluster_name == "local":
             # local
             return SparkLocalConfiguration(self.connector, cluster_name)
-        elif cluster_name == 'k8s':
+        elif cluster_name == "k8s":
             # kubernetes
             return SparkK8sConfiguration(self.connector, cluster_name)
         else:
@@ -31,44 +32,44 @@ class SparkConfigurationFactory:
 
 
 class SparkConfiguration(object):
-
     def __init__(self, connector, cluster_name):
         self.cluster_name = cluster_name
         self.connector = connector
 
     def get_cluster_name(self):
-        """ Get cluster name """
+        """Get cluster name"""
         return self.cluster_name
 
     def get_spark_memory(self):
-        """ Get spark max memory """
-        return os.environ.get('MAX_MEMORY', '2')
+        """Get spark max memory"""
+        return os.environ.get("MAX_MEMORY", "2")
 
     def get_spark_version(self):
-        """ Get spark version """
+        """Get spark version"""
         from pyspark import __version__ as spark_version
+
         return spark_version
 
     def get_spark_user(self):
-        """ Get cluster name """
-        return os.environ.get('SPARK_USER', '')
+        """Get cluster name"""
+        return os.environ.get("SPARK_USER", "")
 
     def get_spark_needs_auth(self):
-        """ Do not require auth if SPARK_AUTH_REQUIRED is 0,
+        """Do not require auth if SPARK_AUTH_REQUIRED is 0,
         e.g. in case HADOOP_TOKEN_FILE_LOCATION has been provided
         """
-        return os.environ.get('SPARK_AUTH_REQUIRED', 'false') == 'true'
+        return os.environ.get("SPARK_AUTH_REQUIRED", "false") == "true"
 
     def close_spark_session(self):
-        sc = self.connector.ipython.user_ns.get('sc')
+        sc = self.connector.ipython.user_ns.get("sc")
         if sc and isinstance(sc, SparkContext):
             sc.stop()
 
     def _parse_options(self, _opts):
-        """ Parse options and set defaults """
+        """Parse options and set defaults"""
         _options = {}
-        if 'options' in _opts:
-            for name, value in _opts['options'].items():
+        if "options" in _opts:
+            for name, value in _opts["options"].items():
                 replaceable_values = {}
                 for _, variable, _, _ in Formatter().parse(value):
                     if variable is not None:
@@ -80,34 +81,30 @@ class SparkConfiguration(object):
 
     def fetch_auth_delegation_tokens(self):
         cluster = self.get_cluster_name()
-        if not cluster or cluster == 'local':
+        if not cluster or cluster == "local":
             return
-        jupyterhub_user_token = os.environ.get('JUPYTERHUB_API_TOKEN')
-        url = os.environ.get('SWAN_HADOOP_TOKEN_GENERATOR_URL')
-        headers = {
-            'Authorization': f'token {jupyterhub_user_token}'
-        }
-        data = {
-            'cluster': cluster
-        }
-        self.connector.log.info(f'Fetching hadoop delegation token for {cluster}')
-        response = requests.post(f'{url}/generate-delegation-token', headers=headers, json=data)
+        jupyterhub_user_token = os.environ.get("JUPYTERHUB_API_TOKEN")
+        url = os.environ.get("SWAN_HADOOP_TOKEN_GENERATOR_URL")
+        headers = {"Authorization": f"token {jupyterhub_user_token}"}
+        data = {"cluster": cluster}
+        self.connector.log.info(f"Fetching hadoop delegation token for {cluster}")
+        response = requests.post(f"{url}/generate-delegation-token", headers=headers, json=data)
         response.raise_for_status()
 
         # Write the token to a temporary file
         fd, path = tempfile.mkstemp(prefix="hadoop_token_")
-        with os.fdopen(fd, 'wb') as file:
+        with os.fdopen(fd, "wb") as file:
             file.write(response.content)
-        
-        os.environ['HADOOP_TOKEN_FILE_LOCATION'] = path
-        self.connector.log.info(f'Hadoop delegation token written to {path}')
+
+        os.environ["HADOOP_TOKEN_FILE_LOCATION"] = path
+        self.connector.log.info(f"Hadoop delegation token written to {path}")
 
     def configure(self, opts, ports):
-        """ Initializes Spark configuration object """
+        """Initializes Spark configuration object"""
 
         # Check if there's already a conf variablex
         # If using SparkMonitor, this is defined but is of type SparkConf
-        conf = self.connector.ipython.user_ns.get('swan_spark_conf')
+        conf = self.connector.ipython.user_ns.get("swan_spark_conf")
         if conf:
             self.connector.log.warn("conf already exists: %s", conf.toDebugString())
             if not isinstance(conf, SparkConf):
@@ -118,14 +115,14 @@ class SparkConfiguration(object):
         options = self._parse_options(opts)
 
         # Do not overwrite the existing driver extraClassPath with option, add instead
-        def_conf_extra_class_path = conf.get('spark.driver.extraClassPath', '')
-        options_extra_class_path = options.get('spark.driver.extraClassPath', '')
-        if def_conf_extra_class_path != '' and options_extra_class_path != '':
-            options['spark.driver.extraClassPath'] = def_conf_extra_class_path + ":" + options_extra_class_path
-        elif def_conf_extra_class_path != '' and options_extra_class_path == '':
-            options['spark.driver.extraClassPath'] = def_conf_extra_class_path
-        elif def_conf_extra_class_path == '' and options_extra_class_path != '':
-            options['spark.driver.extraClassPath'] = options_extra_class_path
+        def_conf_extra_class_path = conf.get("spark.driver.extraClassPath", "")
+        options_extra_class_path = options.get("spark.driver.extraClassPath", "")
+        if def_conf_extra_class_path != "" and options_extra_class_path != "":
+            options["spark.driver.extraClassPath"] = def_conf_extra_class_path + ":" + options_extra_class_path
+        elif def_conf_extra_class_path != "" and options_extra_class_path == "":
+            options["spark.driver.extraClassPath"] = def_conf_extra_class_path
+        elif def_conf_extra_class_path == "" and options_extra_class_path != "":
+            options["spark.driver.extraClassPath"] = options_extra_class_path
 
         # Add options to the default conf
         for name, value in options.items():
@@ -139,92 +136,87 @@ class SparkConfiguration(object):
         env_extra_java_options = os.environ.get("SPARK_DRIVER_EXTRA_JAVA_OPTIONS", "").strip()
         user_extra_java_options = conf.get("spark.driver.extraJavaOptions", "")
         logging_extra_java_options = "-Dlog4j2.configurationFile=%s" % self.connector.log4j_file
-        
+
         extra_java_options = f"{env_extra_java_options} {user_extra_java_options} {logging_extra_java_options}"
         conf.set("spark.driver.extraJavaOptions", extra_java_options)
 
         # Extend conf ensuring that LD_LIBRARY_PATH on executors is the same as on the driver
-        ld_library_path = conf.get('spark.executorEnv.LD_LIBRARY_PATH')
+        ld_library_path = conf.get("spark.executorEnv.LD_LIBRARY_PATH")
         if ld_library_path:
-            ld_library_path = ld_library_path + ":" + os.environ.get('LD_LIBRARY_PATH', '')
+            ld_library_path = ld_library_path + ":" + os.environ.get("LD_LIBRARY_PATH", "")
         else:
-            ld_library_path = os.environ.get('LD_LIBRARY_PATH', '')
-        conf.set('spark.executorEnv.LD_LIBRARY_PATH', ld_library_path)
+            ld_library_path = os.environ.get("LD_LIBRARY_PATH", "")
+        conf.set("spark.executorEnv.LD_LIBRARY_PATH", ld_library_path)
 
         # Extend conf with ports for the driver and block manager
-        conf.set('spark.driver.host', os.environ.get('SERVER_HOSTNAME', 'localhost'))
-        conf.set('spark.driver.port', ports[0])
-        conf.set('spark.driver.blockManager.port', ports[1])
-        conf.set('spark.port.maxRetries', 100)
-        conf.set('spark.ui.port', ports[2])
+        conf.set("spark.driver.host", os.environ.get("SERVER_HOSTNAME", "localhost"))
+        conf.set("spark.driver.port", ports[0])
+        conf.set("spark.driver.blockManager.port", ports[1])
+        conf.set("spark.port.maxRetries", 100)
+        conf.set("spark.ui.port", ports[2])
 
         # Extend conf with spark app name to allow the monitoring and filtering of SWAN jobs in the Spark clusters
-        app_name = conf.get('spark.app.name')
-        conf.set('spark.app.name', app_name + '_swan' if app_name else 'pyspark_shell_swan')
+        app_name = conf.get("spark.app.name")
+        conf.set("spark.app.name", app_name + "_swan" if app_name else "pyspark_shell_swan")
 
         return conf
 
 
 class SparkLocalConfiguration(SparkConfiguration):
-
     def configure(self, opts, ports):
-        """ Initialize YARN configuration for Spark """
+        """Initialize YARN configuration for Spark"""
 
         conf = super(self.__class__, self).configure(opts, ports)
 
-        conf.set('spark.master', 'local[*]')
+        conf.set("spark.master", "local[*]")
         return conf
 
     def get_spark_session_config(self):
         conn_config = {}
 
-        sc = self.connector.ipython.user_ns.get('sc')
+        sc = self.connector.ipython.user_ns.get("sc")
         if sc and isinstance(sc, SparkContext):
-            webui_url = 'https://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
-            conn_config['sparkwebui'] = webui_url
+            webui_url = "https://" + sc._conf.get("spark.driver.host") + ":" + sc._conf.get("spark.ui.port")
+            conn_config["sparkwebui"] = webui_url
         return conn_config
 
 
 class SparkK8sConfiguration(SparkConfiguration):
-
     def _should_skip_k8s_tls_verify(self):
         """Allow an explicit compatibility escape hatch for broken cluster certs."""
-        return os.environ.get('SPARK_K8S_SKIP_TLS_VERIFY', 'false').lower() == 'true'
+        return os.environ.get("SPARK_K8S_SKIP_TLS_VERIFY", "false").lower() == "true"
 
     def _get_kubeconfig_path(self):
-        return os.environ.get('KUBECONFIG') or os.path.expanduser('~/.kube/config')
+        return os.environ.get("KUBECONFIG") or os.path.expanduser("~/.kube/config")
 
     def _build_k8s_api_instance(self, relax_x509_strict=False):
         """Create a k8s API client honoring the current kubeconfig and local overrides."""
         k8s_config = client.Configuration()
-        config.load_kube_config(
-            config_file=self._get_kubeconfig_path(),
-            client_configuration=k8s_config
-        )
+        config.load_kube_config(config_file=self._get_kubeconfig_path(), client_configuration=k8s_config)
 
         api_client = client.ApiClient(k8s_config)
 
         if relax_x509_strict and k8s_config.verify_ssl and k8s_config.ssl_ca_cert:
             self.connector.log.warning(
-                'Retrying Kubernetes API call with strict X.509 verification relaxed while '
-                'still validating against the kubeconfig CA bundle'
+                "Retrying Kubernetes API call with strict X.509 verification relaxed while "
+                "still validating against the kubeconfig CA bundle"
             )
             ssl_context = ssl.create_default_context(cafile=k8s_config.ssl_ca_cert)
-            if hasattr(ssl, 'VERIFY_X509_STRICT'):
+            if hasattr(ssl, "VERIFY_X509_STRICT"):
                 ssl_context.verify_flags &= ~ssl.VERIFY_X509_STRICT
 
             api_client.rest_client.pool_manager = urllib3.PoolManager(
                 num_pools=4,
-                cert_reqs='CERT_REQUIRED',
+                cert_reqs="CERT_REQUIRED",
                 ca_certs=k8s_config.ssl_ca_cert,
                 cert_file=k8s_config.cert_file,
                 key_file=k8s_config.key_file,
-                ssl_context=ssl_context
+                ssl_context=ssl_context,
             )
 
         if self._should_skip_k8s_tls_verify():
             self.connector.log.warning(
-                'SPARK_K8S_SKIP_TLS_VERIFY=true: disabling TLS verification for Kubernetes API calls'
+                "SPARK_K8S_SKIP_TLS_VERIFY=true: disabling TLS verification for Kubernetes API calls"
             )
             k8s_config.verify_ssl = False
             api_client = client.ApiClient(k8s_config)
@@ -233,27 +225,21 @@ class SparkK8sConfiguration(SparkConfiguration):
 
     def _is_aki_compatibility_error(self, exc):
         message = str(exc)
-        return (
-            'CERTIFICATE_VERIFY_FAILED' in message and
-            'Missing Authority Key Identifier' in message
-        )
+        return "CERTIFICATE_VERIFY_FAILED" in message and "Missing Authority Key Identifier" in message
 
     def _is_k8s_tls_exception(self, exc):
-        return isinstance(
-            exc,
-            (ssl.SSLError, urllib3.exceptions.SSLError, urllib3.exceptions.MaxRetryError)
-        )
+        return isinstance(exc, (ssl.SSLError, urllib3.exceptions.SSLError, urllib3.exceptions.MaxRetryError))
 
     def _raise_k8s_tls_error(self, exc):
         if self._is_aki_compatibility_error(exc):
             raise Exception(
-                'Could not connect to the Kubernetes API because Python '
-                f'{sys.version_info.major}.{sys.version_info.minor} uses stricter OpenSSL '
-                'certificate validation and the cluster certificate chain is missing the '
-                'Authority Key Identifier extension. '
-                'Please fix the cluster certificate chain. As a temporary workaround, '
-                'set SPARK_K8S_SKIP_TLS_VERIFY=true to disable TLS verification for the '
-                'Kubernetes secret refresh call.'
+                "Could not connect to the Kubernetes API because Python "
+                f"{sys.version_info.major}.{sys.version_info.minor} uses stricter OpenSSL "
+                "certificate validation and the cluster certificate chain is missing the "
+                "Authority Key Identifier extension. "
+                "Please fix the cluster certificate chain. As a temporary workaround, "
+                "set SPARK_K8S_SKIP_TLS_VERIFY=true to disable TLS verification for the "
+                "Kubernetes secret refresh call."
             ) from exc
 
         raise
@@ -276,33 +262,29 @@ class SparkK8sConfiguration(SparkConfiguration):
         """Dependencies which are in EOS HOME will be formatted to root://"""
 
         spark_work_dir = None
-        for dh in self.connector.ipython.user_ns.get('_dh', []):
+        for dh in self.connector.ipython.user_ns.get("_dh", []):
             dh_str = str(dh)
-            if dh_str.startswith('/eos/home') and 'SWAN_projects' in dh_str:
+            if dh_str.startswith("/eos/home") and "SWAN_projects" in dh_str:
                 # Adjust /eos/home path to /eos/user xrootd access
-                spark_work_dir = (
-                    dh_str
-                    .replace('/eos/home', 'root://eoshome.cern.ch//eos/user', 1)
-                    .replace('-', '/', 1)
-                )
+                spark_work_dir = dh_str.replace("/eos/home", "root://eoshome.cern.ch//eos/user", 1).replace("-", "/", 1)
                 break
 
         adjusted_paths = []
         for path in path_array:
             path_str = str(path)
 
-            if spark_work_dir and path_str.startswith('./'):
-                adjusted_path = path_str.replace('.', spark_work_dir, 1)
+            if spark_work_dir and path_str.startswith("./"):
+                adjusted_path = path_str.replace(".", spark_work_dir, 1)
                 if " " in adjusted_path:
                     raise Exception(
-                        'Could not stage dependencies with spark.files, spark.jars or spark.submit.pyFiles '
-                        'which include space in the name of the project or path'
+                        "Could not stage dependencies with spark.files, spark.jars or spark.submit.pyFiles "
+                        "which include space in the name of the project or path"
                     )
                 adjusted_paths.append(adjusted_path)
-            elif path_str.startswith('/'):
+            elif path_str.startswith("/"):
                 raise Exception(
-                    'Staging of dependencies not allowed from all local paths. '
-                    'Please use your notebook directory ./, root://, http:// or s3a://'
+                    "Staging of dependencies not allowed from all local paths. "
+                    "Please use your notebook directory ./, root://, http:// or s3a://"
                 )
             else:
                 adjusted_paths.append(path_str)
@@ -310,7 +292,7 @@ class SparkK8sConfiguration(SparkConfiguration):
         return ",".join(adjusted_paths)
 
     def _retrieve_k8s_master(self, kubeconfig_path):
-        """ Extract k8s master ip from kubeconfig """
+        """Extract k8s master ip from kubeconfig"""
 
         with open(kubeconfig_path) as f:
             for line in f.readlines():
@@ -319,11 +301,11 @@ class SparkK8sConfiguration(SparkConfiguration):
                     return "k8s://" + server[1].strip()
 
     def _refresh_spark_tokens(self, name, namespace, data_dict):
-        """ Create or replace k8s secret <name> in the namespace <namespace """
+        """Create or replace k8s secret <name> in the namespace <namespace"""
 
         try:
             # Refresh tokens, so new executors will pick up new token
-            self._call_k8s_api('read_namespaced_secret', name, namespace)
+            self._call_k8s_api("read_namespaced_secret", name, namespace)
             exists = True
         except ApiException:
             exists = False
@@ -344,101 +326,107 @@ class SparkK8sConfiguration(SparkConfiguration):
                 with open(file_path, "rb") as file:
                     data = file.read()
 
-            secret_data.data[secret_key] =  base64.standard_b64encode(data).decode('ascii')
+            secret_data.data[secret_key] = base64.standard_b64encode(data).decode("ascii")
 
         try:
             # Refresh tokens, so new executors will pick up new token
             if exists:
-                self._call_k8s_api('replace_namespaced_secret', name, namespace, secret_data)
+                self._call_k8s_api("replace_namespaced_secret", name, namespace, secret_data)
             else:
-                self._call_k8s_api('create_namespaced_secret', namespace, secret_data)
+                self._call_k8s_api("create_namespaced_secret", namespace, secret_data)
         except ApiException as e:
             raise Exception("Could not create required secret: %s\n" % e)
 
     def configure(self, opts, ports):
-        """ Initialize K8s configuration for Spark """
+        """Initialize K8s configuration for Spark"""
 
         conf = super(self.__class__, self).configure(opts, ports)
 
         # Set K8s configuration
-        conf.set('spark.kubernetes.namespace', os.environ.get('SPARK_USER'))
-        conf.set('spark.kubernetes.container.image', 'gitlab-registry.cern.ch/swan/spark/docker-registry/swan:alma9-20260319')
-        conf.set('spark.master', self._retrieve_k8s_master(self._get_kubeconfig_path()))
+        conf.set("spark.kubernetes.namespace", os.environ.get("SPARK_USER"))
+        conf.set(
+            "spark.kubernetes.container.image", "gitlab-registry.cern.ch/swan/spark/docker-registry/swan:alma9-20260319"
+        )
+        conf.set("spark.master", self._retrieve_k8s_master(self._get_kubeconfig_path()))
 
         # There is no shuffle service for K8S
-        conf.set('spark.shuffle.service.enabled', 'false')
-        conf.set('spark.dynamicAllocation.shuffleTracking.enabled', 'true')
+        conf.set("spark.shuffle.service.enabled", "false")
+        conf.set("spark.dynamicAllocation.shuffleTracking.enabled", "true")
 
         # Ensure that Spark ENVs on executors are the same as on the driver
-        conf.set('spark.executorEnv.PYTHONPATH', os.environ.get('PYTHONPATH'))
-        conf.set('spark.executorEnv.JAVA_HOME', os.environ.get('JAVA_HOME'))
-        conf.set('spark.executorEnv.SPARK_HOME', os.environ.get('SPARK_HOME'))
-        conf.set('spark.executorEnv.SPARK_EXTRA_CLASSPATH', os.environ.get('SPARK_DIST_CLASSPATH'))
+        conf.set("spark.executorEnv.PYTHONPATH", os.environ.get("PYTHONPATH"))
+        conf.set("spark.executorEnv.JAVA_HOME", os.environ.get("JAVA_HOME"))
+        conf.set("spark.executorEnv.SPARK_HOME", os.environ.get("SPARK_HOME"))
+        conf.set("spark.executorEnv.SPARK_EXTRA_CLASSPATH", os.environ.get("SPARK_DIST_CLASSPATH"))
 
         # Disable console progress as it would be printed in the notebook (since ipython 6)
-        conf.set('spark.ui.showConsoleProgress', 'false')
+        conf.set("spark.ui.showConsoleProgress", "false")
 
         # Authenticate EOS and HDFS also on spark executors by
         # telling spark to mount spark-tokens secret to each executor and set env pointing to secret data
         secret_data = {}
-        if "KRB5CCNAME" in os.environ and os.path.exists(os.environ.get('KRB5CCNAME')):
-            secret_data["krb5cc"] = os.environ.get('KRB5CCNAME')
-            conf.set('spark.kubernetes.executor.secrets.spark-tokens', '/tokens')
-            conf.set('spark.executorEnv.KRB5CCNAME', '/tokens/krb5cc')
+        if "KRB5CCNAME" in os.environ and os.path.exists(os.environ.get("KRB5CCNAME")):
+            secret_data["krb5cc"] = os.environ.get("KRB5CCNAME")
+            conf.set("spark.kubernetes.executor.secrets.spark-tokens", "/tokens")
+            conf.set("spark.executorEnv.KRB5CCNAME", "/tokens/krb5cc")
 
-        if "HADOOP_TOKEN_FILE_LOCATION" in os.environ and os.path.exists(os.environ.get('HADOOP_TOKEN_FILE_LOCATION')):
-            secret_data["hadoop.toks"] = os.environ.get('HADOOP_TOKEN_FILE_LOCATION')
-            conf.set('spark.kubernetes.executor.secrets.spark-tokens', '/tokens')
-            conf.set('spark.executorEnv.HADOOP_TOKEN_FILE_LOCATION', '/tokens/hadoop.toks')
+        if "HADOOP_TOKEN_FILE_LOCATION" in os.environ and os.path.exists(os.environ.get("HADOOP_TOKEN_FILE_LOCATION")):
+            secret_data["hadoop.toks"] = os.environ.get("HADOOP_TOKEN_FILE_LOCATION")
+            conf.set("spark.kubernetes.executor.secrets.spark-tokens", "/tokens")
+            conf.set("spark.executorEnv.HADOOP_TOKEN_FILE_LOCATION", "/tokens/hadoop.toks")
 
         # Create/replace spark-tokens secret with HADOOP_TOKEN_FILE_LOCATION and KRB5CCNAME if set
-        self._refresh_spark_tokens(
-            "spark-tokens",
-            os.environ.get('SPARK_USER'),
-            secret_data
-        )
+        self._refresh_spark_tokens("spark-tokens", os.environ.get("SPARK_USER"), secret_data)
 
         # There is no resource staging server for files, download directly from storage to executors
         # Distribute files (for pyFiles add them also to files) and jars
-        spark_files = conf.get('spark.files', '')
-        conf.set('spark.files', self._format_local_paths(spark_files.split(",")))
-        spark_jars = conf.get('spark.jars', '')
-        conf.set('spark.jars', self._format_local_paths(spark_jars.split(",")))
+        spark_files = conf.get("spark.files", "")
+        conf.set("spark.files", self._format_local_paths(spark_files.split(",")))
+        spark_jars = conf.get("spark.jars", "")
+        conf.set("spark.jars", self._format_local_paths(spark_jars.split(",")))
 
-        if conf.get('spark.submit.pyFiles', None):
-            raise Exception('Option spark.submit.pyFiles is not recommended. '
-                            'Please use e.g. spark.files=./bigdl.zip and sc.addPyFile("./bigdl.zip")')
+        if conf.get("spark.submit.pyFiles", None):
+            raise Exception(
+                "Option spark.submit.pyFiles is not recommended. "
+                'Please use e.g. spark.files=./bigdl.zip and sc.addPyFile("./bigdl.zip")'
+            )
 
-        if conf.get('spark.yarn.dist.files', None) or \
-                conf.get('spark.yarn.dist.jars', None) or \
-                conf.get('spark.yarn.dist.archives', None):
-            raise Exception('Kubernetes does not support syntax for YARN, use spark.files or spark.jars')
+        if (
+            conf.get("spark.yarn.dist.files", None)
+            or conf.get("spark.yarn.dist.jars", None)
+            or conf.get("spark.yarn.dist.archives", None)
+        ):
+            raise Exception("Kubernetes does not support syntax for YARN, use spark.files or spark.jars")
 
         return conf
 
     def get_spark_session_config(self):
         conn_config = {}
-        sc = self.connector.ipython.user_ns.get('sc')
+        sc = self.connector.ipython.user_ns.get("sc")
         if sc and isinstance(sc, SparkContext):
             # set the metrics URL if the config bundle is selected
-            if sc._conf.get('spark.cern.grafana.url') is not None:
+            if sc._conf.get("spark.cern.grafana.url") is not None:
                 # if spark.cern.grafana.url is set, use cern spark monitoring dashboard
-                conn_config['sparkmetrics'] = sc._conf.get('spark.cern.grafana.url') + \
-                                              '&var-ClusterName=' + self.get_cluster_name() + \
-                                              '&var-UserName=' + self.get_spark_user() + \
-                                              '&var-ApplicationId=' + sc._conf.get('spark.app.id')
+                conn_config["sparkmetrics"] = (
+                    sc._conf.get("spark.cern.grafana.url")
+                    + "&var-ClusterName="
+                    + self.get_cluster_name()
+                    + "&var-UserName="
+                    + self.get_spark_user()
+                    + "&var-ApplicationId="
+                    + sc._conf.get("spark.app.id")
+                )
 
-            webui_url = 'http://' + sc._conf.get('spark.driver.host') + ':' + sc._conf.get('spark.ui.port')
-            conn_config['sparkwebui'] = webui_url
+            webui_url = "http://" + sc._conf.get("spark.driver.host") + ":" + sc._conf.get("spark.ui.port")
+            conn_config["sparkwebui"] = webui_url
 
         return conn_config
 
 
 class SparkYarnConfiguration(SparkConfiguration):
-
     def _get_sc_config(self, key, wait=False):
-        """ It can happen that context will be returned by pyspark, but some yarn configs are late propagated """
-        sc = self.connector.ipython.user_ns.get('sc')
+        """It can happen that context will be returned by pyspark, but some yarn configs are late propagated"""
+        sc = self.connector.ipython.user_ns.get("sc")
 
         if wait:
             # try to get config by key 10 times with wait of 1s
@@ -453,46 +441,49 @@ class SparkYarnConfiguration(SparkConfiguration):
         return sc._conf.get(key, None)
 
     def configure(self, opts, ports):
-        """ Initialize YARN configuration for Spark """
+        """Initialize YARN configuration for Spark"""
 
         conf = super(self.__class__, self).configure(opts, ports)
 
         # Initialize YARN Specific configuration
-        conf.set('spark.master', 'yarn')
+        conf.set("spark.master", "yarn")
 
         # Archive the local python packages and set spark.submit.pyFiles if the propagate python packages bundle is selected
-        if conf.get('spark.cern.user.pyModules') is not None:
-           python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
-           dir_name=os.environ['HOME']+'/.local/lib/python'+python_version+'/site-packages'
-           filename = '/tmp/'+str(uuid.uuid4().hex)
-           user_archive=shutil.make_archive(filename, 'zip', dir_name)
-           if conf.get('spark.submit.pyFiles') is not None:
-               archive_filename=conf.get('spark.submit.pyFiles')+','+user_archive
-           else:
-               archive_filename=user_archive
-           conf.set('spark.submit.pyFiles', archive_filename)
+        if conf.get("spark.cern.user.pyModules") is not None:
+            python_version = f"{sys.version_info.major}.{sys.version_info.minor}"
+            dir_name = os.environ["HOME"] + "/.local/lib/python" + python_version + "/site-packages"
+            filename = "/tmp/" + str(uuid.uuid4().hex)
+            user_archive = shutil.make_archive(filename, "zip", dir_name)
+            if conf.get("spark.submit.pyFiles") is not None:
+                archive_filename = conf.get("spark.submit.pyFiles") + "," + user_archive
+            else:
+                archive_filename = user_archive
+            conf.set("spark.submit.pyFiles", archive_filename)
 
         # Disable console progress as it would be printed in the notebook (since ipython 6)
-        conf.set('spark.ui.showConsoleProgress', 'false')
+        conf.set("spark.ui.showConsoleProgress", "false")
 
         return conf
 
     def get_spark_session_config(self):
         conn_config = {}
-        sc = self.connector.ipython.user_ns.get('sc')
+        sc = self.connector.ipython.user_ns.get("sc")
         if sc and isinstance(sc, SparkContext):
             # set the metrics URL if the config bundle is selected
             conn_config = {}
 
-            grafana_url = self._get_sc_config('spark.cern.grafana.url')
-            app_id = self._get_sc_config('spark.app.id')
+            grafana_url = self._get_sc_config("spark.cern.grafana.url")
+            app_id = self._get_sc_config("spark.app.id")
             if grafana_url and app_id:
                 # if spark.cern.grafana.url is set, use cern spark monitoring dashboard
-                conn_config['sparkmetrics'] = (
+                conn_config["sparkmetrics"] = (
                     grafana_url
-                    + '&var-ClusterName=' + self.get_cluster_name()
-                    + '&var-UserName=' + self.get_spark_user()
-                    + '&var-ApplicationId=' + app_id
+                    + "&var-ClusterName="
+                    + self.get_cluster_name()
+                    + "&var-UserName="
+                    + self.get_spark_user()
+                    + "&var-ApplicationId="
+                    + app_id
                 )
 
             # Determine the WebUI URL for Spark on YARN (Spark 4 compatible)
@@ -507,7 +498,7 @@ class SparkYarnConfiguration(SparkConfiguration):
 
                 if effective_app_id:
                     policy = (hconf.get("yarn.http.policy") or "").upper()
-                    use_https = (policy == "HTTPS_ONLY")
+                    use_https = policy == "HTTPS_ONLY"
                     scheme = "https" if use_https else "http"
 
                     # 1) Dedicated YARN web proxy, if configured
@@ -534,7 +525,7 @@ class SparkYarnConfiguration(SparkConfiguration):
 
                     if addrs:
                         # we only store the first one
-                        conn_config['sparkwebui'] = f"{scheme}://{addrs[0]}/proxy/{effective_app_id}"
+                        conn_config["sparkwebui"] = f"{scheme}://{addrs[0]}/proxy/{effective_app_id}"
             except Exception:
                 # Best-effort: don't break config retrieval, but do log what went wrong
                 self.connector.log.warn(

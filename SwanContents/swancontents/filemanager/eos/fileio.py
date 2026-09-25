@@ -7,7 +7,7 @@ from contextlib import contextmanager
 import os
 import subprocess
 
-swan_sharing_folder = 'swan_sharing_folder/'
+swan_sharing_folder = "swan_sharing_folder/"
 
 
 def _is_hidden(path, root):
@@ -23,16 +23,17 @@ def _is_hidden(path, root):
     try:
         return is_hidden(path, root)
     except ValueError as e:
-        if 'abs_path must be within abs_root' in str(e):
+        if "abs_path must be within abs_root" in str(e):
             return False
         raise
+
 
 # XXX: This is extremely hacky, but we need to patch the is_hidden function
 filemanager.is_hidden = _is_hidden
 
 
 @contextmanager
-def atomic_writing(path, text=True, encoding='utf-8', log=None, **kwargs):
+def atomic_writing(path, text=True, encoding="utf-8", log=None, **kwargs):
     """Context manager to write to a file only if the entire write is successful.
 
     This works by writing the contents to a temp file and rename it to the target.
@@ -61,14 +62,14 @@ def atomic_writing(path, text=True, encoding='utf-8', log=None, **kwargs):
 
     dirname, basename = os.path.split(path)
     # The .~ prefix will make Dropbox ignore the temporary file.
-    tmp_path = os.path.join(dirname, '.~'+basename)
+    tmp_path = os.path.join(dirname, ".~" + basename)
 
     if text:
         # Make sure that text files have Unix linefeeds by default
-        kwargs.setdefault('newline', '\n')
-        fileobj = open(tmp_path, 'w', encoding=encoding, **kwargs)
+        kwargs.setdefault("newline", "\n")
+        fileobj = open(tmp_path, "w", encoding=encoding, **kwargs)
     else:
-        fileobj = open(tmp_path, 'wb', **kwargs)
+        fileobj = open(tmp_path, "wb", **kwargs)
 
     try:
         yield fileobj
@@ -79,8 +80,8 @@ def atomic_writing(path, text=True, encoding='utf-8', log=None, **kwargs):
         fileobj.close()
 
         # To create a version of the file, enable that eos functionality on the parent directory
-        if path.startswith('/eos/'):
-            subprocess.run(["setfattr","-n", "user.fusex.rename.version", "-v", "1", dirname])
+        if path.startswith("/eos/"):
+            subprocess.run(["setfattr", "-n", "user.fusex.rename.version", "-v", "1", dirname])
 
         # Try to rename tmp file to the original name
         # This is an atomic operation and will silently replace the current file
@@ -101,8 +102,8 @@ def atomic_writing(path, text=True, encoding='utf-8', log=None, **kwargs):
         # Remove the versioning option to revert to default behaviour
         # This will complain if the exception occurred before setting this attr,
         # but it will not generate a new exception.
-        if path.startswith('/eos/'):
-            subprocess.run(["setfattr","-x", "user.fusex.rename.version", dirname])
+        if path.startswith("/eos/"):
+            subprocess.run(["setfattr", "-x", "user.fusex.rename.version", dirname])
 
 
 class SwanFileManagerMixin(AsyncFileManagerMixin):
@@ -114,22 +115,21 @@ class SwanFileManagerMixin(AsyncFileManagerMixin):
     """
 
     def _get_os_path(self, path):
-        """ Given an API path (i.e. SWAN_projects/Proj1), return its file system path (/eos/user/u/usera/SWAN_projects/Proj1).
-            The SWAN version allows access to paths outside the root folder (/eos/user/u/usera) for the shared folders specific case
+        """Given an API path (i.e. SWAN_projects/Proj1), return its file system path (/eos/user/u/usera/SWAN_projects/Proj1).
+        The SWAN version allows access to paths outside the root folder (/eos/user/u/usera) for the shared folders specific case
         """
 
         if path.startswith(swan_sharing_folder):
-            path = path.split('/')
+            path = path.split("/")
             if len(path) < 3:
-                 raise HTTPError(404)
-                
-            eosbasepath_format = os.getenv('EOS_PATH_FORMAT', '/eos/user/{username[0]}/{username}/')
-            user_basepath = eosbasepath_format.format(username = path[1])
-            return url_path_join(user_basepath, 'SWAN_projects', *(path[2:]))
+                raise HTTPError(404)
+
+            eosbasepath_format = os.getenv("EOS_PATH_FORMAT", "/eos/user/{username[0]}/{username}/")
+            user_basepath = eosbasepath_format.format(username=path[1])
+            return url_path_join(user_basepath, "SWAN_projects", *(path[2:]))
 
         else:
             return super()._get_os_path(path)
-
 
     @contextmanager
     def atomic_writing(self, os_path, *args, **kwargs):

@@ -1,6 +1,7 @@
 """
 Setup Module for the SwanContents extension.
 """
+
 import os
 
 from jupyter_packaging import create_cmdclass, get_version
