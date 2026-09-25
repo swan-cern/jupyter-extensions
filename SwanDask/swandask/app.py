@@ -35,7 +35,7 @@ def _set_dashboard_whitelist():
     def custom_init(self, *args, **kwargs):
         super(DaskDashboardHandler, self).__init__(*args,
                                                    host_allowlist=[private_ip],
-                                                   *kwargs)
+                                                   **kwargs)
 
     DaskDashboardHandler.__init__ = partialmethod(custom_init)
 
@@ -66,7 +66,7 @@ def main():
         from jupyter_server.auth import IdentityProvider
         from traitlets.config import Configurable
         identity_provider = IdentityProvider(parent=Configurable())
-    except:
+    except Exception:  # noqa: BLE001
         identity_provider = None
 
     app = web.Application(
