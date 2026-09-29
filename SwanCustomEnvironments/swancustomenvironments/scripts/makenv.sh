@@ -124,6 +124,11 @@ while [ $# -gt 0 ]; do
             USE_NXCALS=true
             shift
             ;;
+        --root-dir)
+            ROOT_DIR=$2
+            shift
+            shift
+            ;;
         --help|-h)
             print_help
             exit 0
@@ -268,7 +273,7 @@ if [[ " $STACKS_FOR_CUSTOMENVS " != *" $BUILDER "* ]]; then
         fi
     fi
 
-    _log "REPO_PATH:${GIT_REPO_PATH#$HOME}"
+    _log "REPO_PATH:${GIT_REPO_PATH#$ROOT_DIR}"
 
     # Ensure the terminal loads the environment and cds into the repository path
     echo -e "${ACTIVATE_ENV_CMD}\ncd ${GIT_REPO_PATH}" >> /home/$USER/.bash_profile

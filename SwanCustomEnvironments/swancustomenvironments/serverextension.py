@@ -49,7 +49,7 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
         builder_version = self.get_query_argument("builder_version", default="")
         nxcals = self.get_query_argument("nxcals", default="")
 
-        arguments = ["--repository", repository, "--builder", builder]
+        arguments = ["--repository", repository, "--builder", builder, "--root-dir", self.contents_manager.root_dir]
         if builder_version:
             arguments.extend(("--builder_version", builder_version))
         if nxcals:
