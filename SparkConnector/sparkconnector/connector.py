@@ -119,7 +119,7 @@ class SparkConnector:
                 # Java errors follow specific format
                 exact_java_error = str(ex).split('\n\tat')[0]
                 self.send_error('sparkconn-connect-error', exact_java_error)
-                self.log.error("Error creating Spark application", exc_info=True)
+                self.log.exception("Error creating Spark application")
 
         elif action == 'sparkconn-action-getlogs':
             self.file_thread.send_log_tail()
@@ -177,19 +177,13 @@ class SparkConnector:
 
         fd, path = tempfile.mkstemp(suffix='.properties')
         os.close(fd) # Reopen tempfile because mkstemp opens it in binary format
-        f = open(path, 'w')
-
         __location__ = os.path.realpath(
             os.path.join(os.getcwd(), os.path.dirname(__file__)))
-        f_configs = open(os.path.join(__location__, 'log4j_conf'), "r")
 
-        for line in f_configs:
-            f.write(line)
+        with open(path, 'w') as f, open(os.path.join(__location__, 'log4j_conf'), "r") as f_configs:
+            f.writelines(f_configs)
+            f.write(f'appender.file.fileName={log_path}\n')
 
-        f.write(u'appender.file.fileName=%s\n' % log_path)
-
-        f_configs.close()
-        f.close()
         self.log.info("Created temporary Log4j configuration file: %s", path)
 
         return path
