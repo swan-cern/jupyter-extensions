@@ -12,6 +12,9 @@ requires-python = ">=3.10"
 authors = [{ name = "SWAN Team", email = "swan-admins@cern.ch" }]
 dependencies = ["jupyter_server==2.15.0", "jupyter_events==0.12.0"]
 
+[dependency-groups]
+dev = ["pytest>=8"]
+
 [project.entry-points."jupyter_server.extensions"]
 swanmetrics = "swanmetrics:_load_jupyter_server_extension"
 
