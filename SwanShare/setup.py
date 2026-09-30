@@ -46,25 +46,25 @@ cmdclass["jsdeps"] = combine_commands(
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setup_args = dict(
-    name=name,
-    version=version,
-    url="https://github.com/swan-cern/jupyter-extensions",
-    author="SWAN Admins",
-    description="Sharing for SWAN",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    cmdclass=cmdclass,
-    packages=setuptools.find_packages(),
-    install_requires=[
+setup_args = {
+    "name": name,
+    "version": version,
+    "url": "https://github.com/swan-cern/jupyter-extensions",
+    "author": "SWAN Admins",
+    "description": "Sharing for SWAN",
+    "long_description": long_description,
+    "long_description_content_type": "text/markdown",
+    "cmdclass": cmdclass,
+    "packages": setuptools.find_packages(),
+    "install_requires": [
         'PyJWT'
     ],
-    zip_safe=False,
-    include_package_data=True,
-    license="AGPL-3.0",
-    platforms="Linux, Mac OS X, Windows",
-    keywords=["Jupyter", "SWAN", "CERN"],
-    classifiers=[
+    "zip_safe": False,
+    "include_package_data": True,
+    "license": "AGPL-3.0",
+    "platforms": "Linux, Mac OS X, Windows",
+    "keywords": ["Jupyter", "SWAN", "CERN"],
+    "classifiers": [
         "License :: OSI Approved :: GNU Affero General Public License v3",
         "Programming Language :: Python",
         "Programming Language :: Python :: 3.9",
@@ -72,7 +72,7 @@ setup_args = dict(
         "Programming Language :: Python :: 3.11",
         "Framework :: Jupyter",
     ],
-)
+}
 
 
 if __name__ == "__main__":

@@ -5,8 +5,7 @@ from socket import (
     socket,
     SO_REUSEADDR,
     SOL_SOCKET,
-    gethostname,
-    error as SocketError
+    gethostname
 )
 
 opened_port_file = '/tmp/port_allocator'
@@ -80,7 +79,7 @@ class PortAllocator(threading.Thread):
             'time': time.time()
         }
 
-        self.log.info('Requested ports for process %s: %s' % (process, assigned_ports))
+        self.log.info(f'Requested ports for process {process}: {assigned_ports}')
         return assigned_ports
 
     def release_ports(self, process, ports):
@@ -89,7 +88,7 @@ class PortAllocator(threading.Thread):
         """
 
         if process not in self.clients:
-            self.log.warn(f'Process {process} not in registered clients, not releasing ports {ports}')
+            self.log.warning(f'Process {process} not in registered clients, not releasing ports {ports}')
             return
 
         stored_ports = self.clients[process]['ports']
@@ -99,7 +98,7 @@ class PortAllocator(threading.Thread):
                 self.ports_available.append(p)
                 self.log.info(f'Port {p} from process {process} has been released')
             except ValueError:
-                self.log.warn(f'Port {p} not assigned to process {process}, not releasing port {p}')
+                self.log.warning(f'Port {p} not assigned to process {process}, not releasing port {p}')
 
     def delete_client(self, process):
         """ Delete a client from the list of processes and put its ports back in the list so that they're reused """
@@ -107,13 +106,13 @@ class PortAllocator(threading.Thread):
             # Put the ports in the end of the list. They will be re-used in last.
             self.ports_available.extend(self.clients[process]['ports'])
             del self.clients[process]
-            self.log.info('Deleted process %s' % process)
+            self.log.info(f'Deleted process {process}')
 
     def set_status(self, process, status):
         """ Update the status of a client process. Usefull for housekeeping. """
         if process in self.clients:
             self.clients[process]['status'] = status
-            self.log.info('Update the status of process %s: %s' % (process, status))
+            self.log.info(f'Update the status of process {process}: {status}')
 
     def _check_process(self, process):
         """ Check if at least one port assigned to this client process is being used. If not, remove the client. """
@@ -121,15 +120,15 @@ class PortAllocator(threading.Thread):
         for port in list(self.clients[process]['ports']):
             try:
                 s.connect((gethostname(), int(port)))
-            except SocketError:
+            except OSError:
                 pass
             else:
                 # at least one port is being used, so keep the process info
-                self.log.info('Process %s is using at least one requested port' % process)
+                self.log.info(f'Process {process} is using at least one requested port')
                 break
         else:
             # no port is being used
-            self.log.info('Process %s is not using any port' % process)
+            self.log.info(f'Process {process} is not using any port')
             self.delete_client(process)
         s.close()
 
@@ -145,14 +144,14 @@ class PortAllocator(threading.Thread):
         for process in list(self.clients.keys()):
 
             if self.clients[process]['status'] == Conn_State.DISCONNECTED.value:
-                self.log.info('Process %s is disconnected' % process)
+                self.log.info(f'Process {process} is disconnected')
                 self.delete_client(process)
                 continue
 
             try:
                 os.kill(process, 0)
             except OSError:
-                self.log.info('Process %s is no longer alive' % process)
+                self.log.info(f'Process {process} is no longer alive')
                 self.delete_client(process)
                 continue
 
@@ -197,13 +196,13 @@ class PortAllocator(threading.Thread):
         while True:
             context = zmq.Context()
             zmq_socket = context.socket(zmq.REP)
-            zmq_socket.bind("tcp://*:%s" % self.queue_port)
+            zmq_socket.bind(f"tcp://*:{self.queue_port}")
 
             def send_msg(kind, content):
                 msg = {
                     kind: content
                 }
-                zmq_socket.send_json(msg)
+                zmq_socket.send_json(msg)  # noqa: B023
 
             def send_ok(content = None):
                 send_msg('ok', content)
@@ -263,7 +262,7 @@ class PortAllocatorClient:
            The connection might be in an inconsistent state and therefore is necessary
            to establish again the connection.
         """
-        self.socket.connect("tcp://localhost:%s" % self.port)
+        self.socket.connect(f"tcp://localhost:{self.port}")
 
     def get_ports(self, n):
         """ 

@@ -37,7 +37,7 @@ class SwanShareHandler(APIHandler):
             token_decoded = jwt.decode(token, options={"verify_signature": False}, algorithms='RS256')
             
             if token_decoded['exp'] < time.time():
-                raise web.HTTPError(400, u'Token expired')
+                raise web.HTTPError(400, 'Token expired')
                 
             r = requests.get(f"{self.config.cernbox_url}/swanapi/v2/authenticate",
                                 headers={
