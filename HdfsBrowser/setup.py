@@ -36,7 +36,7 @@ package_data_spec = {
 labext_name = "@swan-cern/hdfsbrowser"
 
 data_files_spec = [
-    ("share/jupyter/labextensions/%s" % labext_name, lab_path, "**"),
+    (f"share/jupyter/labextensions/{labext_name}", lab_path, "**"),
     ("etc/jupyter/jupyter_server_config.d",
      "jupyter-config/jupyter_server_config.d", "hdfsbrowser.json"),
      ("etc/jupyter/jupyter_notebook_config.d",
@@ -63,27 +63,27 @@ else:
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setup_args = dict(
-    name=name,
-    version=version,
-    url="https://github.com/swan-cern/jupyter-extensions",
-    author="SWAN Admins",
-    description="Jupyter Server extension to browse HDFS filesystem",
-    long_description= long_description,
-    long_description_content_type="text/markdown",
-    cmdclass= cmdclass,
-    packages=setuptools.find_packages(),
-    install_requires=[
+setup_args = {
+    "name": name,
+    "version": version,
+    "url": "https://github.com/swan-cern/jupyter-extensions",
+    "author": "SWAN Admins",
+    "description": "Jupyter Server extension to browse HDFS filesystem",
+    "long_description": long_description,
+    "long_description_content_type": "text/markdown",
+    "cmdclass": cmdclass,
+    "packages": setuptools.find_packages(),
+    "install_requires": [
         "jupyterlab>=4.0.0,<5",
         "bs4",
     ],
-    zip_safe=False,
-    include_package_data=True,
-    python_requires=">=3.6",
-    license="AGPL-3.0",
-    platforms="Linux",
-    keywords=["Jupyter", "JupyterLab", "SWAN", "CERN"],
-    classifiers=[
+    "zip_safe": False,
+    "include_package_data": True,
+    "python_requires": ">=3.6",
+    "license": "AGPL-3.0",
+    "platforms": "Linux",
+    "keywords": ["Jupyter", "JupyterLab", "SWAN", "CERN"],
+    "classifiers": [
         "Framework :: Jupyter",
         "Framework :: Jupyter :: JupyterLab",
         "Framework :: Jupyter :: JupyterLab :: 4",
@@ -97,7 +97,7 @@ setup_args = dict(
         "Programming Language :: Python :: 3.10",
         "Programming Language :: Python :: 3.11",
     ],
-)
+}
 
 
 if __name__ == "__main__":
