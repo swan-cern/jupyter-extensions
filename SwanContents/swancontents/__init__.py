@@ -2,6 +2,7 @@ from ._version import __version__
 
 __all__ = ["__version__"]
 
+
 def _jupyter_server_extension_points():
     from .swanclassic.notebookapp import NotebookApp
 
@@ -13,6 +14,7 @@ def _jupyter_server_extension_points():
         },
         {"module": "swancontents.serverextension"},
     ]
+
 
 def _jupyter_labextension_paths():
     return []

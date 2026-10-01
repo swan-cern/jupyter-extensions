@@ -47,11 +47,10 @@ def fetch_runs(page_size: int, page_token: str, config: SwanML, log: logging.Log
             log.info("Kubeflow returned 403 Forbidden when listing runs; returning empty list")
             return {
                 "runs": [],
-                "next_page_token": '',
+                "next_page_token": "",
                 "total_size": 0,
             }
         raise
-
 
     runs = []
     for run in response.runs or []:
@@ -61,14 +60,12 @@ def fetch_runs(page_size: int, page_token: str, config: SwanML, log: logging.Log
                 "name": run.display_name,
                 "state": run.state,
                 "created_at": str(run.created_at),
-                "finished_at": (
-                    str(run.finished_at) if run.finished_at else None
-                ),
+                "finished_at": (str(run.finished_at) if run.finished_at else None),
                 "url": f"{config.kubeflow_host}/#/runs/details/{run.run_id}",
             }
         )
     return {
         "runs": runs,
-        "next_page_token": response.next_page_token or '',
+        "next_page_token": response.next_page_token or "",
         "total_size": response.total_size,
     }

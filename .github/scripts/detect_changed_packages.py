@@ -9,9 +9,7 @@ import subprocess
 from pathlib import Path
 
 
-PACKAGES = sorted(
-    pkg.name for pkg in Path.cwd().glob("*/") if (pkg / "pyproject.toml").exists()
-)
+PACKAGES = sorted(pkg.name for pkg in Path.cwd().glob("*/") if (pkg / "pyproject.toml").exists())
 
 
 def main():
@@ -30,9 +28,7 @@ def main():
     for path in changed:
         print(f"  {path}")
 
-    matched = [
-        pkg for pkg in PACKAGES if any(path.startswith(f"{pkg}/") for path in changed)
-    ]
+    matched = [pkg for pkg in PACKAGES if any(path.startswith(f"{pkg}/") for path in changed)]
     print("Matched packages:")
     for pkg in matched:
         print(f"  {pkg}")

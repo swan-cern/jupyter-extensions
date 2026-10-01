@@ -16,9 +16,8 @@ try:
 except:
     pass
 
-class NotebookViewerHandler(
-    ExtensionHandlerJinjaMixin, ExtensionHandlerMixin, JupyterHandler
-):
+
+class NotebookViewerHandler(ExtensionHandlerJinjaMixin, ExtensionHandlerMixin, JupyterHandler):
     """
     Jupyter server extension to provide a view-only mode to open notebooks.
     When users receive a shared project, now they can open it and use this extension

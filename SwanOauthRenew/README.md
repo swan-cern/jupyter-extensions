@@ -26,8 +26,8 @@ Then is necessary to configure (in the jupyter config file) the files that need 
 
 ```python
 c.SwanOauthRenew.files = [
-        ('/tmp/swan_oauth.token', 'access_token', '{token}'),
-        ('/tmp/cernbox_oauth.token', 'exchanged_tokens/cernbox-service', '{token}'),
-        ('/tmp/eos_oauth.token', 'exchanged_tokens/eos-service', 'oauth2:{token}:auth.cern.ch')
-    ]
+    ("/tmp/swan_oauth.token", "access_token", "{token}"),
+    ("/tmp/cernbox_oauth.token", "exchanged_tokens/cernbox-service", "{token}"),
+    ("/tmp/eos_oauth.token", "exchanged_tokens/eos-service", "oauth2:{token}:auth.cern.ch"),
+]
 ```
