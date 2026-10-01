@@ -84,6 +84,7 @@ print_help() {
     _log "  --builder BUILDER           Builder to create the environment"
     _log "  --builder_version VERSION   Version of the builder to use (optional)"
     _log "  --nxcals                    Install NXCALS package and Spark extensions in the environment (optional)"
+    _log "  --root-dir ROOT_DIR         JupyterLab contents root directory path"
     _log "  -h, --help                  Print this help page"
 }
 
@@ -122,6 +123,11 @@ while [ $# -gt 0 ]; do
             ;;
         --nxcals)
             USE_NXCALS=true
+            shift
+            ;;
+        --root-dir)
+            ROOT_DIR=$2
+            shift
             shift
             ;;
         --help|-h)
@@ -268,7 +274,7 @@ if [[ " $STACKS_FOR_CUSTOMENVS " != *" $BUILDER "* ]]; then
         fi
     fi
 
-    _log "REPO_PATH:${GIT_REPO_PATH#$HOME}"
+    _log "REPO_PATH:${GIT_REPO_PATH#$ROOT_DIR}"
 
     # Ensure the terminal loads the environment and cds into the repository path
     echo -e "${ACTIVATE_ENV_CMD}\ncd ${GIT_REPO_PATH}" >> /home/$USER/.bash_profile
