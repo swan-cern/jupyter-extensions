@@ -84,6 +84,7 @@ print_help() {
     _log "  --builder BUILDER           Builder to create the environment"
     _log "  --builder_version VERSION   Version of the builder to use (optional)"
     _log "  --nxcals                    Install NXCALS package and Spark extensions in the environment (optional)"
+    _log "  --root-dir ROOT_DIR         JupyterLab contents root directory path"
     _log "  -h, --help                  Print this help page"
 }
 
