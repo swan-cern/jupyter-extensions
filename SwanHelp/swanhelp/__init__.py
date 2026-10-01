@@ -27,9 +27,9 @@ def _jupyter_server_extension_paths():
 
 # NB extension
 def _jupyter_nbextension_paths():
-    return [dict(
-                section="common",
-                src="nbextension",
-                dest="swanhelp",
-                require="swanhelp/extension"),
+    return [{
+                "section": "common",
+                "src": "nbextension",
+                "dest": "swanhelp",
+                "require": "swanhelp/extension"},
             ]

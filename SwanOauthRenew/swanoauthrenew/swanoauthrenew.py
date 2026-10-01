@@ -42,8 +42,8 @@ class TokenRefresher(threading.Thread):
             try:
                 ttl = self.refresh_token()
                 self.log.info(f'oAuth token refreshed. Next in {ttl}s')
-            except Exception as e:
-                self.log.error(f"Error renewing oAuth token: {str(e)}. Trying later.", exc_info=False)
+            except Exception as e:  # noqa: BLE001
+                self.log.error(f"Error renewing oAuth token: {e!s}. Trying later.", exc_info=False)
                 ttl = 60
             time.sleep(ttl)
 
@@ -71,8 +71,7 @@ class TokenRefresher(threading.Thread):
                 ttl = token_ttl
 
         # If the token has already expired, something went wrong but we'll try again later
-        if ttl < 60:
-            ttl = 60
+        ttl = max(ttl, 60)
 
         return ttl
 
@@ -100,5 +99,5 @@ def _load_jupyter_server_extension(serverapp):
         except KeyError as e:
             log.info(f"Environment variable {e} is not set. Exiting...")
     else:
-        log.info(f"No files were configured. Exiting...")
+        log.info("No files were configured. Exiting...")
 

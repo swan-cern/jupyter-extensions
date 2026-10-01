@@ -19,6 +19,7 @@ dynamic = ["version"]
 dev = [
     "jupyterlab>=4.0.0,<5",
     "ruff==0.15.11",
+    "pytest>=8",
 ]
 
 [tool.hatch.version]
