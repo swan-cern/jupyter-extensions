@@ -26,17 +26,13 @@ def get_name_from_shared_from_link(r):
 
 
 def is_cernbox_shared_link(proj_name):
-    return (
-        proj_name.startswith(CERNBoxPrefix) or proj_name.startswith(CERNBoxPrefixTesting)
-    ) and "download" in proj_name
+    return (proj_name.startswith((CERNBoxPrefix, CERNBoxPrefixTesting))) and "download" in proj_name
 
 
 def is_good_proj_name(proj_name):
-    if proj_name.endswith(".git") or proj_name.endswith(".ipynb") or proj_name.endswith(".zip"):
+    if proj_name.endswith((".git", ".ipynb", ".zip")):
         return True
-    if is_cernbox_shared_link(proj_name):
-        return True
-    return False
+    return bool(is_cernbox_shared_link(proj_name))
 
 
 def is_file_on_eos(proj_name):
@@ -69,10 +65,7 @@ def has_good_chars(name, extra_chars=""):
         name = name[5:]
 
     has_allowd_chars = set(name) <= set(allowed)
-    if not has_allowd_chars:
-        return False
-
-    return True
+    return has_allowd_chars
 
 
 def check_url(url):
@@ -81,17 +74,18 @@ def check_url(url):
     gitlab_match = re.compile(GitlabRE).match(url)
 
     # Limit the sources
-    is_good_server = (
-        gitlab_match
-        or url.startswith("https://github.com")
-        or url.startswith("https://raw.githubusercontent.com")
-        or url.startswith("https://root.cern.ch")
-        or url.startswith("https://root.cern")
-        or url.startswith("https://swan-gallery.web.cern.ch")
-        or url.startswith(CERNBoxPrefix)
-        or url.startswith(CERNBoxPrefixTesting)
-        or url.startswith(EOSUserPrefix)
-        or url.startswith(LocalPrefix)
+    is_good_server = gitlab_match or url.startswith(
+        (
+            "https://github.com",
+            "https://raw.githubusercontent.com",
+            "https://root.cern.ch",
+            "https://root.cern",
+            "https://swan-gallery.web.cern.ch",
+            CERNBoxPrefix,
+            CERNBoxPrefixTesting,
+            EOSUserPrefix,
+            LocalPrefix,
+        )
     )
     if not is_good_server:
         raise web.HTTPError(
@@ -102,7 +96,7 @@ def check_url(url):
     # Check the chars
     onEOS = is_file_on_eos(url)
     local = url.startswith(LocalPrefix)
-    cernbox = url.startswith(CERNBoxPrefix) or url.startswith(CERNBoxPrefixTesting)
+    cernbox = url.startswith((CERNBoxPrefix, CERNBoxPrefixTesting))
 
     extra_chars = ""
     if cernbox:
@@ -127,8 +121,6 @@ def check_url(url):
         request = requests.get(url, verify=not is_cernbox_shared_link(url))
         sc = request.status_code
         if sc != 200:
-            raise web.HTTPError(
-                400, "The URL of the project does not exist or is not reachable (status code is %s)" % sc
-            )
+            raise web.HTTPError(400, f"The URL of the project does not exist or is not reachable (status code is {sc})")
 
     return True

@@ -1,6 +1,6 @@
 from traitlets import HasTraits, Unicode
 from tornado import web
-import os, io, shutil, subprocess, tempfile, requests, zipfile
+import asyncio, os, io, shutil, tempfile, requests, zipfile
 from .proj_url_checker import (
     is_cernbox_shared_link,
     get_name_from_shared_from_link,
@@ -51,10 +51,7 @@ class ProjectsMixin(HasTraits):
         """Check is this is SWAN projects folder"""
 
         folders = path.replace(self.swan_home + "/", "", 1).split("/")
-        if len(folders) == 2 and folders[0] == self.swan_default_folder:
-            return True
-
-        return False
+        return bool(len(folders) == 2 and folders[0] == self.swan_default_folder)
 
     def _contains_swan_folder_name(self, path):
         """To prevent users from using the default SWAN projects folder name"""
@@ -117,7 +114,7 @@ class ProjectsMixin(HasTraits):
         path = path.strip("/")
 
         if path != self.swan_default_folder and not self.exists(path):
-            raise web.HTTPError(404, "No such file or directory: %s" % path)
+            raise web.HTTPError(404, f"No such file or directory: {path}")
 
         os_path = self._get_os_path(path)
 
@@ -128,7 +125,7 @@ class ProjectsMixin(HasTraits):
 
         if self._is_dir(os_path) and self._is_file(os_path_proj):
             if type not in (None, "project", "directory"):
-                raise web.HTTPError(400, "%s is a project, not a %s" % (path, type), reason="bad type")
+                raise web.HTTPError(400, f"{path} is a project, not a {type}", reason="bad type")
 
             model = await self._proj_model(path, content=content)
 
@@ -153,7 +150,7 @@ class ProjectsMixin(HasTraits):
         os_path = self._get_os_path(path)
 
         if self._contains_swan_folder_name(os_path):
-            raise web.HTTPError(400, "The name %s is restricted" % self.swan_default_folder)
+            raise web.HTTPError(400, f"The name {self.swan_default_folder} is restricted")
 
         self.log.debug("Creating project %s", os_path)
 
@@ -166,7 +163,7 @@ class ProjectsMixin(HasTraits):
             raise
 
         except Exception as e:
-            self.log.error("Error while creating a Project: %s %s", path, e, exc_info=True)
+            self.log.exception("Error while creating a Project: %s", path)
             raise web.HTTPError(500, f"Unexpected error while creating a Project: {path} {e}") from e
 
         return await self.get(path, content=False)
@@ -189,7 +186,7 @@ class ProjectsMixin(HasTraits):
 
         path = path.strip("/")
         if not await self.dir_exists(path):
-            raise web.HTTPError(404, "No such directory: %s" % path)
+            raise web.HTTPError(404, f"No such directory: {path}")
 
         model = {"type": "directory", "is_project": True}
         name = await self.increment_filename(self.untitled_project, path, insert=" ")
@@ -201,7 +198,7 @@ class ProjectsMixin(HasTraits):
         """Prevent users from using the name of SWAN projects folder"""
 
         if self._contains_swan_folder_name(self._get_os_path(path)):
-            raise web.HTTPError(400, "The name %s is restricted" % self.swan_default_folder)
+            raise web.HTTPError(400, f"The name {self.swan_default_folder} is restricted")
 
         return await super().update(model, path)
 
@@ -229,13 +226,14 @@ class ProjectsMixin(HasTraits):
         tmp_dir_name = tempfile.mkdtemp()
 
         if url.endswith(".git"):
-            # Use subprocess.run instead of subprocess.call as the later one is deprecated and add the "--"
-            # to separate the process arguments from the url, to prevent users from passing command options
-            # in the place of the url.
-            rc = subprocess.run(["git", "clone", "--recurse-submodules", "--depth=1", "--", url, tmp_dir_name])
-            if rc.returncode != 0:
+            # Add the "--" to separate the process arguments from the url, to prevent users from passing command
+            # options in the place of the url.
+            proc = await asyncio.create_subprocess_exec(
+                "git", "clone", "--recurse-submodules", "--depth=1", "--", url, tmp_dir_name
+            )
+            if await proc.wait() != 0:
                 raise web.HTTPError(
-                    400, "It was not possible to clone the repo %s. Did you pass the username/token?" % url
+                    400, f"It was not possible to clone the repo {url}. Did you pass the username/token?"
                 )
 
             dest_dir_name_ext = os.path.basename(url)
@@ -288,7 +286,7 @@ class ProjectsMixin(HasTraits):
                 model["path"] = os.path.join(await self.move_folder(tmp_dir_name, dest_dir_name), file_name)
 
             else:
-                raise web.HTTPError(404, "File or directory does not exist: %s" % path)
+                raise web.HTTPError(404, f"File or directory does not exist: {path}")
 
         else:
             is_on_cernbox = is_cernbox_shared_link(url)
