@@ -40,7 +40,7 @@ class EOSCheckpoints(SwanFileManagerMixin, AsyncCheckpoints):
         """
         self.log.info(f"Creating checkpoint for {path}")
         # To check if the version returned is new or already known (an error might have occurred)
-        previous_recorded = self.latest_recorded[path] if path in self.latest_recorded else None
+        previous_recorded = self.latest_recorded.get(path, None)
         checkpoints = await self.list_checkpoints(path)
 
         if not checkpoints:
@@ -104,7 +104,7 @@ class EOSCheckpoints(SwanFileManagerMixin, AsyncCheckpoints):
     def _get_checkpoint_info(self, path, id):
         id = id.replace("_", ".")  # Jupyter does not support . in the url
         base = self._get_checkpoint_base(path)
-        base.update(dict(id=id, checkpoint_path=os.path.join(base["base_path"], str(id))))
+        base.update({"id": id, "checkpoint_path": os.path.join(base["base_path"], str(id))})
         return base
 
     # Get the path where the version should be stored.
@@ -112,24 +112,24 @@ class EOSCheckpoints(SwanFileManagerMixin, AsyncCheckpoints):
     def _get_checkpoint_base(self, path):
         src_path = self._get_os_path(path=path)
         dirname, basename = os.path.split(src_path)
-        return dict(
-            src_path=src_path,
-            base_path=os.path.join(dirname, self.version_base % basename),
-        )
+        return {
+            "src_path": src_path,
+            "base_path": os.path.join(dirname, self.version_base % basename),
+        }
 
     # Get the information structure to be returned to the caller
     def _get_checkpoint_return(self, checkpoint):
         id = checkpoint.replace(".", "_")  # Jupyter does not support . in the url
         ts = int(checkpoint.split(".")[0])
         ts = datetime.datetime.fromtimestamp(ts)
-        return dict(id=id, last_modified=ts.strftime("%Y-%m-%dT%H:%M:%S"))
+        return {"id": id, "last_modified": ts.strftime("%Y-%m-%dT%H:%M:%S")}
 
     # Error Handling
     def _no_such_checkpoint(self, path, checkpoint_id):
-        raise HTTPError(404, "Checkpoint no longer exists: %s@%s" % (path, checkpoint_id))
+        raise HTTPError(404, f"Checkpoint no longer exists: {path}@{checkpoint_id}")
 
     def _get_mock_checkpoint(self, path):
         src_path = self._get_os_path(path=path)
         mtime = os.path.getmtime(src_path)
         ts = datetime.datetime.fromtimestamp(mtime)
-        return dict(id="0_0", last_modified=ts.strftime("%Y-%m-%dT%H:%M:%S"))
+        return {"id": "0_0", "last_modified": ts.strftime("%Y-%m-%dT%H:%M:%S")}
