@@ -1,4 +1,4 @@
-import os, shutil, sys, uuid, time, base64, tempfile, ssl
+import os, shutil, subprocess, sys, uuid, time, base64, tempfile, ssl
 import requests
 import urllib3
 
@@ -54,11 +54,29 @@ class SparkConfiguration:
         """Get cluster name"""
         return os.environ.get("SPARK_USER", "")
 
-    def get_spark_needs_auth(self):
-        """Do not require auth if SPARK_AUTH_REQUIRED is 0,
-        e.g. in case HADOOP_TOKEN_FILE_LOCATION has been provided
+    def get_auth_mode(self):
+        """How the user obtains the Kerberos ticket Spark needs.
+        'password': the panel asks for the password and runs kinit (NXCALS).
+        'kinit':    the user runs kinit in a terminal; we only check the ticket.
+        'none':     no ticket needed (local Spark).
         """
-        return os.environ.get("SPARK_AUTH_REQUIRED", "false") == "true"
+        if self.get_cluster_name() == "local":
+            return "none"
+        if os.environ.get("SPARK_AUTH_REQUIRED", "false") == "true":
+            return "password"
+        return "kinit"
+
+    def has_valid_tgt(self):
+        """True if the credential cache holds an unexpired ticket-granting ticket.
+        The EOS-only cache SWAN provides has service tickets but no TGT, so the
+        exit status of 'klist -s' alone is not enough: it is 0 for such a cache.
+        """
+        try:
+            listing = subprocess.run(["klist"], capture_output=True, text=True, timeout=10)
+            unexpired = subprocess.run(["klist", "-s"], timeout=10)
+        except (OSError, subprocess.SubprocessError):
+            return False
+        return listing.returncode == 0 and unexpired.returncode == 0 and "krbtgt/" in listing.stdout
 
     def close_spark_session(self):
         sc = self.connector.ipython.user_ns.get("sc")

@@ -13,6 +13,10 @@ from swanportallocator.portallocator import PortAllocatorClient, NoPortsExceptio
 from .configuration import SparkConfigurationFactory
 from .logreader import LogReader
 
+KINIT_INSTRUCTIONS = (
+    'Open a terminal (File > New > Terminal), run "kinit", type your CERN password, then try again here.'
+)
+
 
 class SparkConnector:
     """Main singleton object for the kernel extension"""
@@ -48,6 +52,14 @@ class SparkConnector:
 
         # Try to get a kerberos ticket
         if action == "sparkconn-action-auth":
+            if self.spark_configuration.get_auth_mode() == "kinit":
+                # The user runs kinit in a terminal; we only verify the resulting ticket
+                if self.spark_configuration.has_valid_tgt():
+                    self.send_ok("sparkconn-config")
+                else:
+                    self.send_error("sparkconn-auth", "No valid Kerberos ticket found yet. " + KINIT_INSTRUCTIONS)
+                return
+
             # Execute kinit and pipe password directly to the process without exposing it.
             auth_kinit = msg["content"]["data"]["password"]
             p = subprocess.Popen(["kinit"], stdin=subprocess.PIPE, universal_newlines=True)
@@ -64,13 +76,18 @@ class SparkConnector:
                 self.send_ok("sparkconn-connected", self.spark_configuration.get_spark_session_config())
                 return
 
+            # Refuse early with instructions rather than let Spark fail with a Java stack trace
+            if self.spark_configuration.get_auth_mode() == "kinit" and not self.spark_configuration.has_valid_tgt():
+                self.send_error("sparkconn-connect-error", "No valid Kerberos ticket found. " + KINIT_INSTRUCTIONS)
+                return
+
             try:
                 # Ask port allocator to reserve and return 3 available ports
                 self.port_allocator.connect()
                 ports = self.port_allocator.get_ports(3)
 
                 # Fetch delegation tokens from an external service
-                if self.spark_configuration.get_spark_needs_auth():
+                if self.spark_configuration.get_auth_mode() == "password":
                     # Do nothing if generating kerberos ticket prompting the password from user. (for nxcals)
                     self.log.info("Skipped fetching delegation tokens because SPARK_AUTH_REQUIRED")
                 elif os.environ.get("SWAN_FETCH_HADOOP_TOKENS", "false") == "true":
@@ -142,9 +159,12 @@ class SparkConnector:
 
         # Check the current status of the kernel and tell frontend
         # If the user refreshes the page, he will still see the correct state
+        mode = self.spark_configuration.get_auth_mode()
         if self.connected:
             page = "sparkconn-connected"
-        elif self.spark_configuration.get_spark_needs_auth():
+        elif mode == "password":
+            page = "sparkconn-auth"
+        elif mode == "kinit" and not self.spark_configuration.has_valid_tgt():
             page = "sparkconn-auth"
         else:
             page = "sparkconn-config"
@@ -156,6 +176,7 @@ class SparkConnector:
                 "maxmemory": self.spark_configuration.get_spark_memory(),
                 "sparkversion": self.spark_configuration.get_spark_version(),
                 "cluster": self.spark_configuration.get_cluster_name(),
+                "authmode": mode,
                 "page": page,
             }
         )
