@@ -21,6 +21,40 @@ export const Authenticate = observer(() => {
       </Alert>
     );
   }
+
+  // The kernel decides the mode; 'kinit' means the user runs kinit in a terminal
+  const usesKinit = store.currentNotebook.authMode === 'kinit';
+  if (usesKinit) {
+    return (
+      <Layout>
+        <Section title="Authentication" className="jp-SparkConnector-auth">
+          {displayError}
+          <Alert severity="info">
+            Before connecting to the cluster, you need a Kerberos ticket. Open a
+            terminal, run <code>kinit</code> and enter your CERN password there,
+            then click Check ticket.
+          </Alert>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => store.onClickOpenTerminal()}
+          >
+            Open terminal
+          </Button>
+        </Section>
+        <Button
+          color="primary"
+          variant="contained"
+          onClick={() => store.onClickAuthenticate('')}
+          startIcon={<VpnKeyIcon />}
+          className="jp-SparkConnector-button-main"
+        >
+          Check ticket
+        </Button>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <Section title="Authentication" className="jp-SparkConnector-auth">

@@ -154,6 +154,7 @@ SparkConnector.prototype.on_comm_msg = function (msg) {
             this.max_memory = parseInt(msg.content.data.maxmemory.replace('g', ''));
             this.cluster = msg.content.data.cluster;
             this.spark_version = msg.content.data.sparkversion;
+            this.authmode = msg.content.data.authmode || 'password';
             show_page(this, msg.content.data.page);
             break;
         case 'sparkconn-action-follow-log':
@@ -289,7 +290,7 @@ SparkConnector.prototype.authenticate = function () {
 
     this.send({
         action: 'sparkconn-action-auth',
-        password: password_field.val()
+        password: password_field.val() || ''
     });
 
     return false;
@@ -506,6 +507,14 @@ SparkConnector.prototype.get_html_auth = function (config, error) {
                     .append($('<span aria-hidden="true"/>').html('&times;'))
             ).append($('<p/>').text(error))
             .appendTo(html);
+    }
+
+    if (this.authmode === 'kinit') {
+        $('<p>Before connecting to the cluster, you need a Kerberos ticket.<br>' +
+          'Open a terminal, run <code>kinit</code> and enter your CERN password there, ' +
+          'then click Authenticate.</p>')
+            .appendTo(html);
+        return;
     }
 
     $('<p>Before connecting to the cluster, we need to obtain a Kerberos ticket.<br>Please enter your account password.</p><p>&nbsp;</p>')

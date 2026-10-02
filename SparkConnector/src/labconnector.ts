@@ -170,6 +170,8 @@ export class JupyterLabConnector {
             clusterName: data.cluster as string,
             savedConfig,
           });
+          store.notebooks[notebookPanel.id].authMode =
+            data.authmode ?? 'password';
           if (page === 'sparkconn-config') {
             store.notebooks[notebookPanel.id].status = 'configuring';
           } else if (page === 'sparkconn-auth') {
@@ -249,6 +251,10 @@ export class JupyterLabConnector {
 
   private async promptUserForKernelRestart(notebookPanelId: string) {
     return this.labApp.commands.execute('notebook:restart-kernel');
+  }
+
+  openTerminal() {
+    return this.labApp.commands.execute('terminal:create-new');
   }
 
   async onClickRestart(notebookPanelId: string) {
