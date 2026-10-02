@@ -123,6 +123,11 @@ class ProjectsMixin(HasTraits):
 
         path = path.strip('/')
 
+        # If JupyterLab + EOS, the path arrives relative to preferred_dir, so 
+        # we need to re-anchor it under preferred_dir so _get_os_path() resolves correctly.
+        if self.preferred_dir and not path.startswith(self.preferred_dir.lstrip('/')):
+            path = os.path.join(self.preferred_dir.lstrip('/'), path)
+
         if path != self.swan_default_folder and not self.exists(path):
             raise web.HTTPError(404, 'No such file or directory: %s' % path)
 
