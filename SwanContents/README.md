@@ -21,7 +21,7 @@ pip install swancontents
 To replace the default Jupyter Contents Manager (including its Javascript library) and the templates, in the Jupyter Notebook configuration (i.e in `jupyter_notebook_config.py`), set the following:
 
 ```python
-c.ServerApp.contents_manager_class = 'swancontents.filemanager.SwanEosFileManager'
+c.ServerApp.contents_manager_class = "swancontents.filemanager.SwanEosFileManager"
 ```
 
 Note: `EOSCheckpoints` is set by default as `checkpoints_class` when using SwanEosFileManager.

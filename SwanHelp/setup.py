@@ -1,24 +1,22 @@
 """
 swanhelp setup
 """
+
 import json
 import os
 
-from jupyter_packaging import (
-    create_cmdclass, install_npm, ensure_targets,
-    combine_commands, skip_if_exists
-)
+from jupyter_packaging import create_cmdclass, install_npm, ensure_targets, combine_commands, skip_if_exists
 import setuptools
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 NBEXTENSION = os.path.join(HERE, "nbextension")
 
 # The name of the project
-name="swanhelp"
+name = "swanhelp"
 
 # Get our version
-with open(os.path.join(HERE, 'package.json')) as f:
-    version = json.load(f)['version']
+with open(os.path.join(HERE, "package.json")) as f:
+    version = json.load(f)["version"]
 
 lab_path = os.path.join(HERE, name, "labextension")
 nb_path = os.path.join(HERE, name, "nbextension")
@@ -29,24 +27,16 @@ jstargets = [
     os.path.join(nb_path, "extension.js"),
 ]
 
-package_data_spec = {
-    name: [
-        "*"
-    ]
-}
+package_data_spec = {name: ["*"]}
 
 labext_name = "@swan-cern/swanhelp"
 
 data_files_spec = [
     (f"share/jupyter/labextensions/{labext_name}", lab_path, "**"),
     (f"share/jupyter/labextensions/{labext_name}", HERE, "install.json"),
-     
 ]
 
-cmdclass = create_cmdclass("jsdeps",
-    package_data_spec=package_data_spec,
-    data_files_spec=data_files_spec
-)
+cmdclass = create_cmdclass("jsdeps", package_data_spec=package_data_spec, data_files_spec=data_files_spec)
 
 js_command = combine_commands(
     install_npm(HERE, build_cmd="install:all", npm=["jlpm"]),

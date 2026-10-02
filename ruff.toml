@@ -1,3 +1,9 @@
+line-length = 120
+
+[format]
+quote-style = "double"
+line-ending = "lf"
+
 [lint]
 ignore = [
     "I001",     # TODO: fix import ordering across all packages

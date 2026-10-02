@@ -5,17 +5,14 @@ except ImportError:
     # in editable mode with pip. It is highly recommended to install
     # the package from a stable release or in editable mode: https://pip.pypa.io/en/stable/topics/local-project-installs/#editable-installs
     import warnings
+
     warnings.warn("Importing 'swancustomenvironments' outside a proper installation.")
     __version__ = "dev"
 
 
 def _jupyter_labextension_paths():
-    return [{
-        "src": "labextension",
-        "dest": "swancustomenvironments"
-    }]
+    return [{"src": "labextension", "dest": "swancustomenvironments"}]
+
 
 def _jupyter_server_extension_points():
-    return [{
-        "module": "swancustomenvironments.serverextension"
-    }]
+    return [{"module": "swancustomenvironments.serverextension"}]

@@ -52,8 +52,8 @@ source_dir = "src"
 build_dir = "swan_ml/labextension"
 
 [tool.ruff]
+extend = "../ruff.toml"
 target-version = "py311"
-line-length = 120
 
 [tool.ruff.lint]
 select = [

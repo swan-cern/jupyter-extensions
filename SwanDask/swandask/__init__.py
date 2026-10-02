@@ -2,7 +2,7 @@ from jupyter_client.kernelspec import get_kernel_spec
 
 from ._version import __version__
 
-__all__ = [ "__version__" ]
+__all__ = ["__version__"]
 
 
 def get_env():

@@ -1,22 +1,20 @@
 """
 Setup Module to setup Python Handlers for the SparkConnector extension.
 """
+
 import json
 import os
 
-from jupyter_packaging import (
-    create_cmdclass, install_npm, ensure_targets,
-    combine_commands, skip_if_exists
-)
+from jupyter_packaging import create_cmdclass, install_npm, ensure_targets, combine_commands, skip_if_exists
 import setuptools
 
-name="sparkconnector"
+name = "sparkconnector"
 
 HERE = os.path.abspath(os.path.dirname(__file__))
 
 # Get our version
-with open(os.path.join(HERE, 'package.json')) as f:
-    version = json.load(f)['version']
+with open(os.path.join(HERE, "package.json")) as f:
+    version = json.load(f)["version"]
 
 lab_path = os.path.join(HERE, name, "labextension")
 nb_path = os.path.join(HERE, name, "nbextension")
@@ -27,22 +25,13 @@ jstargets = [
     os.path.join(nb_path, "extension.js"),
 ]
 
-package_data_spec = {
-    name: [
-        "*"
-    ]
-}
+package_data_spec = {name: ["*"]}
 
 labext_name = "@swan-cern/sparkconnector"
 
-data_files_spec = [
-    (f"share/jupyter/labextensions/{labext_name}", lab_path, "**")
-]
+data_files_spec = [(f"share/jupyter/labextensions/{labext_name}", lab_path, "**")]
 
-cmdclass = create_cmdclass("jsdeps",
-    package_data_spec=package_data_spec,
-    data_files_spec=data_files_spec
-)
+cmdclass = create_cmdclass("jsdeps", package_data_spec=package_data_spec, data_files_spec=data_files_spec)
 
 js_command = combine_commands(
     install_npm(HERE, build_cmd="install:all", npm=["jlpm"]),
