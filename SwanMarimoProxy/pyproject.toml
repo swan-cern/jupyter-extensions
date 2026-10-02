@@ -39,6 +39,7 @@ version = { path = "swan_marimo_proxy/_version.py" }
 packages = ["swan_marimo_proxy"]
 
 [tool.ruff]
+extend = "../ruff.toml"
 target-version = "py311"
 
 [tool.ruff.lint]
