@@ -59,7 +59,7 @@ class NotebookApp(ClassicNotebookApp):
         in order to use them in our theme templates
         """
         super().initialize_settings()
-        new_vars = self.settings["jinja_template_vars"] if "jinja_template_vars" in self.settings else dict()
+        new_vars = self.settings.get("jinja_template_vars", {})
         new_vars.update({"current_year": datetime.datetime.now().year})
 
         # Check if we are running via Jupyterhub single user (in that case, control url is defined),
