@@ -175,6 +175,10 @@ class SparkConnectorStore {
     );
   }
 
+  onClickOpenTerminal() {
+    this.appConnector?.openTerminal();
+  }
+
   onClickRestart() {
     this.appConnector?.onClickRestart(store.currentNotebookPanelId as string);
   }
@@ -190,6 +194,7 @@ class NotebookStateStore {
   sparkVersion?: string;
   clusterName?: string;
   authError?: string;
+  authMode: 'password' | 'kinit' | 'none' = 'password';
 
   status:
     | 'connected'
