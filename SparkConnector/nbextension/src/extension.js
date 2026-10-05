@@ -297,6 +297,27 @@ SparkConnector.prototype.authenticate = function () {
 }
 
 /**
+ * Opens a new terminal in a new browser tab, the same way the classic file list button does
+ * @returns {boolean} Returns false to prevent the modal box from closing
+ */
+SparkConnector.prototype.open_terminal = function () {
+    var base_url = utils.get_body_data('baseUrl');
+    var w = window.open('#', '_blank');   // open the tab now, inside the click, so pop-up blockers allow it
+    utils.ajax(utils.url_path_join(base_url, 'api/terminals'), {
+        type: 'POST',
+        dataType: 'json',
+        success: function (data) {
+            w.location = utils.url_path_join(base_url, 'terminals', utils.encode_uri_components(data.name));
+        },
+        error: function (jqXHR, status, error) {
+            w.close();
+            utils.log_ajax_error(jqXHR, status, error);
+        }
+    });
+    return false;
+};
+
+/**
  * Action for the Connect button
  * Sends all options to the kernel, changes to the loading state and saves the options in the
  * notebook metadata
@@ -511,8 +532,11 @@ SparkConnector.prototype.get_html_auth = function (config, error) {
 
     if (this.authmode === 'kinit') {
         $('<p>Before connecting to the cluster, you need a Kerberos ticket.<br>' +
-          'Open a terminal (the terminal button at the top of your SWAN file list), ' +
-          'run <code>kinit</code> and enter your CERN password there, then click Authenticate.</p>')
+          'Open a terminal with the button below, run <code>kinit</code> and enter your CERN password there, ' +
+          'then click Authenticate.</p>')
+            .appendTo(html);
+        $('<button type="button" class="btn btn-default btn-sm">Open terminal</button>')
+            .on('click', $.proxy(this.open_terminal, this))
             .appendTo(html);
         return;
     }
