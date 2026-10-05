@@ -162,9 +162,7 @@ class SparkConnector:
         mode = self.spark_configuration.get_auth_mode()
         if self.connected:
             page = "sparkconn-connected"
-        elif mode == "password":
-            page = "sparkconn-auth"
-        elif mode == "kinit" and not self.spark_configuration.has_valid_tgt():
+        elif mode == "password" or (mode == "kinit" and not self.spark_configuration.has_valid_tgt()):
             page = "sparkconn-auth"
         else:
             page = "sparkconn-config"
