@@ -511,8 +511,8 @@ SparkConnector.prototype.get_html_auth = function (config, error) {
 
     if (this.authmode === 'kinit') {
         $('<p>Before connecting to the cluster, you need a Kerberos ticket.<br>' +
-          'Open a terminal, run <code>kinit</code> and enter your CERN password there, ' +
-          'then click Authenticate.</p>')
+          'Open a terminal (the terminal button at the top of your SWAN file list), ' +
+          'run <code>kinit</code> and enter your CERN password there, then click Authenticate.</p>')
             .appendTo(html);
         return;
     }
