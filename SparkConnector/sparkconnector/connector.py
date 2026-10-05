@@ -13,9 +13,7 @@ from swanportallocator.portallocator import PortAllocatorClient, NoPortsExceptio
 from .configuration import SparkConfigurationFactory
 from .logreader import LogReader
 
-KINIT_INSTRUCTIONS = (
-    'Open a terminal (File > New > Terminal), run "kinit", type your CERN password, then try again here.'
-)
+KINIT_INSTRUCTIONS = 'Open a terminal, run "kinit", type your CERN password, then try again here.'
 
 
 class SparkConnector:
