@@ -531,12 +531,14 @@ SparkConnector.prototype.get_html_auth = function (config, error) {
     }
 
     if (this.authmode === 'kinit') {
-        $('<p>Before connecting to the cluster, you need a Kerberos ticket.<br>' +
-          'Open a terminal with the button below, run <code>kinit</code> and enter your CERN password there, ' +
-          'then click Authenticate.</p>')
+        $('<p>Before connecting to the cluster, you need a Kerberos ticket.</p>')
             .appendTo(html);
-        $('<button type="button" class="btn btn-default btn-sm">Open terminal</button>')
-            .on('click', $.proxy(this.open_terminal, this))
+        $('<ol/>')
+            .append($('<li/>')
+                .append($('<a href="#">Click here</a>').on('click', $.proxy(this.open_terminal, this)))
+                .append(' to open a terminal in a new tab.'))
+            .append('<li>In the terminal, run <code>kinit</code> and enter your CERN password.</li>')
+            .append('<li>Return to this tab and click Authenticate.</li>')
             .appendTo(html);
         return;
     }
