@@ -62,7 +62,7 @@ class SparkConfiguration:
         """
         if self.get_cluster_name() == "local":
             return "none"
-        if os.environ.get("SPARK_AUTH_REQUIRED", "false") == "true":
+        if os.environ.get("SPARK_PASSWORD_PROMPT_REQUIRED", "false") == "true":
             return "password"
         return "kinit"
 
