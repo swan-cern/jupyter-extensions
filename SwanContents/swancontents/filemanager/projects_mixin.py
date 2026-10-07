@@ -1,6 +1,7 @@
 from traitlets import HasTraits, Unicode
 from tornado import web
-import asyncio, os, io, shutil, tempfile, requests, zipfile
+from tornado.httpclient import AsyncHTTPClient
+import asyncio, os, io, shutil, tempfile, zipfile
 from .proj_url_checker import (
     is_cernbox_shared_link,
     get_name_from_shared_from_link,
@@ -296,12 +297,17 @@ class ProjectsMixin(HasTraits):
 
             # Download the file and store it with the correct name inside the temp folder
             # or unzip all files if it's compressed
-            r = requests.get(url, stream=True)
+            http_client = AsyncHTTPClient()
+            try:
+                r = await http_client.fetch(url)
+            except Exception as e:
+                raise web.HTTPError(400, f"Could not download file: {e}")
+
             if is_on_cernbox:
                 file_name = get_name_from_shared_from_link(r)
 
             if file_name.endswith(".zip"):
-                with zipfile.ZipFile(io.BytesIO(r.content)) as nb_zip:
+                with zipfile.ZipFile(io.BytesIO(r.body)) as nb_zip:
                     nb_zip.extractall(tmp_dir_name)
                     # Change to the notebook file to allow the redirection to open it
                     file_name = file_name.replace(".zip", ".ipynb")
@@ -309,7 +315,7 @@ class ProjectsMixin(HasTraits):
             else:
                 nb_path = os.path.join(tmp_dir_name, file_name)
                 with open(nb_path, "w+b") as nb:
-                    nb.write(r.content)
+                    nb.write(r.body)
 
             # Get the destination folder path
             file_name_no_ext = os.path.splitext(file_name)[0]
