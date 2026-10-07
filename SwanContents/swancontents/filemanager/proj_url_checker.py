@@ -19,7 +19,7 @@ GitlabRE = r"^https://(.+:.+@)?gitlab\.cern\.ch"
 
 
 def get_name_from_shared_from_link(r):
-    hdr = r.raw.getheader("Content-Disposition")
+    hdr = r.headers["Content-Disposition"]
     encodedName = re.search('filename="(.*)"$', hdr).group(1)
     finalFilename = parse.unquote_plus(encodedName)
     return finalFilename
