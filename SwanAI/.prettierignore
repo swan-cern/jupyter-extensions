@@ -1,0 +1,10 @@
+node_modules
+.yarn
+.venv
+lib
+dist
+swan_ai/labextension
+tsconfig.tsbuildinfo
+yarn.lock
+package-lock.json
+uv.lock
