@@ -67,5 +67,5 @@ class ShareHandler(ExtensionHandlerJinjaMixin, ExtensionHandlerMixin, JupyterHan
 
 
 default_handlers = [
-    (r"/share%s" % path_regex, ShareHandler),
+    (rf"/share{path_regex}", ShareHandler),
 ]

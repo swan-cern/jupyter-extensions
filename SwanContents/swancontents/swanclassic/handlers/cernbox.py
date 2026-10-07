@@ -39,5 +39,5 @@ class CernboxHandler(TreeHandler):
 
 
 default_handlers = [
-    (r"/cernbox%s" % path_regex, CernboxHandler),
+    (rf"/cernbox{path_regex}", CernboxHandler),
 ]
