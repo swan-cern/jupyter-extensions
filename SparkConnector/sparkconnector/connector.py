@@ -87,7 +87,7 @@ class SparkConnector:
                 # Fetch delegation tokens from an external service
                 if self.spark_configuration.get_auth_mode() == "password":
                     # Do nothing if generating kerberos ticket prompting the password from user. (for nxcals)
-                    self.log.info("Skipped fetching delegation tokens because SPARK_AUTH_REQUIRED")
+                    self.log.info("Skipped fetching delegation tokens because SPARK_PASSWORD_PROMPT_REQUIRED")
                 elif os.environ.get("SWAN_FETCH_HADOOP_TOKENS", "false") == "true":
                     self.spark_configuration.fetch_auth_delegation_tokens()
                 else:
