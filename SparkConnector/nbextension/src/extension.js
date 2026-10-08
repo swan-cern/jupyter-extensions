@@ -154,6 +154,7 @@ SparkConnector.prototype.on_comm_msg = function (msg) {
             this.max_memory = parseInt(msg.content.data.maxmemory.replace('g', ''));
             this.cluster = msg.content.data.cluster;
             this.spark_version = msg.content.data.sparkversion;
+            this.authmode = msg.content.data.authmode || 'password';
             show_page(this, msg.content.data.page);
             break;
         case 'sparkconn-action-follow-log':
@@ -289,11 +290,32 @@ SparkConnector.prototype.authenticate = function () {
 
     this.send({
         action: 'sparkconn-action-auth',
-        password: password_field.val()
+        password: password_field.val() || ''
     });
 
     return false;
 }
+
+/**
+ * Opens a new terminal in a new browser tab, the same way the classic file list button does
+ * @returns {boolean} Returns false to prevent the modal box from closing
+ */
+SparkConnector.prototype.open_terminal = function () {
+    var base_url = utils.get_body_data('baseUrl');
+    var w = window.open('#', '_blank');   // open the tab now, inside the click, so pop-up blockers allow it
+    utils.ajax(utils.url_path_join(base_url, 'api/terminals'), {
+        type: 'POST',
+        dataType: 'json',
+        success: function (data) {
+            w.location = utils.url_path_join(base_url, 'terminals', utils.encode_uri_components(data.name));
+        },
+        error: function (jqXHR, status, error) {
+            w.close();
+            utils.log_ajax_error(jqXHR, status, error);
+        }
+    });
+    return false;
+};
 
 /**
  * Action for the Connect button
@@ -506,6 +528,19 @@ SparkConnector.prototype.get_html_auth = function (config, error) {
                     .append($('<span aria-hidden="true"/>').html('&times;'))
             ).append($('<p/>').text(error))
             .appendTo(html);
+    }
+
+    if (this.authmode === 'kinit') {
+        $('<p>Before connecting to the cluster, you need a Kerberos ticket.</p>')
+            .appendTo(html);
+        $('<ol/>')
+            .append($('<li/>')
+                .append($('<a href="#">Click here</a>').on('click', $.proxy(this.open_terminal, this)))
+                .append(' to open a terminal in a new tab.'))
+            .append('<li>In the terminal, run <code>kinit</code> and enter your CERN password.</li>')
+            .append('<li>Return to this tab and click Authenticate.</li>')
+            .appendTo(html);
+        return;
     }
 
     $('<p>Before connecting to the cluster, we need to obtain a Kerberos ticket.<br>Please enter your account password.</p><p>&nbsp;</p>')
