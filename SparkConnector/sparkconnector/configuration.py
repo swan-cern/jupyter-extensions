@@ -72,11 +72,11 @@ class SparkConfiguration:
         exit status of 'klist -s' alone is not enough: it is 0 for such a cache.
         """
         try:
-            listing = subprocess.run(["klist"], capture_output=True, text=True, timeout=10, check=False)
-            unexpired = subprocess.run(["klist", "-s"], timeout=10, check=False)
+            subprocess.run(["klist", "-s"], timeout=10, check=True)
+            listing = subprocess.run(["klist"], capture_output=True, text=True, timeout=10, check=True)
         except (OSError, subprocess.SubprocessError):
             return False
-        return listing.returncode == 0 and unexpired.returncode == 0 and "krbtgt/" in listing.stdout
+        return "krbtgt/" in listing.stdout
 
     def close_spark_session(self):
         sc = self.connector.ipython.user_ns.get("sc")
