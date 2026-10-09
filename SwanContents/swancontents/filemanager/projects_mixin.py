@@ -6,7 +6,6 @@ from .proj_url_checker import (
     get_name_from_shared_from_link,
     is_file_on_eos,
     get_eos_username,
-    get_path_without_eos_base,
 )
 
 
@@ -250,14 +249,11 @@ class ProjectsMixin(HasTraits):
             file_path = url[6:]
             username = get_eos_username(file_path)
 
-            # in JupyterLab root_dir is /eos, so get_eos_username is None
-            # Files outside /eos/user/<u>/<user> then open in place, while
-            # the user's own files are copied into SWAN_projects.
-            # The classic UI behaves the opposite. Revisit with CERNBox sharing.
-            if username == get_eos_username(self.root_dir):
-                # Inside user own directory
+            # Open in place if the file is inside root_dir and not in another user's home
+            # username is None for files outside any user's home, e.g. project spaces
+            if file_path.startswith(self.root_dir + "/") and username in (None, get_eos_username(self.swan_home)):
                 model["type"] = "file"
-                model["path"] = get_path_without_eos_base(file_path)
+                model["path"] = file_path
 
             else:
                 # Outside of user directory. Copy the file.
