@@ -50,13 +50,6 @@ def get_eos_username(eos_path):
         return None
 
 
-def get_path_without_eos_base(eos_path):
-    try:
-        return re.compile(EOSUserRE).split(eos_path)[-1]
-    except AttributeError:
-        return ""
-
-
 def has_good_chars(name, extra_chars=""):
     """Check if contains only good characters.
     Avoid code injection: paranoia mode"""
