@@ -1,0 +1,50 @@
+#!/bin/bash -i
+#Author Omar.Zapata@cern.ch 2021
+###
+# This is called from the extension SwanTerminal and it requires the project path and stacks path as arguments.
+# The project path is used to read the .swanproject file and the stacks path is required to load the proper enviroment.
+# When the bash session is started we modify the prompt indicating in which project the terminal is located.
+# Additionally, the bash session runs completely isolated from other possible environments,
+# so we need to define some basic environment variables such as:
+#
+# * HOME with path to the user home
+# * PATH with default paths for the system
+# * OAUTH2_TOKEN required by EOS storage
+#
+# swan_env will load the other variables from the stack, inside the isolated enviroment.
+###
+
+clear
+if ! [ -x "$(command -v jq)" ]; then
+  echo 'Error: jq is not installed.' >&2
+  sleep 60
+  exit 1
+fi
+if [[ $# -gt 1 ]] ; then
+    PROJECT_PATH=$1
+    PROJECT_NAME=`IFS='/'; ARR=($PROJECT_PATH);echo "${ARR[-1]}"`
+    PROJECT_FILE="$PROJECT_PATH/.swanproject"
+    
+    STACKS_PATH="$2"
+
+    if [ -d "$PROJECT_PATH" ]
+    then
+      STACK=`jq '.stack' "$PROJECT_FILE"`
+      RELEASE=`jq '.release' "$PROJECT_FILE"`
+      PLATFORM=`jq '.platform' "$PROJECT_FILE"`
+      USER_SCRIPT="$PROJECT_PATH/.userscript"
+      echo "Loading $RELEASE with plafortm $PLATFORM "
+      # FIXME: this have to be removed when environment isolation is not needed anymore, it's only temporary
+      env -i HOME=$HOME \
+             OAUTH2_TOKEN=$OAUTH2_TOKEN \
+             PROJECT="$PROJECT_NAME" \
+             PROJECT_PATH="$PROJECT_PATH" PS1="$PS1" \
+             bash -c "swan_env \"$PROJECT_PATH\" \"$STACKS_PATH\" \"$PROJECT_PATH\" bash --rcfile  <(echo 'PS1=\"($PROJECT_NAME) $PS1 \"') "
+    else
+      echo "Error: project $PROJECT_PATH doesn't exist" >&2
+      # JupyterLab closes the terminal window immediately after the process ends
+      # this sleep is to allow the user to see the message
+      sleep 60
+      exit 1
+    fi
+fi

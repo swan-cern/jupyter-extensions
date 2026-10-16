@@ -1,0 +1,92 @@
+#!/bin/bash
+#Author Omar.Zapata@cern.ch 2021
+###
+# This script allows to execute code inside the project environment.
+#
+# The parameters are:
+# * Project name: Name of the project.
+# * Cwd: Current working directory, where the command will be executed.
+# * Command: command to execute inside the project environment.
+#
+#
+# With the project name we search the project located at $HOME/SWAN_projects/
+# reading the configuration to load the environment and the bash script provided by the user.
+#
+# This script is called from SwanKernelSpecManager to start the kernel and from swan_bash to start a bash session inside the project environment.
+##
+PARAMETERS=("$@")
+# Check if jq is installed
+if ! [ -x "$(command -v jq)" ]; then
+  echo 'Error: jq is not installed.' >&2
+  # JupyterLab closes the terminal window immediately after the process ends
+  # this sleep is to allow the user to see the message
+  sleep 60
+  exit 1
+fi
+
+# Check arguments
+if [[ $# -lt 3 ]] ; then
+  echo 'Error: project name, cwd and commands required.' >&2
+  echo 'Format is: swan_env myproject cwd command command_options' >&2
+  echo 'Example: swan_env myproject . python --version (shows version for the python inside the project environment)' >&2
+  # JupyterLab closes the terminal window immediately after the process ends
+  # this sleep is to allow the user to see the message
+  sleep 60
+  exit 1
+fi
+
+###
+# In the next block I make the path to the project to read the information from .swanproject file such as
+# stack, release and platform.
+# I also create the path to use bash user script to source it.
+###
+PROJECT_PATH=$1
+PROJECT_NAME=`IFS='/'; ARR=($PROJECT_PATH);echo "${ARR[-1]}"`
+PROJECT_FILE="$PROJECT_PATH/.swanproject"
+STACK=`jq -r '.stack' "$PROJECT_FILE"`
+RELEASE=`jq -r '.release' "$PROJECT_FILE"`
+PLATFORM=`jq -r '.platform' "$PROJECT_FILE"`
+USER_SCRIPT="$PROJECT_PATH/.userscript"
+
+# Path to the stack where the setup.sh for this project is located.
+# The available stacks are provided in the extension with --SwanProjects.stacks_path
+STACKS_PATH="$2"
+STACK_PATH="$STACKS_PATH/$STACK"
+STACK_SETUP="$STACK_PATH/setup.sh"
+
+# Working directory parameter
+CWD="$3"
+i=2
+
+for j in $(seq 0 1 $((i)));do
+    unset PARAMETERS[$j]
+done
+# After project name and working directory the remaining option passed to the script is the command to be execute inside the environment.
+COMMAND=${PARAMETERS[@]}
+
+if [ ! -d $STACK_PATH ]; then
+  echo "Error sourcing the environment, the stack $STACK was not found in stacks path $STACKS_PATH" >&2
+  echo "project $PROJECT_NAME can not be loeaded." >&2
+  exit 1
+fi
+
+if [ -f $STACK_SETUP ]; then
+  . $STACK_SETUP
+else
+   echo "Error loading stack setup.sh on $STACK_SETUP, file doesn't exists." >&2
+   exit 1
+fi
+
+# The next variables allow the user to know in the environment basic information about the project such as stack, name and path.
+export SWAN_STACK="$RELEASE($PLATFORM)"
+export SWAN_PROJECT_NAME=$PROJECT_NAME
+export SWAN_PROJECT_PATH=$PROJECT_PATH
+
+if [ "$USER_SCRIPT" != "" ] && [ -f "$USER_SCRIPT" ]; then
+    . "${USER_SCRIPT}"
+fi
+
+# The command is executed inside the $CWD folder.
+# if the command produces output it will be there.
+cd "$CWD"
+$COMMAND
