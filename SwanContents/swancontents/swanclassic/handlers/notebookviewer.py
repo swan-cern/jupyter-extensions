@@ -13,7 +13,7 @@ try:
     import voila  # noqa: F401
 
     has_voila = True
-except:
+except:  # noqa: S110
     pass
 
 
@@ -34,10 +34,7 @@ class NotebookViewerHandler(ExtensionHandlerJinjaMixin, ExtensionHandlerMixin, J
 
         self.log.info(f"Viewing notebook {path}")
 
-        try:
-            model = await ensure_async(cm.get(path, content=True))
-        except web.HTTPError:
-            raise
+        model = await ensure_async(cm.get(path, content=True))
 
         if model["type"] != "notebook":
             # not a notebook, redirect to files
