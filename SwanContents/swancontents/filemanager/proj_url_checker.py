@@ -32,7 +32,7 @@ def is_cernbox_shared_link(proj_name):
 def is_good_proj_name(proj_name):
     if proj_name.endswith((".git", ".ipynb", ".zip")):
         return True
-    return bool(is_cernbox_shared_link(proj_name))
+    return is_cernbox_shared_link(proj_name)
 
 
 def is_file_on_eos(proj_name):
@@ -57,8 +57,7 @@ def has_good_chars(name, extra_chars=""):
     if is_file_on_eos(name):
         name = name[5:]
 
-    has_allowd_chars = set(name) <= set(allowed)
-    return has_allowd_chars
+    return set(name) <= set(allowed)
 
 
 def check_url(url):

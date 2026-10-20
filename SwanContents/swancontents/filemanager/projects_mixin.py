@@ -51,7 +51,7 @@ class ProjectsMixin(HasTraits):
         """Check is this is SWAN projects folder"""
 
         folders = path.replace(self.swan_home + "/", "", 1).split("/")
-        return bool(len(folders) == 2 and folders[0] == self.swan_default_folder)
+        return len(folders) == 2 and folders[0] == self.swan_default_folder
 
     def _contains_swan_folder_name(self, path):
         """To prevent users from using the default SWAN projects folder name"""
