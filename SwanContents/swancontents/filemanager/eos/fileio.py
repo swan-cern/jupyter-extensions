@@ -67,9 +67,9 @@ def atomic_writing(path, text=True, encoding="utf-8", log=None, **kwargs):
     if text:
         # Make sure that text files have Unix linefeeds by default
         kwargs.setdefault("newline", "\n")
-        fileobj = open(tmp_path, "w", encoding=encoding, **kwargs)
+        fileobj = open(tmp_path, "w", encoding=encoding, **kwargs)  # noqa: SIM115
     else:
-        fileobj = open(tmp_path, "wb", **kwargs)
+        fileobj = open(tmp_path, "wb", **kwargs)  # noqa: SIM115
 
     try:
         yield fileobj
@@ -140,9 +140,8 @@ class SwanFileManagerMixin(AsyncFileManagerMixin):
         simply writes the file (whatever an old exists or not)"""
 
         if self.use_atomic_writing:
-            with self.perm_to_403(os_path):
-                with atomic_writing(os_path, *args, log=self.log, **kwargs) as f:
-                    yield f
+            with self.perm_to_403(os_path), atomic_writing(os_path, *args, log=self.log, **kwargs) as f:
+                yield f
         else:
             # Return to the default behaviour
             super().atomic_writing(os_path, *args, **kwargs)

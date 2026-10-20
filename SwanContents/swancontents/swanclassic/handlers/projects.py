@@ -95,5 +95,5 @@ class ProjectsHandler(ExtensionHandlerJinjaMixin, ExtensionHandlerMixin, Jupyter
 
 
 default_handlers = [
-    (r"/projects%s" % path_regex, ProjectsHandler),
+    (rf"/projects{path_regex}", ProjectsHandler),
 ]
