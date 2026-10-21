@@ -5,6 +5,7 @@ import requests
 import time
 import jwt
 from functools import reduce
+from urllib.parse import quote
 from traitlets.config import Configurable
 from traitlets import Tuple, List
 
@@ -33,6 +34,7 @@ class TokenRefresher(threading.Thread):
         self.config = config
         self.api_url = os.environ["JUPYTERHUB_API_URL"]
         self.api_token = os.environ["JUPYTERHUB_API_TOKEN"]
+        self.username = os.environ["JUPYTERHUB_USER"]
 
         super(self.__class__, self).__init__()
 
@@ -47,7 +49,10 @@ class TokenRefresher(threading.Thread):
             time.sleep(ttl)
 
     def refresh_token(self):
-        r = requests.get(f"{self.api_url}/user", headers={"Authorization": f"token {self.api_token}"})
+        r = requests.get(
+            f"{self.api_url}/users/{quote(self.username, safe='')}",
+            headers={"Authorization": f"token {self.api_token}"},
+        )
 
         if r.status_code != requests.codes.ok:
             raise Exception(f"Non ok code accessing API: {r.status_code}")
