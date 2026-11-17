@@ -1,0 +1,10 @@
+{
+  "metadata": {
+    "kernel_provisioner": {
+      "provisioner_name": "swan-provisioner",
+      "config": {}
+    }
+  },
+  "display_name": "Python 3 (Environment Specific)",
+  "language": "python"
+}
