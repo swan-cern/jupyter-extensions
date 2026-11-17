@@ -1,0 +1,24 @@
+{
+  "name": "swanprojects-monorepo",
+  "version": "0.0.0",
+  "private": true,
+  "description": "SWAN JupyterLab extension for projects",
+  "homepage": "https://github.com/swan-cern/jupyter-extensions",
+  "bugs": {
+    "url": "https://github.com/swan-cern/jupyter-extensions/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/swan-cern/jupyter-extensions.git"
+  },
+  "license": "AGPL-3.0",
+  "author": "SWAN Admins",
+  "files": [],
+  "scripts": {
+    "postinstall": "lerna bootstrap",
+    "build:prod": "lerna run build:prod"
+  },
+  "dependencies": {
+    "lerna": "^4.0.0"
+  }
+}
