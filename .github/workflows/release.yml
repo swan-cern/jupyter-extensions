@@ -10,6 +10,7 @@ on:
         type: choice
         options:
           - SparkConnector
+          - SwanAI
           - SwanContents
           - SwanCustomEnvironments
           - SwanDask
