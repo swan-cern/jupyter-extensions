@@ -113,8 +113,8 @@
         <div class="container-fluid">
           {% block logo %}
             <span id="jupyterhub-logo" class="navbar-brand">
-              <a href="{{ logo_url or base_url }}">
-                <img src='{{ base_url }}logo'
+              <a href="{{ hub_prefix }}">
+                <img src='{{ hub_prefix }}logo'
                      alt='JupyterHub logo'
                      class='jpy-logo'
                      title='Home' />
