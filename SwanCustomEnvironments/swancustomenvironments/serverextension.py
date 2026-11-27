@@ -1,3 +1,4 @@
+import logging
 import os
 
 from tornado import web
@@ -22,6 +23,10 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
     LOG_FILE = "/tmp/makenv.log"
 
     makenv_process = None
+
+    def __init__(self, application, request, **kwargs):
+        super().__init__(application, request, **kwargs)
+        self.logger = logging.getLogger("SwanCustomEnvironments")
 
     @web.authenticated
     async def get(self):
@@ -74,6 +79,7 @@ class SwanCustomEnvironmentsApiHandler(APIHandler):
                 if line:
                     # Real output arrived — reset the keepalive timer and send it.
                     last_keepalive = monotonic()
+                    self.logger.info(line.rstrip("\n"))
                     await self._send_line(line)
                 else:
                     # No output yet — sleep briefly, then check if it's time to send a keepalive
