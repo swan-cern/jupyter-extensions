@@ -22,7 +22,7 @@ eval ${LOGIN_CMD}
 
 # Initialize mamba and send its activation script to the user's bash profile
 MAMBADIR=$(mktemp -d)
-HOME=${MAMBADIR} mamba init
+HOME=${MAMBADIR} mamba shell init --shell bash
 ACTIVATE_TEMP_MAMBA_CMD="source ${MAMBADIR}/.bashrc"
 echo ${ACTIVATE_TEMP_MAMBA_CMD} >> /home/$USER/.bash_profile
 eval ${ACTIVATE_TEMP_MAMBA_CMD}
