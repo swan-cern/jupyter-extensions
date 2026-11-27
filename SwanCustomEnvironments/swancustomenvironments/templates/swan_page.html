@@ -15,7 +15,7 @@
 
 {% block logo %}
   <span id="jupyterhub-logo" class="navbar-brand">
-    <a href="{{ logo_url or base_url }}">
+    <a href="{{ hub_prefix }}">
       <img src="{{ hub_prefix }}logo" alt="SWAN logo" class="jpy-logo" title="Home" />
     </a>
   </span>
@@ -23,14 +23,14 @@
 
 {% block nav_bar_left_items %}
   <li class="nav-item">
-    <a class="btn swan-nav-link" href="{{ base_url }}home">Home</a>
+    <a class="btn swan-nav-link" href="{{ hub_prefix }}home">Home</a>
   </li>
   <li class="nav-item">
-    <a class="btn swan-nav-link" href="{{ base_url }}token">Token</a>
+    <a class="btn swan-nav-link" href="{{ hub_prefix }}token">Token</a>
   </li>
   {% if 'admin-ui' in parsed_scopes %}
     <li class="nav-item">
-      <a class="btn swan-nav-link" href="{{ base_url }}admin">Admin</a>
+      <a class="btn swan-nav-link" href="{{ hub_prefix }}admin">Admin</a>
     </li>
   {% endif %}
 {% endblock nav_bar_left_items %}
